@@ -27,10 +27,10 @@ to a total log
 ```typescript
 import { halua } from 'halua'
 
-// create new instance
+// make new instance
 let logger = halua.New()
 
-// create new instance with postfix, this method will inherit dateGetter and handler 
+// make new instance with postfix, this method will inherit dateGetter and handler 
 logger = halua.With('operation')
 // will log as "{date} {level} {msg} {...args} operation"
 ```

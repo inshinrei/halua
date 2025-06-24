@@ -13,6 +13,13 @@ export class LoggerCore implements Logger {
     ['error', Level.Error],
   ])
 
+  private readonly colors = new Map([
+    ['magenta', '35'],
+    ['red', '91'],
+    ['cyan', '36'],
+    ['yellow', '33'],
+  ])
+
   constructor(
     handler?: Handler | null | undefined,
     options: LoggerOptions = {},
@@ -34,7 +41,10 @@ export class LoggerCore implements Logger {
     // throw error if handler is not full
   }
 
-  public New(handler: Handler = this.handler, options: LoggerOptions = this.options): Logger {
+  public New(
+    handler: Handler = this.handler,
+    options: LoggerOptions = this.options,
+  ): Logger {
     return new LoggerCore(handler, options)
   }
 
@@ -43,9 +53,8 @@ export class LoggerCore implements Logger {
       ? `${this.options.postfix} ${this.composeMsgWithArgs(msg, ...args)}`
       : this.composeMsgWithArgs(msg, ...args)
     return new LoggerCore(this.handler, {
+      ...this.options,
       postfix,
-      dateGetter: this.dateGetter,
-      minLevel: this.options.minLevel,
     })
   }
 
@@ -128,6 +137,29 @@ export class LoggerCore implements Logger {
   }
 
   private formatWithLevel(level: string, msg: string): string {
+    // console.log('\x1b[32m Output with green text \x1b[0m')
+    // console.log('\x1b[35m Output with magenta text \x1b[0m')
+    // console.log('\x1b[34m Output with blue text \x1b[0m')
+    //
+    // console.log('\x1b[41m Output with red background \x1b[0m')
+    // console.log('\x1b[42m Output with green background \x1b[0m')
+    // console.log('\x1b[43m Output with yellow background \x1b[0m')
+
+    // pretty AND non custom handler is used, prettyWithCustomHandlerEscapeChars [start, rear] option
+
+    // add prettify to variables
+    switch (this.options.pretty) {
+      case level === Level.Debug:
+        return this.shiftValue(this.prettify(level, 'cyan'), msg)
+      // magenta is bad for dark theme
+      case level === Level.Info:
+        return this.shiftValue(this.prettify(level, 'magenta'), msg)
+      case level === Level.Warn:
+        return this.shiftValue(this.prettify(level, 'yellow'), msg)
+      case level === Level.Error:
+        return this.shiftValue(this.prettify(level, 'red'), msg)
+    }
+
     return this.shiftValue(level, msg)
   }
 
@@ -140,6 +172,13 @@ export class LoggerCore implements Logger {
       }
     }
     return this.shiftValue(this.getDateInLocaleString(), msg)
+  }
+
+  private prettify(
+    value: string,
+    color: 'red' | 'cyan' | 'yellow' | 'magenta',
+  ) {
+    return `\x1b[${this.colors.get(color)}m${value}\x1b[0m`
   }
 
   private shiftValue(value: string, to: string) {

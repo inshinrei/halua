@@ -1,8 +1,8 @@
 export interface Handler {
-  debug: (msg: string) => void
-  info: (msg: string) => void
-  warn: (msg: string) => void
-  error: (msg: string) => void
+  debug: (msg: string, ...args: any[]) => void
+  info: (msg: string, ...args: any[]) => void
+  warn: (msg: string, ...args: any[]) => void
+  error: (msg: string, ...args: any[]) => void
 }
 
 type LoggerFn = (msg: string, ...args: any[]) => void
@@ -14,13 +14,21 @@ export interface Logger {
   err: LoggerFn
   assert: (value: boolean, msg: string, ...args: any[]) => void
   setHandler: (handler: Handler) => void
-  setDateGetter: (getter: (() => string | number)) => void
+  setDateGetter: (getter: () => string | number) => void
 }
 
 export interface LoggerOptions {
   minLevel?: Level
   postfix?: string
+  pretty?: boolean
   dateGetter?: (() => string | number) | null | undefined
+}
+
+interface Log {
+  msg: string
+  level: Level
+  timestamp: string
+  variables: Record<string, any>
 }
 
 export enum Level {
