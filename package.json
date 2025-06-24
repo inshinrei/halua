@@ -1,0 +1,37 @@
+{
+  "name": "halua",
+  "version": "0.0.1",
+  "description": "logger for JS",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "jest --config jest.config.ts",
+    "build": "tsc",
+    "prepare": "yarn build",
+    "prepublishOnly": "yarn test && yarn size",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inshinrei/halua.git"
+  },
+  "keywords": [
+    "logger",
+    "logging"
+  ],
+  "author": "inshinrei",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/inshinrei/halua/issues"
+  },
+  "homepage": "https://github.com/inshinrei/halua#readme",
+  "devDependencies": {
+    "jest": "^30.0.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
