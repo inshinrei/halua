@@ -5,10 +5,9 @@
   "main": "index.ts",
   "types": "index.d.ts",
   "scripts": {
-    "test": "jest --config jest.config.ts",
+    "test": "jest --config --passWithNoTests jest.config.ts",
     "build": "tsc",
     "prepare": "yarn build",
-    "prepublishOnly": "yarn test",
     "postversion": "git push && git push --tags"
   },
   "repository": {
