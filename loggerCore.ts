@@ -34,7 +34,7 @@ export class LoggerCore implements Logger {
     // throw error if handler is not full
   }
 
-  public New(handler?: Handler, options?: LoggerOptions): Logger {
+  public New(handler: Handler = this.handler, options: LoggerOptions = this.options): Logger {
     return new LoggerCore(handler, options)
   }
 
@@ -45,6 +45,7 @@ export class LoggerCore implements Logger {
     return new LoggerCore(this.handler, {
       postfix,
       dateGetter: this.dateGetter,
+      minLevel: this.options.minLevel,
     })
   }
 
