@@ -11,6 +11,10 @@
     "strict": true,
     "strictNullChecks": true
   },
-  "include": ["index.ts", "loggerCore.ts", "types.ts"],
+  "include": [
+    "src/index.ts",
+    "src/loggerCore.ts",
+    "src/types.ts"
+  ],
   "exclude": ["node_modules", "src/**/*.test.ts"]
 }
