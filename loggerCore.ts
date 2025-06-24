@@ -13,7 +13,6 @@ export class LoggerCore implements Logger {
     ['error', Level.Error],
   ])
 
-  // should pass handler, min level to log
   constructor(
     handler?: Handler | null | undefined,
     options: LoggerOptions = {},
@@ -22,7 +21,7 @@ export class LoggerCore implements Logger {
       this.handler = handler
     }
 
-    if (options?.dateGetter) {
+    if (options.dateGetter) {
       this.dateGetter = options.dateGetter
       delete options.dateGetter
     }
