@@ -1,9 +1,9 @@
 {
   "name": "halua",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "logger for JS",
-  "main": "index.ts",
-  "types": "index.d.ts",
+  "main": "lib/index.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --config --passWithNoTests jest.config.ts",
     "build": "tsc",
