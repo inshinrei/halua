@@ -2,7 +2,7 @@ import type { Handler, Logger, LoggerOptions } from './types'
 import { Level } from './types'
 
 export class LoggerCore implements Logger {
-  private handler: Handler = self?.console || window?.console
+  private handler: Handler = console || self?.console || window?.console
   private dateGetter: null | (() => string | number) = null
   private readonly options: LoggerOptions = {}
 
@@ -42,7 +42,7 @@ export class LoggerCore implements Logger {
   }
 
   public New(
-    handler: Handler = this.handler,
+    handler: Handler | null = this.handler,
     options: LoggerOptions = this.options,
   ): Logger {
     return new LoggerCore(handler, options)
