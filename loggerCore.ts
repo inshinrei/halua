@@ -34,7 +34,7 @@ export class LoggerCore implements Logger {
     // throw error if handler is not full
   }
 
-  public New(handler: Handler, options?: LoggerOptions): Logger {
+  public New(handler?: Handler, options?: LoggerOptions): Logger {
     return new LoggerCore(handler, options)
   }
 
