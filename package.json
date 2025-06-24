@@ -1,12 +1,14 @@
 {
   "name": "halua",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "logger for JS",
-  "main": "lib/index.ts",
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
   "types": "lib/index.d.ts",
+  "files": ["lib"],
   "scripts": {
     "test": "jest --config --passWithNoTests jest.config.ts",
-    "build": "tsc",
+    "build": "tsup",
     "prepare": "yarn build",
     "postversion": "git push && git push --tags"
   },
@@ -28,6 +30,7 @@
     "jest": "^30.0.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "publishConfig": {

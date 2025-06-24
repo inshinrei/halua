@@ -2,7 +2,7 @@ import type { Handler, Logger, LoggerOptions } from './types'
 import { Level } from './types'
 
 export class LoggerCore implements Logger {
-  private handler: Handler = self.console
+  private handler: Handler = self?.console || window?.console
   private dateGetter: null | (() => string | number) = null
   private readonly options: LoggerOptions = {}
 
