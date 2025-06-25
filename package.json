@@ -1,6 +1,6 @@
 {
   "name": "halua",
-  "version": "26.0.1  ",
+  "version": "26.0.1",
   "description": "logger for JS",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
@@ -18,7 +18,10 @@
   },
   "keywords": [
     "logger",
-    "logging"
+    "logging",
+    "node",
+    "console",
+    "web"
   ],
   "author": "inshinrei",
   "license": "MIT",
