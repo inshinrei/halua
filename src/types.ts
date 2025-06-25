@@ -34,8 +34,8 @@ export interface Log {
 }
 
 export enum Level {
-  Debug = 'DEBUG',
-  Info = 'INFO',
-  Warn = 'WARN',
-  Error = 'ERR',
+  Debug = "DEBUG",
+  Info = "INFO",
+  Warn = "WARN",
+  Error = "ERR",
 }

@@ -1,6 +1,6 @@
-import type { Handler, Log, Logger, LoggerOptions } from './types'
-import { Level } from './types'
-import  { HandlerJSON } from './JSONHandler'
+import type { Handler, Log, Logger, LoggerOptions } from "./types"
+import { Level } from "./types"
+import { HandlerJSON } from "./JSONHandler"
 
 export class LoggerCore implements Logger {
   private handler: Handler = console || self?.console || window?.console
@@ -8,23 +8,20 @@ export class LoggerCore implements Logger {
   private readonly options: LoggerOptions = {}
 
   private readonly levelMapping: Map<string, Level> = new Map([
-    ['debug', Level.Debug],
-    ['info', Level.Info],
-    ['warn', Level.Warn],
-    ['error', Level.Error],
+    ["debug", Level.Debug],
+    ["info", Level.Info],
+    ["warn", Level.Warn],
+    ["error", Level.Error],
   ])
 
   private readonly colors = new Map([
-    ['magenta', '35'],
-    ['red', '91'],
-    ['cyan', '36'],
-    ['yellow', '33'],
+    ["magenta", "35"],
+    ["red", "91"],
+    ["cyan", "36"],
+    ["yellow", "33"],
   ])
 
-  constructor(
-    handler?: Handler | null | undefined,
-    options: LoggerOptions = {},
-  ) {
+  constructor(handler?: Handler | null | undefined, options: LoggerOptions = {}) {
     if (handler) {
       this.handler = handler
     }
@@ -43,10 +40,7 @@ export class LoggerCore implements Logger {
   }
 
   // handler is passed by ref
-  public New(
-    handler: Handler | null = this.handler,
-    options: LoggerOptions = this.options,
-  ): Logger {
+  public New(handler: Handler | null = this.handler, options: LoggerOptions = this.options): Logger {
     return new LoggerCore(handler, { ...options })
   }
 
@@ -64,29 +58,29 @@ export class LoggerCore implements Logger {
 
   public debug(msg: string, ...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Debug)) {
-      this.log('debug', msg, ...args)
+      this.log("debug", msg, ...args)
     }
   }
 
   public info(msg: string, ...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Info)) {
-      this.log('info', msg, ...args)
+      this.log("info", msg, ...args)
     }
   }
 
   public warn(msg: string, ...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Warn)) {
-      this.log('warn', msg, ...args)
+      this.log("warn", msg, ...args)
     }
   }
 
   public err(msg: string, ...args: any[]) {
-    this.log('error', msg, ...args)
+    this.log("error", msg, ...args)
   }
 
   public assert(value: boolean, msg: string, ...args: any[]) {
     if (!value) {
-      this.log('error', `assertion failed: ${msg}`, ...args)
+      this.log("error", `assertion failed: ${msg}`, ...args)
     }
   }
 
@@ -98,11 +92,7 @@ export class LoggerCore implements Logger {
     this.dateGetter = getter
   }
 
-  private log(
-    to: 'debug' | 'info' | 'warn' | 'error',
-    msg: string,
-    ...args: any[]
-  ): void {
+  private log(to: "debug" | "info" | "warn" | "error", msg: string, ...args: any[]): void {
     let level = this.levelMapping.get(to)!
 
     let logStruct: Log = {
@@ -133,10 +123,10 @@ export class LoggerCore implements Logger {
   }
 
   private modifyVariablesIn(data: Log, ...args: any[]): void {
-    let key = ''
+    let key = ""
     for (let arg of args) {
       if (!key) {
-        if (typeof arg === 'object') {
+        if (typeof arg === "object") {
           try {
             data.msg = this.appendValue(JSON.stringify(arg), data.msg)
           } catch (_) {
@@ -153,7 +143,7 @@ export class LoggerCore implements Logger {
 
       data.variables[key] = arg
       // if typeof arg object need to stringify
-      key = ''
+      key = ""
     }
 
     if (key) {
@@ -162,14 +152,14 @@ export class LoggerCore implements Logger {
   }
 
   private composeStrFrom(data: Log) {
-    let variablesStr = ''
+    let variablesStr = ""
 
     for (let key in data.variables) {
       variablesStr += ` ${key}="${data.variables[key]}"`
       variablesStr = variablesStr.trim()
     }
 
-    return `${data.timestamp} ${this.formatWithLevel(data.level, '')} ${data.msg}${variablesStr ? '\n' : ''}${variablesStr}`
+    return `${data.timestamp} ${this.formatWithLevel(data.level, "")} ${data.msg}${variablesStr ? "\n" : ""}${variablesStr}`
   }
 
   private composeMsgWithArgs(msg: string, ...args: any[]) {
@@ -178,7 +168,7 @@ export class LoggerCore implements Logger {
     }
 
     let totalMsg = msg
-    let key = ''
+    let key = ""
 
     for (let arg of args) {
       if (!key) {
@@ -187,7 +177,7 @@ export class LoggerCore implements Logger {
       }
 
       totalMsg = this.appendValue(`${key}="${arg}"`, totalMsg)
-      key = ''
+      key = ""
     }
 
     if (key) {
@@ -203,14 +193,14 @@ export class LoggerCore implements Logger {
     // add prettify to variables
     switch (this.options.pretty) {
       case level === Level.Debug:
-        return this.shiftValue(this.prettify(level, 'cyan'), msg)
+        return this.shiftValue(this.prettify(level, "cyan"), msg)
       // magenta is bad for dark theme
       case level === Level.Info:
-        return this.shiftValue(this.prettify(level, 'magenta'), msg)
+        return this.shiftValue(this.prettify(level, "magenta"), msg)
       case level === Level.Warn:
-        return this.shiftValue(this.prettify(level, 'yellow'), msg)
+        return this.shiftValue(this.prettify(level, "yellow"), msg)
       case level === Level.Error:
-        return this.shiftValue(this.prettify(level, 'red'), msg)
+        return this.shiftValue(this.prettify(level, "red"), msg)
     }
 
     return this.shiftValue(level, msg)
@@ -225,10 +215,7 @@ export class LoggerCore implements Logger {
     return this.getDateInLocaleString()
   }
 
-  private prettify(
-    value: string,
-    color: 'red' | 'cyan' | 'yellow' | 'magenta',
-  ) {
+  private prettify(value: string, color: "red" | "cyan" | "yellow" | "magenta") {
     return `\x1b[${this.colors.get(color)}m${value}\x1b[0m`
   }
 
