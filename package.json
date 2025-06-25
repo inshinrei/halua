@@ -2,6 +2,7 @@
   "name": "halua",
   "version": "26.0.1",
   "description": "logger for JS",
+  "type": "module",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "types": "lib/index.d.ts",
@@ -9,7 +10,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "jest --config --passWithNoTests jest.config.ts",
+    "test": "vitest",
     "build": "tsup",
     "prepare": "yarn build",
     "postversion": "git push && git push --tags"
@@ -32,12 +33,12 @@
   },
   "homepage": "https://github.com/inshinrei/halua#readme",
   "devDependencies": {
-    "jest": "^30.0.2",
     "prettier": "^3.6.1",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"
