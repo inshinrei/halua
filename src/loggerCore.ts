@@ -1,12 +1,13 @@
-import type { Handler, Logger, LoggerOptions } from './types'
+import type { Handler, Log, Logger, LoggerOptions } from './types'
 import { Level } from './types'
+import  { HandlerJSON } from './JSONHandler'
 
 export class LoggerCore implements Logger {
   private handler: Handler = console || self?.console || window?.console
   private dateGetter: null | (() => string | number) = null
   private readonly options: LoggerOptions = {}
 
-  private readonly levelMapping = new Map([
+  private readonly levelMapping: Map<string, Level> = new Map([
     ['debug', Level.Debug],
     ['info', Level.Info],
     ['warn', Level.Warn],
@@ -41,17 +42,20 @@ export class LoggerCore implements Logger {
     // throw error if handler is not full
   }
 
+  // handler is passed by ref
   public New(
     handler: Handler | null = this.handler,
     options: LoggerOptions = this.options,
   ): Logger {
-    return new LoggerCore(handler, options)
+    return new LoggerCore(handler, { ...options })
   }
 
   public With(msg: string, ...args: any[]): Logger {
     let postfix = this.options.postfix
       ? `${this.options.postfix} ${this.composeMsgWithArgs(msg, ...args)}`
       : this.composeMsgWithArgs(msg, ...args)
+    // handler is passed by ref here
+    // check how With works with variables (should store them on a new line, guess vars should be also moved to options)
     return new LoggerCore(this.handler, {
       ...this.options,
       postfix,
@@ -99,16 +103,73 @@ export class LoggerCore implements Logger {
     msg: string,
     ...args: any[]
   ): void {
-    let value = msg
-    value = this.composeMsgWithArgs(value, ...args)
-    if (this.options.postfix) {
-      value = this.appendValue(this.options.postfix, value)
+    let level = this.levelMapping.get(to)!
+
+    let logStruct: Log = {
+      msg,
+      level,
+      variables: {},
+      // for JSON it should be just stamp
+      timestamp: this.getTimestamp(),
     }
 
-    let level: string = this.levelMapping.get(to)!
+    this.modifyVariablesIn(logStruct, ...args)
+    if (this.options.postfix) {
+      logStruct.msg = this.appendValue(this.options.postfix, logStruct.msg)
+    }
 
-    value = this.formatWithDate(this.formatWithLevel(level, value))
-    this.handler[to](value)
+    try {
+      if (this.handler instanceof HandlerJSON) {
+        this.handler[to](logStruct.msg, logStruct.timestamp, logStruct.variables)
+        return
+      }
+
+      this.handler[to](this.composeStrFrom(logStruct))
+    } catch (err) {
+      if (level !== Level.Error) {
+        this.err(`failed to call handler for ${to}`)
+      }
+    }
+  }
+
+  private modifyVariablesIn(data: Log, ...args: any[]): void {
+    let key = ''
+    for (let arg of args) {
+      if (!key) {
+        if (typeof arg === 'object') {
+          try {
+            data.msg = this.appendValue(JSON.stringify(arg), data.msg)
+          } catch (_) {
+            if (data.level !== Level.Error) {
+              this.err(`stringify failed for, ${arg}`)
+            }
+          }
+          continue
+        }
+
+        key = arg
+        continue
+      }
+
+      data.variables[key] = arg
+      // if typeof arg object need to stringify
+      key = ''
+    }
+
+    if (key) {
+      data.variables[key] = undefined
+    }
+  }
+
+  private composeStrFrom(data: Log) {
+    let variablesStr = ''
+
+    for (let key in data.variables) {
+      variablesStr += ` ${key}="${data.variables[key]}"`
+      variablesStr = variablesStr.trim()
+    }
+
+    return `${data.timestamp} ${this.formatWithLevel(data.level, '')} ${data.msg}${variablesStr ? '\n' : ''}${variablesStr}`
   }
 
   private composeMsgWithArgs(msg: string, ...args: any[]) {
@@ -137,14 +198,6 @@ export class LoggerCore implements Logger {
   }
 
   private formatWithLevel(level: string, msg: string): string {
-    // console.log('\x1b[32m Output with green text \x1b[0m')
-    // console.log('\x1b[35m Output with magenta text \x1b[0m')
-    // console.log('\x1b[34m Output with blue text \x1b[0m')
-    //
-    // console.log('\x1b[41m Output with red background \x1b[0m')
-    // console.log('\x1b[42m Output with green background \x1b[0m')
-    // console.log('\x1b[43m Output with yellow background \x1b[0m')
-
     // pretty AND non custom handler is used, prettyWithCustomHandlerEscapeChars [start, rear] option
 
     // add prettify to variables
@@ -163,15 +216,13 @@ export class LoggerCore implements Logger {
     return this.shiftValue(level, msg)
   }
 
-  private formatWithDate(msg: string): string {
+  private getTimestamp(): string {
     if (this.dateGetter) {
       try {
-        return this.shiftValue(this.dateGetter().toString(), msg)
-      } catch (_) {
-        this.err('date getter catches an error, check your date getter func')
-      }
+        return this.dateGetter().toString()
+      } catch (_) {}
     }
-    return this.shiftValue(this.getDateInLocaleString(), msg)
+    return this.getDateInLocaleString()
   }
 
   private prettify(
@@ -182,10 +233,16 @@ export class LoggerCore implements Logger {
   }
 
   private shiftValue(value: string, to: string) {
+    if (!to) {
+      return value
+    }
     return `${value} ${to}`
   }
 
   private appendValue(value: string, to: string) {
+    if (!to) {
+      return value
+    }
     return `${to} ${value}`
   }
 

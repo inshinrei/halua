@@ -7,7 +7,7 @@ pnpm i halua
 // or 
 npm i halua
 // or
-yarn i halua
+yarn add halua
 ```
 
 ### calling signature

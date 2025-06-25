@@ -8,6 +8,8 @@ export interface Handler {
 type LoggerFn = (msg: string, ...args: any[]) => void
 
 export interface Logger {
+  New: (handler?: Handler, options?: LoggerOptions) => Logger
+  With: (msg: string, ...args: any[]) => Logger
   debug: LoggerFn
   info: LoggerFn
   warn: LoggerFn
@@ -24,7 +26,7 @@ export interface LoggerOptions {
   dateGetter?: (() => string | number) | null | undefined
 }
 
-interface Log {
+export interface Log {
   msg: string
   level: Level
   timestamp: string

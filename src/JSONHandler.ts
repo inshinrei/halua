@@ -1,35 +1,38 @@
 import type { Handler, Logger } from './types'
 
-export function JSONHandler(send: (value: string) => void) {
-  class HandlerJSON implements Handler {
-    public debug(message: string, timestamp: string): void {
-      this.log(message, 'DEBUG', timestamp)
-    }
+export class HandlerJSON implements Handler {
+  constructor(private send: (data: string) => void) {}
 
-    public info(message: string, timestamp: string): void {
-      this.log(message, 'INFO', timestamp)
-    }
-
-    public warn(message: string, timestamp: string): void {
-      this.log(message, 'WARN', timestamp)
-    }
-
-    public error(message: string, timestamp: string): void {
-      this.log(message, 'ERR', timestamp)
-    }
-
-    private log(message: string, level: string, timestamp: string): void {
-      let o = {
-        time: timestamp,
-        msg: message,
-        level,
-      }
-      try {
-        let result = JSON.stringify(o)
-        send(result)
-      } catch (_) {}
-    }
+  public debug(message: string, timestamp: string, variables: Record<string, any>): void {
+    this.log(message, 'DEBUG', timestamp, variables)
   }
 
-  return new HandlerJSON()
+  public info(message: string, timestamp: string, variables: Record<string, any>): void {
+    this.log(message, 'INFO', timestamp, variables)
+  }
+
+  public warn(message: string, timestamp: string, variables: Record<string, any>): void {
+    this.log(message, 'WARN', timestamp, variables)
+  }
+
+  public error(message: string, timestamp: string, variables: Record<string, any>): void {
+    this.log(message, 'ERR', timestamp, variables)
+  }
+
+  private log(message: string, level: string, timestamp: string, variables: Record<string, any>): void {
+    let o = {
+      time: timestamp,
+      msg: message,
+      variables,
+      level,
+    }
+    try {
+      let result = JSON.stringify(o)
+      this.send(result)
+    } catch (_) {}
+  }
+}
+
+export function JSONHandler(send: (value: string) => void) {
+  return new HandlerJSON(send)
 }
