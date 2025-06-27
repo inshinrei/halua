@@ -1,34 +1,37 @@
 import { describe, expect, test, vi } from "vitest"
 import { JSONHandler } from "./JSONHandler"
+import { log, logWithVars } from "../mocks/logs"
 
 describe("JSONHandler", () => {
-  test("outputs single message", () => {
-    let log = {
-      message: "log message",
-      timestamp: "00/00/00 00:00:00",
-      variables: {},
+  let receiver = vi.fn()
+  let handler = JSONHandler(receiver)
+
+  test.each([
+    ["debug", `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"DEBUG"}`],
+    ["info", `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"INFO"}`],
+    ["warn", `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"WARN"}`],
+    ["error", `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"ERR"}`],
+    ["assert", `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"ERR"}`],
+  ])("outputs single message with %s", (field, expected) => {
+    vi.clearAllMocks()
+    if (field === "assert") {
+      handler[field](false, log)
     }
+    handler[field as "debug" | "info" | "warn" | "error"](log)
+    expect(receiver).toHaveBeenCalledWith(expected)
+  })
 
-    let receiver = vi.fn()
-    let handler = JSONHandler(receiver)
-
-    handler.debug(log)
+  test("outputs message with variables", () => {
+    vi.clearAllMocks()
+    handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"DEBUG"}`,
-    )
-    handler.info(log)
-    expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"INFO"}`,
-    )
-    handler.warn(log)
-    expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"WARN"}`,
-    )
-    handler.error(log)
-    expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{},"level":"ERR"}`,
+      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{"count":1,"attr":"attribute","arr":[1,2,3],"obj":{"prop":"value","nested":{"prop":"value"}},"mySet":{},"myMap":{}},"level":"DEBUG"}`,
     )
   })
 
-  test("outputs message with variables", () => {})
+  test("do not false assert", () => {
+    vi.clearAllMocks()
+    handler.assert(true, log)
+    expect(receiver).not.toHaveBeenCalled()
+  })
 })

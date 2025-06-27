@@ -5,6 +5,7 @@ interface JSONLogHandler extends Handler {}
 export function JSONHandler(send: (data: string) => void): JSONLogHandler {
   return new (class JSONLog implements JSONLogHandler {
     debug(log: Log) {
+      console.debug(log)
       this.log({ ...log, level: Level.Debug })
     }
 
@@ -18,6 +19,12 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
 
     error(log: Log) {
       this.log({ ...log, level: Level.Error })
+    }
+
+    assert(c: boolean, log: Log) {
+      if (!c) {
+        this.log({ ...log, level: Level.Error })
+      }
     }
 
     private log(log: Log) {
