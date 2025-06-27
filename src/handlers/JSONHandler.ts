@@ -43,6 +43,9 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
     }
 
     private replacer(_: string, value: any) {
+      if (typeof value === "symbol") {
+        return value.toString()
+      }
       if (value instanceof Set) {
         return Array.from(value)
       }
