@@ -16,8 +16,9 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     if (field === "assert") {
       handler[field](false, log)
+    } else {
+      handler[field as "debug" | "info" | "warn" | "error"](log)
     }
-    handler[field as "debug" | "info" | "warn" | "error"](log)
     expect(receiver).toHaveBeenCalledWith(expected)
   })
 
@@ -25,7 +26,7 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{"count":1,"attr":"attribute","arr":[1,2,3],"obj":{"prop":"value","nested":{"prop":"value"}},"mySet":{},"myMap":{}},"level":"DEBUG"}`,
+      `{"message":"log message","timestamp":"00/00/00 00:00:00","variables":{"count":1,"attr":"attribute","arr":[1,2,3],"obj":{"prop":"value","nested":{"prop":"value"}},"mySet":[1,2,3,4,5],"myMap":{"key":"value"}},"level":"DEBUG"}`,
     )
   })
 

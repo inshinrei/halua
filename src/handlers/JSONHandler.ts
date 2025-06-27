@@ -5,7 +5,6 @@ interface JSONLogHandler extends Handler {}
 export function JSONHandler(send: (data: string) => void): JSONLogHandler {
   return new (class JSONLog implements JSONLogHandler {
     debug(log: Log) {
-      console.debug(log)
       this.log({ ...log, level: Level.Debug })
     }
 
@@ -29,7 +28,7 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
 
     private log(log: Log) {
       try {
-        send(JSON.stringify(log))
+        send(JSON.stringify(log, this.replacer))
       } catch (err) {
         if (log.level !== Level.Error) {
           this.error({
@@ -41,6 +40,20 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
           })
         }
       }
+    }
+
+    private replacer(_: string, value: any) {
+      if (value instanceof Set) {
+        return Array.from(value)
+      }
+      if (value instanceof Map) {
+        let obj: Record<string, any> = {}
+        for (let key of value.keys()) {
+          obj[key] = value.get(key)
+        }
+        return obj
+      }
+      return value
     }
   })()
 }
