@@ -10,6 +10,7 @@ export let logWithVars = {
     count: 1,
     attr: "attribute",
     arr: [1, 2, 3],
+    symb: Symbol("symb"),
     obj: {
       prop: "value",
       nested: {
