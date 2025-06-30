@@ -31,7 +31,7 @@ export function TextHandler(send: (data: string) => void): TextLogHandler {
       if (Object.keys(log.variables)) {
         vars = this.composeVariablesString(log.variables)
       }
-      send(`${log.timestamp} ${log.level} ${log.message}${vars}`)
+      send(`${this.prepareDate(log.timestamp)} ${log.level} ${log.message}${vars}`)
     }
 
     private composeVariablesString(data: Record<string, any>, nested = false): string {
@@ -74,6 +74,11 @@ export function TextHandler(send: (data: string) => void): TextLogHandler {
         str += c
       }
       return str
+    }
+
+    private prepareDate(t: number) {
+      let d = new Date(t)
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
     }
   })()
 }

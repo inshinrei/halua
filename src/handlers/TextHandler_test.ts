@@ -7,11 +7,11 @@ describe("TextHandler", () => {
   let handler = TextHandler(receiver)
 
   test.each([
-    ["debug", "1751313289663 DEBUG log message"],
-    ["info", "1751313289663 INFO log message"],
-    ["warn", "1751313289663 WARN log message"],
-    ["error", "1751313289663 ERR log message"],
-    ["assert", "1751313289663 ERR log message"],
+    ["debug", "6/30/2025 10:54:49 PM DEBUG log message"],
+    ["info", "6/30/2025 10:54:49 PM INFO log message"],
+    ["warn", "6/30/2025 10:54:49 PM WARN log message"],
+    ["error", "6/30/2025 10:54:49 PM ERR log message"],
+    ["assert", "6/30/2025 10:54:49 PM ERR log message"],
   ])("outputs single message with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -26,7 +26,7 @@ describe("TextHandler", () => {
     vi.clearAllMocks()
     handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `1751313289663 DEBUG log message count="1" attr="attribute" arr="[1,2,3]" symb="Symbol(symb)" obj="{ prop="value" nested={ prop="value" } }" mySet="Set[1,2,3,4,5]" myMap="{ key="value" }"`,
+      `6/30/2025 10:54:49 PM DEBUG log message count="1" attr="attribute" arr="[1,2,3]" symb="Symbol(symb)" obj="{ prop="value" nested={ prop="value" } }" mySet="Set[1,2,3,4,5]" myMap="{ key="value" }"`,
     )
   })
 
