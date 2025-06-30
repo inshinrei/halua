@@ -37,6 +37,9 @@ export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLo
       args.push(this.prepareDate(log.timestamp))
       args.push(`${log.level}`)
       args.push(`${log.message}`)
+      if (log.args) {
+        args.push(...log.args)
+      }
       if (Object.keys(log.variables).length) {
         args.push(...this.composeVarsArgs(log.variables))
       }

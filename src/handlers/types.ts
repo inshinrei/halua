@@ -11,6 +11,7 @@ export interface Log {
   variables: Record<string, any>
   timestamp: number
   level?: Level
+  args?: Array<any>
 }
 
 export enum Level {

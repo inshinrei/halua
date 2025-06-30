@@ -40,6 +40,7 @@ export class Halua implements HaluaLogger {
       message,
       timestamp: Date.now(),
       variables: {},
+      args: [],
     }
     this.parseArgs(log, args)
     if (field === "assert") {
@@ -64,7 +65,7 @@ export class Halua implements HaluaLogger {
         continue
       }
 
-      log.message += ` ${arg}`
+      log.args!.push(arg)
     }
 
     if (currKey) {
