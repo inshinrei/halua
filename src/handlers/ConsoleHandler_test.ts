@@ -13,11 +13,11 @@ describe("ConsoleHandler", () => {
   let handler = ConsoleHandler(receiver)
 
   test.each([
-    ["debug", ["6/30/2025 10:54:49 PM", " DEBUG", " log message"]],
-    ["info", ["6/30/2025 10:54:49 PM", " INFO", " log message"]],
-    ["warn", ["6/30/2025 10:54:49 PM", " WARN", " log message"]],
-    ["error", ["6/30/2025 10:54:49 PM", " ERR", " log message"]],
-    ["assert", [false, "6/30/2025 10:54:49 PM", " ERR", " log message"]],
+    ["debug", ["6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
+    ["info", ["6/30/2025 10:54:49 PM", "INFO", "log message"]],
+    ["warn", ["6/30/2025 10:54:49 PM", "WARN", "log message"]],
+    ["error", ["6/30/2025 10:54:49 PM", "ERR", "log message"]],
+    ["assert", [false, "6/30/2025 10:54:49 PM", "ERR", "log message"]],
   ])("outputs single messsage with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -37,21 +37,21 @@ describe("ConsoleHandler", () => {
     expect(receiver.debug).toHaveBeenCalledWith(
       ...[
         "6/30/2025 10:54:49 PM",
-        " DEBUG",
-        " log message",
-        " count=",
+        "DEBUG",
+        "log message",
+        "count=",
         1,
-        " attr=",
+        "attr=",
         "attribute",
-        " arr=",
+        "arr=",
         logWithVars.variables.arr,
-        " symb=",
+        "symb=",
         logWithVars.variables.symb,
-        " obj=",
+        "obj=",
         logWithVars.variables.obj,
-        " mySet=",
+        "mySet=",
         logWithVars.variables.mySet,
-        " myMap=",
+        "myMap=",
         logWithVars.variables.myMap,
       ],
     )
@@ -60,6 +60,6 @@ describe("ConsoleHandler", () => {
   test("do not false assert", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
-    expect(receiver.assert).toHaveBeenCalledWith(...[true, "6/30/2025 10:54:49 PM", " ERR", " log message"])
+    expect(receiver.assert).toHaveBeenCalledWith(...[true, "6/30/2025 10:54:49 PM", "ERR", "log message"])
   })
 })

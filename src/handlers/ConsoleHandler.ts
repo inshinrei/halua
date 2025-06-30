@@ -35,8 +35,8 @@ export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLo
     private composeArgs(log: Log): Array<any> {
       let args: Array<any> = []
       args.push(this.prepareDate(log.timestamp))
-      args.push(` ${log.level}`)
-      args.push(` ${log.message}`)
+      args.push(`${log.level}`)
+      args.push(`${log.message}`)
       if (Object.keys(log.variables).length) {
         args.push(...this.composeVarsArgs(log.variables))
       }
@@ -46,7 +46,7 @@ export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLo
     private composeVarsArgs(data: Record<string, any>): Array<any> {
       let args: Array<any> = []
       for (let key in data) {
-        let currArgs = [` ${key}=`, data[key]]
+        let currArgs = [`${key}=`, data[key]]
         args.push(...currArgs)
       }
       return args
