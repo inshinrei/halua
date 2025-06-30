@@ -1,11 +1,11 @@
 import type { HaluaLogger } from "./types"
 import type { Handler, Log } from "./handlers/types"
 
-class Halua implements HaluaLogger {
+export class Halua implements HaluaLogger {
   constructor(private handler: Handler) {}
 
-  public New() {
-    return new Halua(this.handler)
+  public New(handler = this.handler) {
+    return new Halua(handler)
   }
 
   public With() {}
