@@ -13,11 +13,11 @@ describe("ConsoleHandler", () => {
   let handler = ConsoleHandler(receiver)
 
   test.each([
-    ["debug", ["00/00/00 00:00:00", " DEBUG", " log message"]],
-    ["info", ["00/00/00 00:00:00", " INFO", " log message"]],
-    ["warn", ["00/00/00 00:00:00", " WARN", " log message"]],
-    ["error", ["00/00/00 00:00:00", " ERR", " log message"]],
-    ["assert", [false, "00/00/00 00:00:00", " ERR", " log message"]],
+    ["debug", ["6/30/2025 10:54:49 PM", " DEBUG", " log message"]],
+    ["info", ["6/30/2025 10:54:49 PM", " INFO", " log message"]],
+    ["warn", ["6/30/2025 10:54:49 PM", " WARN", " log message"]],
+    ["error", ["6/30/2025 10:54:49 PM", " ERR", " log message"]],
+    ["assert", [false, "6/30/2025 10:54:49 PM", " ERR", " log message"]],
   ])("outputs single messsage with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -36,7 +36,7 @@ describe("ConsoleHandler", () => {
     handler.debug(logWithVars)
     expect(receiver.debug).toHaveBeenCalledWith(
       ...[
-        "00/00/00 00:00:00",
+        "6/30/2025 10:54:49 PM",
         " DEBUG",
         " log message",
         " count=",
@@ -60,6 +60,6 @@ describe("ConsoleHandler", () => {
   test("do not false assert", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
-    expect(receiver.assert).toHaveBeenCalledWith(...[true, "00/00/00 00:00:00", " ERR", " log message"])
+    expect(receiver.assert).toHaveBeenCalledWith(...[true, "6/30/2025 10:54:49 PM", " ERR", " log message"])
   })
 })

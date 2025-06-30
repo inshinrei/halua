@@ -9,7 +9,7 @@ export interface Handler {
 export interface Log {
   message: string
   variables: Record<string, any>
-  timestamp: number | string
+  timestamp: number
   level?: Level
 }
 

@@ -34,7 +34,7 @@ export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLo
 
     private composeArgs(log: Log): Array<any> {
       let args: Array<any> = []
-      args.push(log.timestamp)
+      args.push(this.prepareDate(log.timestamp))
       args.push(` ${log.level}`)
       args.push(` ${log.message}`)
       if (Object.keys(log.variables).length) {
@@ -50,6 +50,11 @@ export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLo
         args.push(...currArgs)
       }
       return args
+    }
+
+    private prepareDate(t: number) {
+      let d = new Date(t)
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
     }
   })()
 }
