@@ -21,3 +21,8 @@ export let logWithVars = {
     myMap: new Map([["key", "value"]]),
   },
 }
+
+export let logWithArgs = {
+  ...log,
+  args: [1, "stringus", [1, 2, 3]],
+}

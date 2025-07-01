@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest"
 import { ConsoleHandler } from "./ConsoleHandler"
-import { log, logWithVars } from "../mocks/logs"
+import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
 describe("ConsoleHandler", () => {
   let receiver = {
@@ -61,5 +61,13 @@ describe("ConsoleHandler", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
     expect(receiver.assert).toHaveBeenCalledWith(...[true, "6/30/2025 10:54:49 PM", "ERR", "log message"])
+  })
+
+  test("outputs message with spare arguments", () => {
+    vi.clearAllMocks()
+    handler.debug(logWithArgs)
+    expect(receiver.debug).toHaveBeenCalledWith(
+      ...["6/30/2025 10:54:49 PM", "DEBUG", "log message", 1, "stringus", [1, 2, 3]],
+    )
   })
 })

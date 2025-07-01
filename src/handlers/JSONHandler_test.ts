@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest"
 import { JSONHandler } from "./JSONHandler"
-import { log, logWithVars } from "../mocks/logs"
+import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
 describe("JSONHandler", () => {
   let receiver = vi.fn()
@@ -34,5 +34,13 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
     expect(receiver).not.toHaveBeenCalled()
+  })
+
+  test("outputs message with spare arguments", () => {
+    vi.clearAllMocks()
+    handler.debug(logWithArgs)
+    expect(receiver).toHaveBeenCalledWith(
+      `{"message":"log message","timestamp":1751313289663,"variables":{},"args":[1,"stringus",[1,2,3]],"level":"DEBUG"}`,
+    )
   })
 })

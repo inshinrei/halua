@@ -28,10 +28,14 @@ export function TextHandler(send: (data: string) => void): TextLogHandler {
 
     private log(log: Log) {
       let vars = ""
+      let args = ""
+      if (log.args) {
+        args = this.composeVariablesString(log.args)
+      }
       if (Object.keys(log.variables)) {
         vars = this.composeVariablesString(log.variables)
       }
-      send(`${this.prepareDate(log.timestamp)} ${log.level} ${log.message}${vars}`)
+      send(`${this.prepareDate(log.timestamp)} ${log.level} ${log.message}${args}${vars}`)
     }
 
     private composeVariablesString(data: Record<string, any>, nested = false): string {

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest"
 import { TextHandler } from "./TextHandler"
-import { log, logWithVars } from "../mocks/logs"
+import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
 describe("TextHandler", () => {
   let receiver = vi.fn()
@@ -34,5 +34,11 @@ describe("TextHandler", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
     expect(receiver).not.toHaveBeenCalled()
+  })
+
+  test("outputs message with spare arguments", () => {
+    vi.clearAllMocks()
+    handler.debug(logWithArgs)
+    expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG log message 0="1" 1="stringus" 2="[1,2,3]"`)
   })
 })
