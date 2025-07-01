@@ -1,8 +1,16 @@
 import type { HaluaLogger } from "./types"
 import type { Handler, Log } from "./handlers/types"
+import { Level } from "./handlers/types"
+
+interface HaluaOptions {
+  minLevel?: Level
+}
 
 export class Halua implements HaluaLogger {
-  constructor(private handler: Handler) {}
+  constructor(
+    private handler: Handler,
+    private options: HaluaOptions = {},
+  ) {}
 
   public New(handler = this.handler) {
     return new Halua(handler)
@@ -11,23 +19,33 @@ export class Halua implements HaluaLogger {
   public With() {}
 
   public debug(message: string, ...args: any[]) {
-    this.sendToHandler("debug", true, message, ...args)
+    if (this.canLogByMinLevelRestriction(Level.Debug)) {
+      this.sendToHandler("debug", true, message, ...args)
+    }
   }
 
   public info(message: string, ...args: any[]) {
-    this.sendToHandler("info", true, message, ...args)
+    if (this.canLogByMinLevelRestriction(Level.Info)) {
+      this.sendToHandler("info", true, message, ...args)
+    }
   }
 
   public warn(message: string, ...args: any[]) {
-    this.sendToHandler("warn", true, message, ...args)
+    if (this.canLogByMinLevelRestriction(Level.Warn)) {
+      this.sendToHandler("warn", true, message, ...args)
+    }
   }
 
   public error(message: string, ...args: any[]) {
-    this.sendToHandler("error", true, message, ...args)
+    if (this.canLogByMinLevelRestriction(Level.Error)) {
+      this.sendToHandler("error", true, message, ...args)
+    }
   }
 
   public assert(condition: boolean, message: string, ...args: any[]) {
-    this.sendToHandler("assert", condition, message, ...args)
+    if (this.canLogByMinLevelRestriction(Level.Error)) {
+      this.sendToHandler("assert", condition, message, ...args)
+    }
   }
 
   private sendToHandler(
@@ -71,5 +89,26 @@ export class Halua implements HaluaLogger {
     if (currKey) {
       log.message += ` ${currKey}`
     }
+  }
+
+  private canLogByMinLevelRestriction(level: Level): boolean {
+    const { minLevel } = this.options
+    if (!minLevel || level === Level.Error) {
+      return true
+    }
+
+    if (level === Level.Warn) {
+      return minLevel !== Level.Error
+    }
+
+    if (level === Level.Info) {
+      return minLevel !== Level.Warn && minLevel !== Level.Error
+    }
+
+    if (level === Level.Debug) {
+      return minLevel === Level.Debug
+    }
+
+    return true
   }
 }
