@@ -1,6 +1,6 @@
 import { Handler, Level, Log } from "./types"
 
-interface ConsoleLogHandler extends Handler {}
+interface WebBrowserConsoleLogHandler extends Handler {}
 
 interface ConsoleLogHandlerConsole {
   debug: (...args: any[]) => void
@@ -10,8 +10,8 @@ interface ConsoleLogHandlerConsole {
   assert: (c: boolean, ...args: any[]) => void
 }
 
-export function ConsoleHandler(c: ConsoleLogHandlerConsole = console): ConsoleLogHandler {
-  return new (class ConsoleLog implements ConsoleLogHandler {
+export function WebBrowserConsoleHandler(c: ConsoleLogHandlerConsole = console): WebBrowserConsoleLogHandler {
+  return new (class ConsoleLog implements WebBrowserConsoleLogHandler {
     debug(log: Log) {
       c.debug(...this.composeArgs({ ...log, level: Level.Debug }))
     }
