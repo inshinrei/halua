@@ -70,4 +70,11 @@ describe("ConsoleHandler", () => {
       ...["6/30/2025 10:54:49 PM", "DEBUG", "log message", 1, "stringus", [1, 2, 3]],
     )
   })
+
+  test("supports date getter passing", () => {
+    vi.clearAllMocks()
+    handler.setDateGetter((_) => `abobus`)
+    handler.debug(log)
+    expect(receiver.debug).toHaveBeenCalledWith(...["abobus", "DEBUG", "log message"])
+  })
 })

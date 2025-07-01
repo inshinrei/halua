@@ -1,6 +1,8 @@
 import { Handler, Level, Log } from "./types"
 
-interface WebBrowserConsoleLogHandler extends Handler {}
+interface WebBrowserConsoleLogHandler extends Handler {
+  setDateGetter: (getter: (timestamp: number) => string) => void
+}
 
 interface ConsoleLogHandlerConsole {
   debug: (...args: any[]) => void
@@ -10,8 +12,17 @@ interface ConsoleLogHandlerConsole {
   assert: (c: boolean, ...args: any[]) => void
 }
 
-export function WebBrowserConsoleHandler(c: ConsoleLogHandlerConsole = console): WebBrowserConsoleLogHandler {
+interface WebBrowserConsoleHandlerOptions {
+  dateGetter?: (timestamp: number) => string
+}
+
+export function WebBrowserConsoleHandler(
+  c: ConsoleLogHandlerConsole = console,
+  options: WebBrowserConsoleHandlerOptions = {},
+): WebBrowserConsoleLogHandler {
   return new (class ConsoleLog implements WebBrowserConsoleLogHandler {
+    constructor(private options: WebBrowserConsoleHandlerOptions) {}
+
     debug(log: Log) {
       c.debug(...this.composeArgs({ ...log, level: Level.Debug }))
     }
@@ -30,6 +41,10 @@ export function WebBrowserConsoleHandler(c: ConsoleLogHandlerConsole = console):
 
     assert(cond: boolean, log: Log) {
       c.assert(cond, ...this.composeArgs({ ...log, level: Level.Error }))
+    }
+
+    public setDateGetter(dateGetter: (timestamp: number) => string) {
+      this.options.dateGetter = dateGetter
     }
 
     private composeArgs(log: Log): Array<any> {
@@ -56,8 +71,11 @@ export function WebBrowserConsoleHandler(c: ConsoleLogHandlerConsole = console):
     }
 
     private prepareDate(t: number) {
+      if (this.options.dateGetter) {
+        return this.options.dateGetter(t)
+      }
       let d = new Date(t)
       return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
     }
-  })()
+  })(options)
 }
