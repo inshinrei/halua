@@ -12,7 +12,7 @@
   "scripts": {
     "test": "vitest",
     "build": "tsup",
-    "prepare": "pnpm run test && pnpm run build",
+    "prepare": "pnpm run test run && pnpm run build",
     "postversion": "git push && git push --tags"
   },
   "repository": {
