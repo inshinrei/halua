@@ -12,11 +12,11 @@ export class Halua implements HaluaLogger {
     private options: HaluaOptions = {},
   ) {}
 
-  public New(handler = this.handler) {
-    return new Halua(handler)
+  public New(handler = this.handler, options = this.options): HaluaLogger {
+    return new Halua(handler, options)
   }
 
-  public With() {}
+  // public With() {}
 
   public debug(message: string, ...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Debug)) {

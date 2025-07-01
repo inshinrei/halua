@@ -1,7 +1,9 @@
 # halua
-logger for JS/TS projects (mainly for browser, but logging handler could be replaced with your implementation). inspired by https://pkg.go.dev/log/slog
+
+logger for JS/TS projects (mainly for browser, but logging handler could be replaced with your implementation).
 
 ### insallation
+
 ```
 pnpm i halua
 // or 
@@ -11,7 +13,9 @@ yarn add halua
 ```
 
 ### calling signature
+
 works for .debug, .info, .warn, .err
+
 ```typescript
 import { halua } from 'halua'
 
@@ -20,10 +24,12 @@ halua.debug('message', 'count', 2, 'some other info', true)
 // {timestamp} {logging level} message count="2" some other info="true"
 // 00/00/00 00:00:00 DEBUG message count="2" some other info="true"
 ```
-the logging func accepts string as a message for the first argument, the following argumets are [key, value] to append 
-to a total log 
+
+the logging func accepts string as a message for the first argument, the following argumets are [key, value] to append
+to a total log
 
 ### creating new instances
+
 ```typescript
 import { halua } from 'halua'
 
@@ -36,6 +42,7 @@ logger = halua.With('operation')
 ```
 
 ### controlling logging level
+
 ```typescript
 import { halua, Level } from 'halua'
 
@@ -45,15 +52,24 @@ const logger = halua.New(null, { minLevel: Level.Warn })
 ```
 
 ### replacing logging with custom handler
+
 The resulting log string will be sent to handler's method
+
 ```typescript
 import { Handler, halua } from 'halua'
 
 class CustomHandler implements Handler {
-  debug(msg: string) {}
-  info(msg: string) {}
-  warn(msg: string) {}
-  error(msg: string) {}
+  debug(msg: string) {
+  }
+
+  info(msg: string) {
+  }
+
+  warn(msg: string) {
+  }
+
+  error(msg: string) {
+  }
 }
 
 // handler is replaced for current and future instances 
@@ -61,6 +77,7 @@ halua.setHandler(CustomHandler)
 ```
 
 ### replacing date getter
+
 ```typescript
 import { halua } from 'halua'
 
@@ -69,6 +86,7 @@ halua.setDateGetter(() => performance.now())
 ```
 
 ### using basic logging
+
 ```typescript
 import { halua } from 'halua'
 
@@ -83,3 +101,4 @@ halua.warn('warning')
 halua.err('err message')
 ```
 
+inspired by https://pkg.go.dev/log/slog
