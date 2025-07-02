@@ -14,6 +14,7 @@ interface ConsoleLogHandlerConsole {
 
 interface WebBrowserConsoleHandlerOptions {
   dateGetter?: (timestamp: number) => string
+  pretty?: boolean
 }
 
 export function WebBrowserConsoleHandler(
@@ -21,30 +22,37 @@ export function WebBrowserConsoleHandler(
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {
   return new (class ConsoleLog implements WebBrowserConsoleLogHandler {
+    private readonly colors = new Map([
+      ["blue", "#7EBCFF"],
+      ["purple", "#FF7DFF"],
+      ["orange", "#FFB37D"],
+      ["red", "#FF7373"],
+    ])
+
     constructor(private options: WebBrowserConsoleHandlerOptions) {}
 
     debug(log: Log) {
-      let args = this.addDateAndLevel({ ...log, level: Level.Debug })
+      let args = this.insertInternalEntries({ ...log, level: Level.Debug })
       c.debug(this.composeConsoleSubstitution(args), ...args)
     }
 
     info(log: Log) {
-      let args = this.addDateAndLevel({ ...log, level: Level.Info })
+      let args = this.insertInternalEntries({ ...log, level: Level.Info })
       c.log(this.composeConsoleSubstitution(args), ...args)
     }
 
     warn(log: Log) {
-      let args = this.addDateAndLevel({ ...log, level: Level.Warn })
+      let args = this.insertInternalEntries({ ...log, level: Level.Warn })
       c.warn(this.composeConsoleSubstitution(args), ...args)
     }
 
     error(log: Log) {
-      let args = this.addDateAndLevel({ ...log, level: Level.Error })
+      let args = this.insertInternalEntries({ ...log, level: Level.Error })
       c.error(this.composeConsoleSubstitution(args), ...args)
     }
 
     assert(cond: boolean, log: Log) {
-      let args = this.addDateAndLevel({ ...log, level: Level.Error })
+      let args = this.insertInternalEntries({ ...log, level: Level.Error })
       c.assert(cond, this.composeConsoleSubstitution(args), ...args)
     }
 
@@ -52,13 +60,31 @@ export function WebBrowserConsoleHandler(
       this.options.dateGetter = dateGetter
     }
 
-    private addDateAndLevel(log: Log) {
-      return [this.prepareDate(log.timestamp), `${log.level}`, ...(log.args || [])]
+    private insertInternalEntries(log: Log) {
+      if (this.options.pretty) {
+        let colorKey =
+          log.level === Level.Debug
+            ? "blue"
+            : log.level === Level.Info
+              ? "purple"
+              : log.level === Level.Warn
+                ? "orange"
+                : "red"
+        return [
+          `${this.prepareDate(log.timestamp)} %c${log.level}`,
+          `color:${this.colors.get(colorKey)};`,
+          ...(log.args || []),
+        ]
+      }
+      return [this.prepareDate(log.timestamp), ` ${log.level}`, ...(log.args || [])]
     }
 
     private composeConsoleSubstitution(data: Array<any>, startingVarConvertionIndex = 2): string {
       let str = ""
-      for (let i = 0; i < data.length; i++) {
+      if (this.options.pretty) {
+        startingVarConvertionIndex = 1
+      }
+      for (let i = this.options.pretty ? 1 : 0; i < data.length; i++) {
         let last = i === data.length - 1
         let v = data[i]
 
@@ -67,16 +93,16 @@ export function WebBrowserConsoleHandler(
         }
 
         if (typeof v === "string") {
-          str += `%s`
+          str += `%s${last ? "" : " "}`
           continue
         }
 
         if (typeof v === "number") {
-          str += `%d`
+          str += `%d${last ? "" : " "}`
           continue
         }
 
-        str += `%o`
+        str += `%o${last ? "" : " "}`
       }
       return str
     }

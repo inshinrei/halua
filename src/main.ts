@@ -47,7 +47,7 @@ export class Halua implements HaluaLogger {
   private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", condition = true, ...args: any[]) {
     let log: Log = {
       timestamp: Date.now(),
-      args: [],
+      args: args || [],
     }
     if (field === "assert") {
       this.handler.assert(condition, log)
@@ -56,28 +56,6 @@ export class Halua implements HaluaLogger {
       this.handler[field](log)
     }
   }
-
-  // private parseArgs(log: Log, args: any[]) {
-  //   let currKey = ""
-  //   for (const arg of args) {
-  //     if (currKey) {
-  //       log.variables[currKey] = arg
-  //       currKey = ""
-  //       continue
-  //     }
-  //
-  //     if (typeof arg === "string" && arg.trim().indexOf(" ") === -1) {
-  //       currKey = arg
-  //       continue
-  //     }
-  //
-  //     log.args!.push(arg)
-  //   }
-  //
-  //   if (currKey) {
-  //     log.message += ` ${currKey}`
-  //   }
-  // }
 
   private canLogByMinLevelRestriction(level: Level): boolean {
     const { minLevel } = this.options
