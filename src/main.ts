@@ -1,10 +1,6 @@
-import type { HaluaLogger } from "./types"
+import type { HaluaLogger, HaluaOptions } from "./types"
 import type { Handler, Log } from "./handlers/types"
 import { Level } from "./handlers/types"
-
-interface HaluaOptions {
-  minLevel?: Level
-}
 
 export class Halua implements HaluaLogger {
   constructor(
