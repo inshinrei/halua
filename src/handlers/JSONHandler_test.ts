@@ -1,17 +1,17 @@
 import { describe, expect, test, vi } from "vitest"
 import { JSONHandler } from "./JSONHandler"
-import { log, logWithArgs, logWithVars } from "../mocks/logs"
+import { log, logWithVars } from "../mocks/logs"
 
 describe("JSONHandler", () => {
   let receiver = vi.fn()
   let handler = JSONHandler(receiver)
 
   test.each([
-    ["debug", `{"message":"log message","timestamp":1751313289663,"variables":{},"level":"DEBUG"}`],
-    ["info", `{"message":"log message","timestamp":1751313289663,"variables":{},"level":"INFO"}`],
-    ["warn", `{"message":"log message","timestamp":1751313289663,"variables":{},"level":"WARN"}`],
-    ["error", `{"message":"log message","timestamp":1751313289663,"variables":{},"level":"ERR"}`],
-    ["assert", `{"message":"log message","timestamp":1751313289663,"variables":{},"level":"ERR"}`],
+    ["debug", `{"timestamp":1751313289663,"args":["log message"],"level":"DEBUG"}`],
+    ["info", `{"timestamp":1751313289663,"args":["log message"],"level":"INFO"}`],
+    ["warn", `{"timestamp":1751313289663,"args":["log message"],"level":"WARN"}`],
+    ["error", `{"timestamp":1751313289663,"args":["log message"],"level":"ERR"}`],
+    ["assert", `{"timestamp":1751313289663,"args":["log message"],"level":"ERR"}`],
   ])("outputs single message with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -26,7 +26,7 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":1751313289663,"variables":{"count":1,"attr":"attribute","arr":[1,2,3],"symb":"Symbol(symb)","obj":{"prop":"value","nested":{"prop":"value"}},"mySet":[1,2,3,4,5],"myMap":{"key":"value"}},"level":"DEBUG"}`,
+      `{"timestamp":1751313289663,"args":["log message","count",1,"arr",[1,2,3],"symb","Symbol(symb)","obj",{"prop":"value","nested":{"prop":"value"}},"mySet",[1,2,3,4,5],"myMap",{"key":"value"},[1,2,3],[5,6,7]],"level":"DEBUG"}`,
     )
   })
 
@@ -34,13 +34,5 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
     expect(receiver).not.toHaveBeenCalled()
-  })
-
-  test("outputs message with spare arguments", () => {
-    vi.clearAllMocks()
-    handler.debug(logWithArgs)
-    expect(receiver).toHaveBeenCalledWith(
-      `{"message":"log message","timestamp":1751313289663,"variables":{},"args":[1,"stringus",[1,2,3]],"level":"DEBUG"}`,
-    )
   })
 })

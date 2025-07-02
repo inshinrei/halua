@@ -32,11 +32,8 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
       } catch (err) {
         if (log.level !== Level.Error) {
           this.error({
-            message: `err while trying to stringify JSON ${err}`,
+            args: [`err while trying to stringify JSON ${err}`],
             timestamp: log.timestamp,
-            variables: {
-              err: err,
-            },
           })
         }
       }
