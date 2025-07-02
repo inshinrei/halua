@@ -6,10 +6,10 @@ export interface HaluaOptions {
 
 export interface HaluaLogger {
   New: (handler?: Handler, options?: HaluaOptions) => HaluaLogger
-  // With:() => {}
-  debug: (message: string, ...args: any[]) => void
-  info: (message: string, ...args: any[]) => void
-  warn: (message: string, ...args: any[]) => void
-  error: (message: string, ...args: any[]) => void
-  assert: (assertion: boolean, message: string, ...args: any[]) => void
+  // With:(...args: any[]) => HaluaLogger
+  debug: (...args: any[]) => void
+  info: (...args: any[]) => void
+  warn: (...args: any[]) => void
+  error: (...args: any[]) => void
+  assert: (assertion: boolean, ...args: any[]) => void
 }

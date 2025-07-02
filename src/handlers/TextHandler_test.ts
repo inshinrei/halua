@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest"
 import { TextHandler } from "./TextHandler"
-import { log, logWithArgs, logWithVars } from "../mocks/logs"
+import { log, logWithVars } from "../mocks/logs"
 
 describe("TextHandler", () => {
   let receiver = vi.fn()
@@ -26,7 +26,7 @@ describe("TextHandler", () => {
     vi.clearAllMocks()
     handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `6/30/2025 10:54:49 PM DEBUG log message count="1" attr="attribute" arr="[1,2,3]" symb="Symbol(symb)" obj="{ prop="value" nested={ prop="value" } }" mySet="Set[1,2,3,4,5]" myMap="{ key="value" }"`,
+      `6/30/2025 10:54:49 PM DEBUG log message count=1 arr=[1,2,3] symb=Symbol(symb) obj={"prop":"value","nested":{"prop":"value"}} mySet=Set[1,2,3,4,5] myMap={"key":"value"} [1,2,3] [5,6,7]`,
     )
   })
 
@@ -34,11 +34,5 @@ describe("TextHandler", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
     expect(receiver).not.toHaveBeenCalled()
-  })
-
-  test("outputs message with spare arguments", () => {
-    vi.clearAllMocks()
-    handler.debug(logWithArgs)
-    expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG log message 0="1" 1="stringus" 2="[1,2,3]"`)
   })
 })

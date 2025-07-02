@@ -27,57 +27,59 @@ export function TextHandler(send: (data: string) => void): TextLogHandler {
     }
 
     private log(log: Log) {
-      let vars = ""
       let args = ""
       if (log.args) {
         args = this.composeVariablesString(log.args)
       }
-      if (Object.keys(log.variables)) {
-        vars = this.composeVariablesString(log.variables)
-      }
-      send(`${this.prepareDate(log.timestamp)} ${log.level} ${log.message}${args}${vars}`)
+      send(`${this.prepareDate(log.timestamp)} ${log.level} ${args}`)
     }
 
-    private composeVariablesString(data: Record<string, any>, nested = false): string {
+    private composeVariablesString(data: Array<any>, nested = false): string {
       let str = ""
       let c = ""
 
-      for (let key in data) {
-        let v = data[key]
-        if (c) {
-          str += c
-          c = ""
-        }
-        if (typeof v === "symbol") {
-          c = ` ${key}="${v.toString()}"`
-          continue
-        }
-        if (v instanceof Set) {
-          c = ` ${key}="Set[${Array.from(v)}]"`
-          continue
-        }
-        if (v instanceof Map) {
-          let obj: Record<string, any> = {}
-          for (let key of v.keys()) {
-            obj[key] = v.get(key)
-          }
-          v = { ...obj }
-        }
-        if (Array.isArray(v)) {
-          c = ` ${key}="[${v}]"`
-          continue
-        }
-        if (typeof v === "object") {
-          c = ` ${key}=${nested ? "" : '"'}{${this.composeVariablesString(v, true)} }${nested ? "" : '"'}`
+      for (let i = 0; i < data.length; i++) {
+        let last = i === data.length - 1
+        let v = data[i]
+
+        if (!last && typeof v === "string" && v.trim().indexOf(" ") === -1) {
+          str += `${v}=${this.formatValue(data[i + 1])} `
+          i += 1
           continue
         }
 
-        c = ` ${key}="${data[key]}"`
+        str += `${this.formatValue(v)}${last ? "" : " "}`
       }
-      if (c) {
-        str += c
-      }
+
       return str
+    }
+
+    private formatValue(v: any): string {
+      if (typeof v === "symbol") {
+        return v.toString()
+      }
+
+      if (v instanceof Set) {
+        return `Set[${Array.from(v)}]`
+      }
+
+      if (v instanceof Map) {
+        let obj: Record<string, any> = {}
+        for (let key of v.keys()) {
+          obj[key] = this.formatValue(v.get(key))
+        }
+        return JSON.stringify(obj)
+      }
+
+      if (Array.isArray(v)) {
+        return `[${v}]`
+      }
+
+      if (typeof v === "object") {
+        return JSON.stringify(v)
+      }
+
+      return `${v}`
     }
 
     private prepareDate(t: number) {

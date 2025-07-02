@@ -14,49 +14,41 @@ export class Halua implements HaluaLogger {
 
   // public With() {}
 
-  public debug(message: string, ...args: any[]) {
+  public debug(...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Debug)) {
-      this.sendToHandler("debug", true, message, ...args)
+      this.sendToHandler("debug", true, ...args)
     }
   }
 
-  public info(message: string, ...args: any[]) {
+  public info(...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Info)) {
-      this.sendToHandler("info", true, message, ...args)
+      this.sendToHandler("info", true, ...args)
     }
   }
 
-  public warn(message: string, ...args: any[]) {
+  public warn(...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Warn)) {
-      this.sendToHandler("warn", true, message, ...args)
+      this.sendToHandler("warn", true, ...args)
     }
   }
 
-  public error(message: string, ...args: any[]) {
+  public error(...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Error)) {
-      this.sendToHandler("error", true, message, ...args)
+      this.sendToHandler("error", true, ...args)
     }
   }
 
-  public assert(condition: boolean, message: string, ...args: any[]) {
+  public assert(assertion: boolean, ...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Error)) {
-      this.sendToHandler("assert", condition, message, ...args)
+      this.sendToHandler("assert", assertion, ...args)
     }
   }
 
-  private sendToHandler(
-    field: "debug" | "info" | "warn" | "error" | "assert",
-    condition = true,
-    message: string,
-    ...args: any[]
-  ) {
+  private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", condition = true, ...args: any[]) {
     let log: Log = {
-      message,
       timestamp: Date.now(),
-      variables: {},
       args: [],
     }
-    this.parseArgs(log, args)
     if (field === "assert") {
       this.handler.assert(condition, log)
     }
@@ -65,27 +57,27 @@ export class Halua implements HaluaLogger {
     }
   }
 
-  private parseArgs(log: Log, args: any[]) {
-    let currKey = ""
-    for (const arg of args) {
-      if (currKey) {
-        log.variables[currKey] = arg
-        currKey = ""
-        continue
-      }
-
-      if (typeof arg === "string" && arg.trim().indexOf(" ") === -1) {
-        currKey = arg
-        continue
-      }
-
-      log.args!.push(arg)
-    }
-
-    if (currKey) {
-      log.message += ` ${currKey}`
-    }
-  }
+  // private parseArgs(log: Log, args: any[]) {
+  //   let currKey = ""
+  //   for (const arg of args) {
+  //     if (currKey) {
+  //       log.variables[currKey] = arg
+  //       currKey = ""
+  //       continue
+  //     }
+  //
+  //     if (typeof arg === "string" && arg.trim().indexOf(" ") === -1) {
+  //       currKey = arg
+  //       continue
+  //     }
+  //
+  //     log.args!.push(arg)
+  //   }
+  //
+  //   if (currKey) {
+  //     log.message += ` ${currKey}`
+  //   }
+  // }
 
   private canLogByMinLevelRestriction(level: Level): boolean {
     const { minLevel } = this.options

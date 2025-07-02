@@ -3,15 +3,14 @@ export interface Handler {
   info: (log: Log) => void
   warn: (log: Log) => void
   error: (log: Log) => void
-  assert: (c: boolean, log: Log) => void
+  assert: (assertion: boolean, log: Log) => void
 }
 
 export interface Log {
-  message: string
-  variables: Record<string, any>
   timestamp: number
   level?: Level
   args?: Array<any>
+  postArgs?: Array<any>
 }
 
 export enum Level {
