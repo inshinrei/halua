@@ -12,7 +12,9 @@ export class Halua implements HaluaLogger {
     return new Halua(handler, options)
   }
 
-  // public With() {}
+  public With(...args: any[]): HaluaLogger {
+    return new Halua(this.handler, { ...this.options, postArgs: (this.options.postArgs || []).concat(args) })
+  }
 
   public debug(...args: any[]) {
     if (this.canLogByMinLevelRestriction(Level.Debug)) {
@@ -48,6 +50,9 @@ export class Halua implements HaluaLogger {
     let log: Log = {
       timestamp: Date.now(),
       args: args || [],
+    }
+    if (this.options.postArgs) {
+      log.args = log.args!.concat(this.options.postArgs)
     }
     if (field === "assert") {
       this.handler.assert(condition, log)

@@ -2,11 +2,12 @@ import { Handler, Level } from "./handlers/types"
 
 export interface HaluaOptions {
   minLevel?: Level
+  postArgs?: Array<any>
 }
 
 export interface HaluaLogger {
   New: (handler?: Handler, options?: HaluaOptions) => HaluaLogger
-  // With:(...args: any[]) => HaluaLogger
+  With: (...args: any[]) => HaluaLogger
   debug: (...args: any[]) => void
   info: (...args: any[]) => void
   warn: (...args: any[]) => void
