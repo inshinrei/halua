@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest"
 import { WebBrowserConsoleHandler } from "./WebBrowserConsoleHandler"
-import { log, logWithArgs, logWithVars } from "../mocks/logs"
+import { log, logWithVars } from "../mocks/logs"
 
 describe("ConsoleHandler", () => {
   let receiver = {
@@ -13,11 +13,11 @@ describe("ConsoleHandler", () => {
   let handler = WebBrowserConsoleHandler(receiver)
 
   test.each([
-    ["debug", ["6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
-    ["info", ["6/30/2025 10:54:49 PM", "INFO", "log message"]],
-    ["warn", ["6/30/2025 10:54:49 PM", "WARN", "log message"]],
-    ["error", ["6/30/2025 10:54:49 PM", "ERR", "log message"]],
-    ["assert", [false, "6/30/2025 10:54:49 PM", "ERR", "log message"]],
+    ["debug", ["%s%s%s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
+    ["info", ["%s%s%s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
+    ["warn", ["%s%s%s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
+    ["error", ["%s%s%s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
+    ["assert", [false, "%s%s%s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
   ])("outputs single messsage with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -36,23 +36,24 @@ describe("ConsoleHandler", () => {
     handler.debug(logWithVars)
     expect(receiver.debug).toHaveBeenCalledWith(
       ...[
+        "%s%s%s%s%d%s%o%s%o%s%o%s%o%s%o%o%o",
         "6/30/2025 10:54:49 PM",
         "DEBUG",
         "log message",
         "count=",
         1,
-        "attr=",
-        "attribute",
         "arr=",
-        logWithVars.variables.arr,
+        [1, 2, 3],
         "symb=",
-        logWithVars.variables.symb,
+        logWithVars.args[6],
         "obj=",
-        logWithVars.variables.obj,
+        logWithVars.args[8],
         "mySet=",
-        logWithVars.variables.mySet,
+        logWithVars.args[10],
         "myMap=",
-        logWithVars.variables.myMap,
+        logWithVars.args[12],
+        [1, 2, 3],
+        [5, 6, 7],
       ],
     )
   })
@@ -60,21 +61,13 @@ describe("ConsoleHandler", () => {
   test("do not false assert", () => {
     vi.clearAllMocks()
     handler.assert(true, log)
-    expect(receiver.assert).toHaveBeenCalledWith(...[true, "6/30/2025 10:54:49 PM", "ERR", "log message"])
-  })
-
-  test("outputs message with spare arguments", () => {
-    vi.clearAllMocks()
-    handler.debug(logWithArgs)
-    expect(receiver.debug).toHaveBeenCalledWith(
-      ...["6/30/2025 10:54:49 PM", "DEBUG", "log message", 1, "stringus", [1, 2, 3]],
-    )
+    expect(receiver.assert).toHaveBeenCalledWith(...[true, "%s%s%s", "6/30/2025 10:54:49 PM", "ERR", "log message"])
   })
 
   test("supports date getter passing", () => {
     vi.clearAllMocks()
     handler.setDateGetter((_) => `abobus`)
     handler.debug(log)
-    expect(receiver.debug).toHaveBeenCalledWith(...["abobus", "DEBUG", "log message"])
+    expect(receiver.debug).toHaveBeenCalledWith(...["%s%s%s", "abobus", "DEBUG", "log message"])
   })
 })

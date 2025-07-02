@@ -24,50 +24,61 @@ export function WebBrowserConsoleHandler(
     constructor(private options: WebBrowserConsoleHandlerOptions) {}
 
     debug(log: Log) {
-      c.debug(...this.composeArgs({ ...log, level: Level.Debug }))
+      let args = this.addDateAndLevel({ ...log, level: Level.Debug })
+      c.debug(this.composeConsoleSubstitution(args), ...args)
     }
 
     info(log: Log) {
-      c.log(...this.composeArgs({ ...log, level: Level.Info }))
+      let args = this.addDateAndLevel({ ...log, level: Level.Info })
+      c.log(this.composeConsoleSubstitution(args), ...args)
     }
 
     warn(log: Log) {
-      c.warn(...this.composeArgs({ ...log, level: Level.Warn }))
+      let args = this.addDateAndLevel({ ...log, level: Level.Warn })
+      c.warn(this.composeConsoleSubstitution(args), ...args)
     }
 
     error(log: Log) {
-      c.error(...this.composeArgs({ ...log, level: Level.Error }))
+      let args = this.addDateAndLevel({ ...log, level: Level.Error })
+      c.error(this.composeConsoleSubstitution(args), ...args)
     }
 
     assert(cond: boolean, log: Log) {
-      c.assert(cond, ...this.composeArgs({ ...log, level: Level.Error }))
+      let args = this.addDateAndLevel({ ...log, level: Level.Error })
+      c.assert(cond, this.composeConsoleSubstitution(args), ...args)
     }
 
     public setDateGetter(dateGetter: (timestamp: number) => string) {
       this.options.dateGetter = dateGetter
     }
 
-    private composeArgs(log: Log): Array<any> {
-      let args: Array<any> = []
-      args.push(this.prepareDate(log.timestamp))
-      args.push(`${log.level}`)
-      args.push(`${log.message}`)
-      if (log.args) {
-        args.push(...log.args)
-      }
-      if (Object.keys(log.variables).length) {
-        args.push(...this.composeVarsArgs(log.variables))
-      }
-      return args
+    private addDateAndLevel(log: Log) {
+      return [this.prepareDate(log.timestamp), `${log.level}`, ...(log.args || [])]
     }
 
-    private composeVarsArgs(data: Record<string, any>): Array<any> {
-      let args: Array<any> = []
-      for (let key in data) {
-        let currArgs = [`${key}=`, data[key]]
-        args.push(...currArgs)
+    private composeConsoleSubstitution(data: Array<any>, startingVarConvertionIndex = 2): string {
+      let str = ""
+      for (let i = 0; i < data.length; i++) {
+        let last = i === data.length - 1
+        let v = data[i]
+
+        if (!last && i > startingVarConvertionIndex && typeof v === "string" && v.trim().indexOf(" ") === -1) {
+          data[i] = `${v}=`
+        }
+
+        if (typeof v === "string") {
+          str += `%s`
+          continue
+        }
+
+        if (typeof v === "number") {
+          str += `%d`
+          continue
+        }
+
+        str += `%o`
       }
-      return args
+      return str
     }
 
     private prepareDate(t: number) {
