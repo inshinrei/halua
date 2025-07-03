@@ -6,8 +6,14 @@ export interface HaluaOptions {
 }
 
 export interface HaluaLogger {
-  New: (handler?: Handler, options?: HaluaOptions) => HaluaLogger
+  New: {
+    (handler: Handler): HaluaLogger
+    (options: HaluaOptions): HaluaLogger
+    (arg1?: Handler | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
+  }
   With: (...args: any[]) => HaluaLogger
+  setHandler: (handler: Handler) => void
+
   debug: (...args: any[]) => void
   info: (...args: any[]) => void
   warn: (...args: any[]) => void

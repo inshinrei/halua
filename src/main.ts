@@ -8,12 +8,30 @@ export class Halua implements HaluaLogger {
     private options: HaluaOptions = {},
   ) {}
 
-  public New(handler = this.handler, options = this.options): HaluaLogger {
-    return new Halua(handler, options)
+  public New(arg1: Handler | HaluaOptions = this.handler, arg2: HaluaOptions | undefined = this.options): HaluaLogger {
+    if (
+      arg1.hasOwnProperty("debug") &&
+      arg1.hasOwnProperty("info") &&
+      arg1.hasOwnProperty("warn") &&
+      arg1.hasOwnProperty("error") &&
+      arg1.hasOwnProperty("assert") &&
+      arg1.hasOwnProperty("New") &&
+      arg1.hasOwnProperty("With")
+    ) {
+      return new Halua(arg1 as Handler, arg2)
+    }
+    if (Object.keys(arg1).length) {
+      return new Halua(this.handler, arg1 as HaluaOptions)
+    }
+    return new Halua(arg1 as Handler, arg2)
   }
 
   public With(...args: any[]): HaluaLogger {
     return new Halua(this.handler, { ...this.options, postArgs: (this.options.postArgs || []).concat(args) })
+  }
+
+  public setHandler(handler: Handler) {
+    this.handler = handler
   }
 
   public debug(...args: any[]) {
