@@ -3,35 +3,46 @@ import type { Handler, Log } from "./handlers/types"
 import { Level } from "./handlers/types"
 
 export class Halua implements HaluaLogger {
-  constructor(
-    private handler: Handler,
-    private options: HaluaOptions = {},
-  ) {}
+  private handlers: Array<Handler> = []
 
-  public New(arg1: Handler | HaluaOptions = this.handler, arg2: HaluaOptions | undefined = this.options): HaluaLogger {
-    if (
-      arg1.hasOwnProperty("debug") &&
-      arg1.hasOwnProperty("info") &&
-      arg1.hasOwnProperty("warn") &&
-      arg1.hasOwnProperty("error") &&
-      arg1.hasOwnProperty("assert") &&
-      arg1.hasOwnProperty("New") &&
-      arg1.hasOwnProperty("With")
-    ) {
+  constructor(
+    handlers: Handler | Array<Handler>,
+    private options: HaluaOptions = {},
+  ) {
+    this.validateHandlers(handlers)
+    this.handlers = Array.isArray(handlers) ? handlers : [handlers]
+  }
+
+  public New(
+    arg1: Handler | Array<Handler> | HaluaOptions = this.handlers,
+    arg2: HaluaOptions | undefined = this.options,
+  ): HaluaLogger {
+    if (Array.isArray(arg1)) {
+      this.validateHandlers(arg1)
+      return new Halua(arg1 as Array<Handler>, arg2)
+    }
+    if (this.supposeIsHandler(arg1)) {
       return new Halua(arg1 as Handler, arg2)
     }
     if (Object.keys(arg1).length) {
-      return new Halua(this.handler, arg1 as HaluaOptions)
+      return new Halua(this.handlers, arg1 as HaluaOptions)
     }
+    this.validateHandlers(arg1 as Handler)
     return new Halua(arg1 as Handler, arg2)
   }
 
   public With(...args: any[]): HaluaLogger {
-    return new Halua(this.handler, { ...this.options, postArgs: (this.options.postArgs || []).concat(args) })
+    return new Halua(this.handlers, { ...this.options, postArgs: (this.options.postArgs || []).concat(args) })
   }
 
-  public setHandler(handler: Handler) {
-    this.handler = handler
+  public setHandler(handler: Handler | Array<Handler>) {
+    this.validateHandlers(handler)
+    this.handlers = Array.isArray(handler) ? handler : [handler]
+  }
+
+  public appendHandler(handler: Handler) {
+    this.validateHandlers(handler)
+    this.handlers.push(handler)
   }
 
   public debug(...args: any[]) {
@@ -73,10 +84,36 @@ export class Halua implements HaluaLogger {
       log.args = log.args!.concat(this.options.postArgs)
     }
     if (field === "assert") {
-      this.handler.assert(condition, log)
+      for (let h of this.handlers) {
+        h.assert(condition, log)
+      }
     }
     if (field !== "assert") {
-      this.handler[field](log)
+      for (let h of this.handlers) {
+        h[field](log)
+      }
+    }
+  }
+
+  private executeHandlers(
+    field: "debug" | "info" | "warn" | "error" | "assert",
+    {
+      condition,
+      args,
+    }: {
+      condition?: boolean
+      args: Array<any>
+    },
+  ) {
+    let totalArgs: Array<any> = field === "assert" ? [condition, ...args] : args
+    try {
+      for (let h of this.handlers) {
+        h[field](...totalArgs)
+      }
+    } catch (err) {
+      if (this.options.errorPolicy === "throw") {
+        throw err
+      }
     }
   }
 
@@ -99,5 +136,28 @@ export class Halua implements HaluaLogger {
     }
 
     return true
+  }
+
+  private validateHandlers(v: Handler | Array<Handler>) {
+    let handlers = Array.isArray(v) ? v : [v]
+    if (this.options.errorPolicy === "throw") {
+      for (let h of handlers) {
+        if (!this.supposeIsHandler(h)) {
+          throw new Error("Passed handlers does not satisfy Handler interface")
+        }
+      }
+    }
+  }
+
+  private supposeIsHandler(v: any): boolean {
+    return (
+      v.hasOwnProperty("debug") &&
+      v.hasOwnProperty("info") &&
+      v.hasOwnProperty("warn") &&
+      v.hasOwnProperty("error") &&
+      v.hasOwnProperty("assert") &&
+      v.hasOwnProperty("New") &&
+      v.hasOwnProperty("With")
+    )
   }
 }

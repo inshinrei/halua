@@ -3,16 +3,18 @@ import { Handler, Level } from "./handlers/types"
 export interface HaluaOptions {
   minLevel?: Level
   postArgs?: Array<any>
+  errorPolicy?: "throw" | "pass"
 }
 
 export interface HaluaLogger {
   New: {
-    (handler: Handler): HaluaLogger
+    (handler: Handler | Array<Handler>): HaluaLogger
     (options: HaluaOptions): HaluaLogger
-    (arg1?: Handler | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
+    (arg1?: Handler | Array<Handler> | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
   }
   With: (...args: any[]) => HaluaLogger
-  setHandler: (handler: Handler) => void
+  setHandler: (handler: Handler | Array<Handler>) => void
+  appendHandler: (handler: Handler) => void
 
   debug: (...args: any[]) => void
   info: (...args: any[]) => void
