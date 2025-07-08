@@ -66,15 +66,16 @@ export function WebBrowserConsoleHandler(
       if (this.options.pretty) {
         let colorKey =
           log.level === Level.Debug
-            ? "blue"
+            ? "purple"
             : log.level === Level.Info
-              ? "purple"
+              ? "blue"
               : log.level === Level.Warn
                 ? "orange"
                 : "red"
         return [
-          `${this.prepareDate(log.timestamp)} %c${log.level}`,
+          `${this.prepareDate(log.timestamp)} %c${log.level} %c`,
           `color:${this.colors.get(colorKey)};`,
+          `color: ${this.colors.get("green")}`,
           ...(log.args || []),
         ]
       }
@@ -84,9 +85,9 @@ export function WebBrowserConsoleHandler(
     private composeConsoleSubstitution(data: Array<any>, startingVarConvertionIndex = 2): string {
       let str = ""
       if (this.options.pretty) {
-        startingVarConvertionIndex = 1
+        startingVarConvertionIndex = 2
       }
-      for (let i = this.options.pretty ? 1 : 0; i < data.length; i++) {
+      for (let i = this.options.pretty ? startingVarConvertionIndex : 0; i < data.length; i++) {
         let last = i === data.length - 1
         let v = data[i]
 
