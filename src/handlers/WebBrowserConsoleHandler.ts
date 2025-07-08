@@ -21,8 +21,10 @@ export function WebBrowserConsoleHandler(
   c: ConsoleLogHandlerConsole = console,
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {
-  return new (class ConsoleLog implements WebBrowserConsoleLogHandler {
+  return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
     private readonly colors = new Map([
+      ["grey", "#BDBDBD"],
+      ["green", "#7DFFA8"],
       ["blue", "#7EBCFF"],
       ["purple", "#FF7DFF"],
       ["orange", "#FFB37D"],
