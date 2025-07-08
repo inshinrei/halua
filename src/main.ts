@@ -83,32 +83,27 @@ export class Halua implements HaluaLogger {
     if (this.options.postArgs) {
       log.args = log.args!.concat(this.options.postArgs)
     }
-    if (field === "assert") {
-      for (let h of this.handlers) {
-        h.assert(condition, log)
-      }
-    }
-    if (field !== "assert") {
-      for (let h of this.handlers) {
-        h[field](log)
-      }
-    }
+    this.executeHandlers(field, { condition, log })
   }
 
   private executeHandlers(
     field: "debug" | "info" | "warn" | "error" | "assert",
     {
       condition,
-      args,
+      log,
     }: {
-      condition?: boolean
-      args: Array<any>
+      condition: boolean
+      log: Log
     },
   ) {
-    let totalArgs: Array<any> = field === "assert" ? [condition, ...args] : args
     try {
       for (let h of this.handlers) {
-        h[field](...totalArgs)
+        if (field === "assert") {
+          h.assert(condition, log)
+        }
+        if (field !== "assert") {
+          h[field](log)
+        }
       }
     } catch (err) {
       if (this.options.errorPolicy === "throw") {

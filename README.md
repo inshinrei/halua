@@ -1,104 +1,103 @@
 # halua
 
-logger for JS/TS projects (mainly for browser, but logging handler could be replaced with your implementation).
+Is a logger for TS/JS projects. Log handler is separated from logger abstraction, supported handlers:
 
-### insallation
+- JSONHandler
+- WebBrowserConsoleHandler (also for node, but I guess "ConsoleHandler" will come separately in future, since coloring
+  for "pretty" option is different in Node)
+- TextHandler - compose all arguments into single string
 
-```
+### installation
+
+```text
 pnpm i halua
-// or 
+```
+
+```text
 npm i halua
-// or
+```
+
+```text
 yarn add halua
 ```
 
 ### calling signature
 
-works for .debug, .info, .warn, .err
+```ts
+import {halua} from 'halua'
 
-```typescript
-import { halua } from 'halua'
+halua.debug()
+halua.info()
+halua.warn()
+halua.error()
+halua.assert()
 
-halua.debug('message', 'count', 2, 'some other info', true)
-// output:
-// {timestamp} {logging level} message count="2" some other info="true"
-// 00/00/00 00:00:00 DEBUG message count="2" some other info="true"
+// note that passing a string with no spaces before another value will 
+// make this string a variable, example: 
+halua.info('some message', 'count', 2)
+// 00/00/00 00:00:00 INFO some message count=2
+
+// a variable will just output as {variable}={following_value}
 ```
 
-the logging func accepts string as a message for the first argument, the following argumets are [key, value] to append
-to a total log
+### options
 
-### creating new instances
+```ts
+import {halua, Level} from 'halua'
 
-```typescript
-import { halua } from 'halua'
+let logger = halua.New({
+  // specifies min level to log (won't invoke handler if level restriction is not met)
+  minLevel: Level.Error,
+  // if errorPolicy equals "throw", the possible runtime errors, as insufficient handler method
+  // or date getter panic would be thrown into your program
+  errorPolicy: 'throw' | 'pass'
+})
+```
 
-// make new instance
+### new instances
+
+```ts
+import {halua, Level, JSONHandler, TextHandler} from 'halua'
+
+// this will make a new instance of logger
 let logger = halua.New()
 
-// make new instance with postfix, this method will inherit dateGetter and handler 
-logger = halua.With('operation')
-// will log as "{date} {level} {msg} {...args} operation"
+// you can pass new handler
+let JSONlogger = logger.New(JSONHandler(self.console.log))
+
+// you can pass multiple handlers
+let anotherLogger = JSONlogger.New(
+  [JSONHandler(self.console.log), TextHandler(self.console.log)]
+)
+
+// you can pass options as second or first argument
+// if options or handler is absent from arguments - 
+// - any absent args would be inherited from current instance
+let logger2 = logger.New({minLevel: Level.Warn})
 ```
 
-### controlling logging level
+### constant arguments
 
-```typescript
-import { halua, Level } from 'halua'
+```ts
+import {halua} from 'halua'
 
-const logger = halua.New(null, { minLevel: Level.Warn })
-// now logger won't output .debug and .info logs
-// Levels sequence: Debug, Info, Warn, Error
+// returns new instance with any arguments you pass as appended args to log
+// any instances created from logger will inherit these arguments, unless you manually
+// override them with .New({ postArgs: [] })
+let logger = halua.With('operation')
+
+logger.debug('minus sixty one')
+// 00/00/00 00:00:00 DEBUG minus sixty one operation
 ```
 
-### replacing logging with custom handler
+### custom handler
 
-The resulting log string will be sent to handler's method
+```ts
+import {Handler} from 'halua'
 
-```typescript
-import { Handler, halua } from 'halua'
-
-class CustomHandler implements Handler {
-  debug(msg: string) {
-  }
-
-  info(msg: string) {
-  }
-
-  warn(msg: string) {
-  }
-
-  error(msg: string) {
-  }
+// can be passed as a handler of an HaluaLogger instance
+interface CustomHandler implements Handler {
 }
-
-// handler is replaced for current and future instances 
-halua.setHandler(CustomHandler)
-```
-
-### replacing date getter
-
-```typescript
-import { halua } from 'halua'
-
-halua.setDateGetter(() => performance.now())
-// will output performance stamp instead of Date (for this and future instances)
-```
-
-### using basic logging
-
-```typescript
-import { halua } from 'halua'
-
-// debug level 
-halua.debug('debug message')
-// info level 
-halua.info('info message')
-
-// warning level
-halua.warn('warning')
-// error level
-halua.err('err message')
 ```
 
 inspired by https://pkg.go.dev/log/slog
