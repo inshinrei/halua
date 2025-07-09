@@ -15,18 +15,22 @@ interface ConsoleLogHandlerConsole {
 interface WebBrowserConsoleHandlerOptions {
   dateGetter?: (timestamp: number) => string
   pretty?: boolean
+  customColors?: Colors
 }
+
+type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
+type Colors = Map<ColorKey, string>
 
 export function WebBrowserConsoleHandler(
   c: ConsoleLogHandlerConsole = console,
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {
   return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
-    private readonly colors = new Map([
+    private readonly colors: Colors = new Map([
       ["grey", "#BDBDBD"],
-      ["green", "#7DFFA8"],
+      ["green", "#2acc60"],
       ["blue", "#7EBCFF"],
-      ["purple", "#FF7DFF"],
+      ["purple", "#ef71ef"],
       ["orange", "#FFB37D"],
       ["red", "#FF7373"],
     ])
@@ -64,7 +68,7 @@ export function WebBrowserConsoleHandler(
 
     private insertInternalEntries(log: Log) {
       if (this.options.pretty) {
-        let colorKey =
+        let colorKey: ColorKey =
           log.level === Level.Debug
             ? "purple"
             : log.level === Level.Info
@@ -74,8 +78,8 @@ export function WebBrowserConsoleHandler(
                 : "red"
         return [
           `${this.prepareDate(log.timestamp)} %c${log.level} %c`,
-          `color:${this.colors.get(colorKey)};`,
-          `color: ${this.colors.get("green")}`,
+          `color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)};`,
+          `color: ${this.options.customColors?.get("green") || this.colors.get("green")}`,
           ...(log.args || []),
         ]
       }
