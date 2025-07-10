@@ -9,7 +9,7 @@ interface JSONLogHandlerOptions {
   dateGetter?: (timestamp: number) => string
 }
 
-export function JSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
+export function NewJSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
   return new (class JSONLog implements JSONLogHandler {
     constructor(private options: JSONLogHandlerOptions) {}
 

@@ -24,7 +24,7 @@ interface WebBrowserConsoleHandlerOptions {
 type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
 type Colors = Map<ColorKey, string>
 
-export function WebBrowserConsoleHandler(
+export function NewWebBrowserConsoleHandler(
   c: ConsoleLogHandlerConsole = console,
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {

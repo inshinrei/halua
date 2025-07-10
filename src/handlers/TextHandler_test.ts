@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from "vitest"
-import { TextHandler } from "./TextHandler"
+import { NewTextHandler } from "./NewTextHandler"
 import { log, logWithVars } from "../mocks/logs"
 
 describe("TextHandler", () => {
   let receiver = vi.fn()
-  let handler = TextHandler(receiver)
+  let handler = NewTextHandler(receiver)
 
   test.each([
     ["debug", "6/30/2025 10:54:49 PM DEBUG log message"],

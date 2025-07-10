@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest"
-import { WebBrowserConsoleHandler } from "./WebBrowserConsoleHandler"
+import { NewWebBrowserConsoleHandler } from "./NewWebBrowserConsoleHandler"
 import { log, logWithVars } from "../mocks/logs"
 
 describe("ConsoleHandler", () => {
@@ -10,7 +10,7 @@ describe("ConsoleHandler", () => {
     error: vi.fn(),
     assert: vi.fn(),
   }
-  let handler = WebBrowserConsoleHandler(receiver)
+  let handler = NewWebBrowserConsoleHandler(receiver)
 
   test.each([
     ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", " DEBUG", "log message"]],

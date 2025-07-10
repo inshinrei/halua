@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from "vitest"
-import { JSONHandler } from "./JSONHandler"
+import { NewJSONHandler } from "./NewJSONHandler"
 import { log, logWithVars } from "../mocks/logs"
 
 describe("JSONHandler", () => {
   let receiver = vi.fn()
-  let handler = JSONHandler(receiver)
+  let handler = NewJSONHandler(receiver)
 
   test.each([
     ["debug", `{"timestamp":1751313289663,"args":["log message"],"level":"DEBUG"}`],

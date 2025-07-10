@@ -1,10 +1,10 @@
 import { Halua } from "./main"
-import { WebBrowserConsoleHandler } from "./handlers/WebBrowserConsoleHandler"
+import { NewWebBrowserConsoleHandler } from "./handlers/NewWebBrowserConsoleHandler"
 
-export const halua = new Halua(WebBrowserConsoleHandler())
+export const halua = new Halua(NewWebBrowserConsoleHandler())
 export type { Log, Handler } from "./handlers/types"
 export type { HaluaLogger } from "./types"
 export { Level } from "./handlers/types"
-export { WebBrowserConsoleHandler }
-export { JSONHandler } from "./handlers/JSONHandler"
-export { TextHandler } from "./handlers/TextHandler"
+export { NewWebBrowserConsoleHandler }
+export { NewJSONHandler } from "./handlers/NewJSONHandler"
+export { NewTextHandler } from "./handlers/NewTextHandler"

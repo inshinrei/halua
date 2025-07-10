@@ -2,7 +2,7 @@ import { Handler, Level, Log } from "./types"
 
 interface TextLogHandler extends Handler {}
 
-export function TextHandler(send: (data: string) => void): TextLogHandler {
+export function NewTextHandler(send: (data: string) => void): TextLogHandler {
   return new (class TextLog implements TextLogHandler {
     debug(log: Log) {
       this.log({ ...log, level: Level.Debug })
