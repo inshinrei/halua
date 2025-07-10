@@ -57,17 +57,17 @@ let logger = halua.New({
 ### new instances
 
 ```ts
-import {halua, Level, JSONHandler, TextHandler} from 'halua'
+import {halua, Level, NewJSONHandler, NewTextHandler} from 'halua'
 
 // this will make a new instance of logger
 let logger = halua.New()
 
 // you can pass new handler
-let JSONlogger = logger.New(JSONHandler(self.console.log))
+let JSONlogger = logger.New(NewJSONHandler(self.console.log))
 
 // you can pass multiple handlers
 let anotherLogger = JSONlogger.New(
-  [JSONHandler(self.console.log), TextHandler(self.console.log)]
+  [NewJSONHandler(self.console.log), NewTextHandler(self.console.log)]
 )
 
 // you can pass options as second or first argument
