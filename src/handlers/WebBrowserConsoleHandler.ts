@@ -13,8 +13,11 @@ interface ConsoleLogHandlerConsole {
 }
 
 interface WebBrowserConsoleHandlerOptions {
+  /** customize date output */
   dateGetter?: (timestamp: number) => string
+  /** turn prettification on, adds colors to console output */
   pretty?: boolean
+  /** provide custom colors map */
   customColors?: Colors
 }
 
