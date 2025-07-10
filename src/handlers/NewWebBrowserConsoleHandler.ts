@@ -89,16 +89,23 @@ export function NewWebBrowserConsoleHandler(
       return [this.prepareDate(log.timestamp), ` ${log.level}`, ...(log.args || [])]
     }
 
-    private composeConsoleSubstitution(data: Array<any>, startingVarConvertionIndex = 2): string {
+    private composeConsoleSubstitution(data: Array<any>, startingVarConvertIndex = 2): string {
       let str = ""
       if (this.options.pretty) {
-        startingVarConvertionIndex = 2
+        startingVarConvertIndex = 2
       }
-      for (let i = this.options.pretty ? startingVarConvertionIndex : 0; i < data.length; i++) {
+      for (let i = this.options.pretty ? startingVarConvertIndex : 0; i < data.length; i++) {
         let last = i === data.length - 1
         let v = data[i]
 
-        if (!last && i > startingVarConvertionIndex && typeof v === "string" && v.trim().indexOf(" ") === -1) {
+        let vWithEqualSign = typeof v === "string" && this.stringMatchesVar(v)
+        let nextVWithEqualSign = !last && typeof data[i + 1] === "string" && this.stringMatchesVar(data[i + 1])
+
+        if (nextVWithEqualSign) {
+          startingVarConvertIndex = i
+        }
+
+        if (!last && i > startingVarConvertIndex && vWithEqualSign) {
           data[i] = `${v}=`
         }
 
@@ -123,6 +130,10 @@ export function NewWebBrowserConsoleHandler(
       }
       let d = new Date(t)
       return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+    }
+
+    private stringMatchesVar(str: string): boolean {
+      return str.trim().indexOf(" ") === -1
     }
   })(options)
 }
