@@ -1,9 +1,18 @@
 import { Handler, Level, Log } from "./types"
 
-interface JSONLogHandler extends Handler {}
+interface JSONLogHandler extends Handler {
+  setDateGetter: (getter: (timestamp: number) => string) => void
+}
 
-export function JSONHandler(send: (data: string) => void): JSONLogHandler {
+interface JSONLogHandlerOptions {
+  /** change timesstamp output */
+  dateGetter?: (timestamp: number) => string
+}
+
+export function JSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
   return new (class JSONLog implements JSONLogHandler {
+    constructor(private options: JSONLogHandlerOptions) {}
+
     debug(log: Log) {
       this.log({ ...log, level: Level.Debug })
     }
@@ -26,8 +35,15 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
       }
     }
 
+    public setDateGetter(getter: (timestamp: number) => string) {
+      this.options.dateGetter = getter
+    }
+
     private log(log: Log) {
       try {
+        if (this.options.dateGetter) {
+          log.timestamp = this.options.dateGetter(log.timestamp as number)
+        }
         send(JSON.stringify(log, this.replacer))
       } catch (err) {
         if (log.level !== Level.Error) {
@@ -55,5 +71,5 @@ export function JSONHandler(send: (data: string) => void): JSONLogHandler {
       }
       return value
     }
-  })()
+  })(options)
 }

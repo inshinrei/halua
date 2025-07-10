@@ -7,7 +7,7 @@ export interface Handler {
 }
 
 export interface Log {
-  timestamp: number
+  timestamp: number | string
   level?: Level
   args?: Array<any>
   postArgs?: Array<any>

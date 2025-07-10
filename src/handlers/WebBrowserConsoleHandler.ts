@@ -117,9 +117,9 @@ export function WebBrowserConsoleHandler(
       return str
     }
 
-    private prepareDate(t: number) {
+    private prepareDate(t: number | string) {
       if (this.options.dateGetter) {
-        return this.options.dateGetter(t)
+        return this.options.dateGetter(t as number)
       }
       let d = new Date(t)
       return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`

@@ -31,7 +31,7 @@ export function TextHandler(send: (data: string) => void): TextLogHandler {
       if (log.args) {
         args = this.composeVariablesString(log.args)
       }
-      send(`${this.prepareDate(log.timestamp)} ${log.level} ${args}`)
+      send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}`)
     }
 
     private composeVariablesString(data: Array<any>, nested = false): string {
