@@ -5,8 +5,10 @@ interface JSONLogHandler extends Handler {
 }
 
 interface JSONLogHandlerOptions {
-  /** change timesstamp output */
+  /** change timestamp output */
   dateGetter?: (timestamp: number) => string
+  /** replace value during stringify, return null to fallback on JSONHandler replacer */
+  replacer?: (value: any) => any
 }
 
 export function NewJSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
@@ -56,6 +58,12 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
     }
 
     private replacer(_: string, value: any) {
+      if (this.options.replacer) {
+        let v = this.options.replacer(value)
+        if (v !== null) {
+          return v
+        }
+      }
       if (typeof value === "symbol") {
         return value.toString()
       }
