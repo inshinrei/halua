@@ -38,7 +38,9 @@ export function NewWebBrowserConsoleHandler(
       ["red", "#FF7373"],
     ])
 
-    constructor(private options: WebBrowserConsoleHandlerOptions) {}
+    constructor(private options: WebBrowserConsoleHandlerOptions) {
+      this.options = options || {}
+    }
 
     debug(log: Log) {
       let args = this.insertInternalEntries({ ...log, level: Level.Debug })
@@ -80,7 +82,7 @@ export function NewWebBrowserConsoleHandler(
                 ? "orange"
                 : "red"
         return [
-          `${this.prepareDate(log.timestamp)} %c${log.level} %c`,
+          `${this.prepareDate(log.timestamp)} %c${log.level}%c`,
           `color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)};`,
           `color: ${this.options.customColors?.get("green") || this.colors.get("green")}`,
           ...(log.args || []),

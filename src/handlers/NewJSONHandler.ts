@@ -13,7 +13,9 @@ interface JSONLogHandlerOptions {
 
 export function NewJSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
   return new (class JSONLog implements JSONLogHandler {
-    constructor(private options: JSONLogHandlerOptions) {}
+    constructor(private options: JSONLogHandlerOptions) {
+      this.options = options || {}
+    }
 
     debug(log: Log) {
       this.log({ ...log, level: Level.Debug })
@@ -43,7 +45,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
 
     private log(log: Log) {
       try {
-        if (this.options.dateGetter) {
+        if (this.options?.dateGetter) {
           log.timestamp = this.options.dateGetter(log.timestamp as number)
         }
         send(JSON.stringify(log, this.replacer))
@@ -58,7 +60,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
     }
 
     private replacer(_: string, value: any) {
-      if (this.options.replacer) {
+      if (this.options?.replacer) {
         let v = this.options.replacer(value)
         if (v !== null) {
           return v
