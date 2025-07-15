@@ -7,11 +7,11 @@ describe("JSONHandler", () => {
   let handler = NewJSONHandler(receiver)
 
   test.each([
-    ["debug", `{"timestamp":1751313289663,"args":["log message"],"level":"DEBUG"}`],
-    ["info", `{"timestamp":1751313289663,"args":["log message"],"level":"INFO"}`],
-    ["warn", `{"timestamp":1751313289663,"args":["log message"],"level":"WARN"}`],
-    ["error", `{"timestamp":1751313289663,"args":["log message"],"level":"ERR"}`],
-    ["assert", `{"timestamp":1751313289663,"args":["log message"],"level":"ERR"}`],
+    ["debug", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"DEBUG"}`],
+    ["info", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"INFO"}`],
+    ["warn", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"WARN"}`],
+    ["error", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERR"}`],
+    ["assert", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERR"}`],
   ])("outputs single message with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -26,7 +26,7 @@ describe("JSONHandler", () => {
     vi.clearAllMocks()
     handler.debug(logWithVars)
     expect(receiver).toHaveBeenCalledWith(
-      `{"timestamp":1751313289663,"args":["log message","count",1,"arr",[1,2,3],"symb","Symbol(symb)","obj",{"prop":"value","nested":{"prop":"value"}},"mySet",[1,2,3,4,5],"myMap",{"key":"value"},[1,2,3],[5,6,7]],"level":"DEBUG"}`,
+      `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message","count",1,"arr",[1,2,3],"symb","Symbol(symb)","obj",{"prop":"value","nested":{"prop":"value"}},"mySet",[1,2,3,4,5],"myMap",{"key":"value"},[1,2,3],[5,6,7]],"level":"DEBUG"}`,
     )
   })
 

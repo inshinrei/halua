@@ -9,6 +9,7 @@ interface JSONLogHandlerOptions {
   dateGetter?: (timestamp: number) => string
   /** replace value during stringify, return null to fallback on JSONHandler replacer */
   replacer?: (value: any) => any
+  linkedArgumentsFlatten?: boolean
 }
 
 export function NewJSONHandler(send: (data: string) => void, options: JSONLogHandlerOptions = {}): JSONLogHandler {
@@ -45,9 +46,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
 
     private log(log: Log) {
       try {
-        if (this.options?.dateGetter) {
-          log.timestamp = this.options.dateGetter(log.timestamp as number)
-        }
+        log.timestamp = this.formatDate(log.timestamp as number)
         send(JSON.stringify(log, this.replacer))
       } catch (err) {
         if (log.level !== Level.Error) {
@@ -57,6 +56,13 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
           })
         }
       }
+    }
+
+    private formatDate(timestamp: number) {
+      if (this.options?.dateGetter) {
+        return this.options.dateGetter(timestamp)
+      }
+      return new Date(timestamp).toISOString()
     }
 
     private replacer(_: string, value: any) {
