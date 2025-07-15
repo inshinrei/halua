@@ -2,7 +2,7 @@ import { Handler, Level } from "./handlers/types"
 
 export interface HaluaOptions {
   minLevel?: Level
-  postArgs?: Array<any>
+  withArgs?: Array<any>
   errorPolicy?: "throw" | "pass"
 }
 

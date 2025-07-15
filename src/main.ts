@@ -32,7 +32,7 @@ export class Halua implements HaluaLogger {
   }
 
   public With(...args: any[]): HaluaLogger {
-    return new Halua(this.handlers, { ...this.options, postArgs: (this.options.postArgs || []).concat(args) })
+    return new Halua(this.handlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
   }
 
   public setHandler(handler: Handler | Array<Handler>) {
@@ -79,9 +79,7 @@ export class Halua implements HaluaLogger {
     let log: Log = {
       timestamp: Date.now(),
       args: args || [],
-    }
-    if (this.options.postArgs) {
-      log.args = log.args!.concat(this.options.postArgs)
+      withArgs: this.options.withArgs || null,
     }
     this.executeHandlers(field, { condition, log })
   }

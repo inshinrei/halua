@@ -10,7 +10,7 @@ export interface Log {
   timestamp: number | string
   level?: Level
   args?: Array<any>
-  postArgs?: Array<any>
+  withArgs?: null | Array<any>
 }
 
 export enum Level {

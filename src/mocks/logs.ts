@@ -3,6 +3,11 @@ export let log = {
   args: ["log message"],
 }
 
+export let logWithArgs = {
+  ...log,
+  withArgs: ["count", 2, [1, 2, 3], "arr", "anotherCount", 5],
+}
+
 export let logWithVars = {
   ...log,
   args: [
@@ -11,8 +16,6 @@ export let logWithVars = {
     1,
     "arr",
     [1, 2, 3],
-    "symb",
-    Symbol("symb"),
     "obj",
     {
       prop: "value",
