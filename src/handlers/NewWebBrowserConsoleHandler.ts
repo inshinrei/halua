@@ -17,6 +17,8 @@ interface WebBrowserConsoleHandlerOptions {
   dateGetter?: (timestamp: number) => string
   /** turn prettification on, adds colors to console output */
   pretty?: boolean
+  /** default: true, get browser theme with window.matchMedia */
+  fetchBrowserThemeOnInstanceCreation?: boolean
   /** provide custom colors map */
   customColors?: Colors
 }
@@ -29,17 +31,47 @@ export function NewWebBrowserConsoleHandler(
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {
   return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
-    private readonly colors: Colors = new Map([
-      ["grey", "#BDBDBD"],
-      ["green", "#2acc60"],
-      ["blue", "#7EBCFF"],
-      ["purple", "#ef71ef"],
-      ["orange", "#FFB37D"],
-      ["red", "#FF7373"],
+    private readonly colors: Colors = new Map([])
+
+    // bg chrome #fefbff
+    private readonly lightColors: Colors = new Map([
+      ["grey", "#565656"],
+      ["green", "#224912"],
+      ["blue", "#195367"],
+      ["purple", "#8A228A"],
+      ["orange", "#7F3E1E"],
+      ["red", "#A51818"],
+    ])
+
+    // bg chrome #27242a
+    private readonly darkColors: Colors = new Map([
+      ["grey", "#C9C9C9"],
+      ["green", "#73CE73"],
+      ["blue", "#93B9E7"],
+      ["purple", "#DCA4E9"],
+      ["orange", "#EEC5A8"],
+      ["red", "#FC9292"],
     ])
 
     constructor(private options: WebBrowserConsoleHandlerOptions) {
       this.options = options || {}
+      this.options.fetchBrowserThemeOnInstanceCreation ??= true
+
+      if (!this.options.pretty) {
+        return
+      }
+
+      if (this.options.fetchBrowserThemeOnInstanceCreation) {
+        if (window?.matchMedia && window?.matchMedia("(prefers-color-scheme: dark)").matches) {
+          this.colors = new Map(this.darkColors)
+        } else {
+          this.colors = new Map(this.lightColors)
+        }
+
+        delete this.options.fetchBrowserThemeOnInstanceCreation
+      } else {
+        this.colors = new Map(this.lightColors)
+      }
     }
 
     debug(log: Log) {

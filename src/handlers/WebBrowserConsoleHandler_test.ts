@@ -10,7 +10,9 @@ describe("ConsoleHandler", () => {
     error: vi.fn(),
     assert: vi.fn(),
   }
-  let handler = NewWebBrowserConsoleHandler(receiver)
+  let handler = NewWebBrowserConsoleHandler(receiver, {
+    fetchBrowserThemeOnInstanceCreation: false,
+  })
 
   test.each([
     ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", " DEBUG", "log message"]],
