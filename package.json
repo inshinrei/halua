@@ -1,6 +1,6 @@
 {
   "name": "halua",
-  "version": "26.1.3",
+  "version": "26.1.4",
   "description": "logger for JS",
   "type": "module",
   "main": "lib/index.js",
