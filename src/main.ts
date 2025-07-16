@@ -79,9 +79,9 @@ export class Halua implements HaluaLogger {
     let log: Log = {
       timestamp: Date.now(),
       args: args || [],
-      withArgs: this.options.withArgs || null,
+      withArgs: this.options?.withArgs || null,
     }
-    this.executeHandlers(field, { condition, log })
+    this.executeHandlers(field, { condition, log: log })
   }
 
   private executeHandlers(
@@ -96,11 +96,12 @@ export class Halua implements HaluaLogger {
   ) {
     try {
       for (let h of this.handlers) {
+        let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
         if (field === "assert") {
-          h.assert(condition, log)
+          h.assert(condition, logArgument)
         }
         if (field !== "assert") {
-          h[field](log)
+          h[field](logArgument)
         }
       }
     } catch (err) {

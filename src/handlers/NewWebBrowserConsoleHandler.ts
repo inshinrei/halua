@@ -31,8 +31,9 @@ export function NewWebBrowserConsoleHandler(
   options: WebBrowserConsoleHandlerOptions = {},
 ): WebBrowserConsoleLogHandler {
   return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
+    public skipDeepCopyWhenSendingLog = true
+    
     private readonly colors: Colors = new Map([])
-
     // bg chrome #fefbff
     private readonly lightColors: Colors = new Map([
       ["grey", "#565656"],
@@ -42,7 +43,6 @@ export function NewWebBrowserConsoleHandler(
       ["orange", "#7F3E1E"],
       ["red", "#A51818"],
     ])
-
     // bg chrome #27242a
     private readonly darkColors: Colors = new Map([
       ["grey", "#C9C9C9"],
@@ -104,6 +104,13 @@ export function NewWebBrowserConsoleHandler(
     }
 
     private insertInternalEntries(log: Log) {
+      let additionalArgs = []
+      if (log.withArgs) {
+        additionalArgs.push("|")
+        additionalArgs.push(...log.withArgs)
+        delete log.withArgs
+      }
+      let totalArgs = [...(log.args || []), ...additionalArgs]
       if (this.options.pretty) {
         let colorKey: ColorKey =
           log.level === Level.Debug
@@ -116,11 +123,11 @@ export function NewWebBrowserConsoleHandler(
         return [
           `${this.prepareDate(log.timestamp)} %c${log.level}%c`,
           `color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)};`,
-          `color: ${this.options.customColors?.get("green") || this.colors.get("green")}`,
-          ...(log.args || []),
+          `color:${this.options.customColors?.get("green") || this.colors.get("green")}`,
+          ...totalArgs,
         ]
       }
-      return [this.prepareDate(log.timestamp), ` ${log.level}`, ...(log.args || [])]
+      return [this.prepareDate(log.timestamp), ` ${log.level}`, ...totalArgs]
     }
 
     private composeConsoleSubstitution(data: Array<any>, startingVarConvertIndex = 2): string {
@@ -140,10 +147,11 @@ export function NewWebBrowserConsoleHandler(
         }
 
         if (!last && i > startingVarConvertIndex && vWithEqualSign) {
-          data[i] = `${v}=`
+          data[i] = `${v} =`
         }
 
         if (typeof v === "string") {
+          // remove spaces they are not needed
           str += `%s${last ? "" : " "}`
           continue
         }
@@ -167,7 +175,7 @@ export function NewWebBrowserConsoleHandler(
     }
 
     private stringMatchesVar(str: string): boolean {
-      return str.trim().indexOf(" ") === -1
+      return str !== "|" && str.trim().indexOf(" ") === -1
     }
   })(options)
 }

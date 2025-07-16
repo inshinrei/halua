@@ -1,4 +1,5 @@
 export interface Handler {
+  skipDeepCopyWhenSendingLog?: boolean
   debug: (log: Log) => void
   info: (log: Log) => void
   warn: (log: Log) => void

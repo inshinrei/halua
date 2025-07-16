@@ -4,6 +4,8 @@ interface TextLogHandler extends Handler {}
 
 export function NewTextHandler(send: (data: string) => void): TextLogHandler {
   return new (class TextLog implements TextLogHandler {
+    public skipDeepCopyWhenSendingLog = true
+
     debug(log: Log) {
       this.log({ ...log, level: Level.Debug })
     }

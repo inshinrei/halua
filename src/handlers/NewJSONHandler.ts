@@ -73,8 +73,8 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
       }
       if (log.withArgs) {
         this.composeLogWithArgsFlattened(log)
-        delete log.withArgs
       }
+      delete log.withArgs
       return log
     }
 
@@ -91,7 +91,6 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
           name = ""
           continue
         }
-        console.debug("we are pushing", arg)
         log.args?.push(arg)
       }
       return log
