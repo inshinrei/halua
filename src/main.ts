@@ -145,11 +145,11 @@ export class Halua implements HaluaLogger {
 
   private supposeIsHandler(v: any): boolean {
     return (
-      v.__proto__.hasOwnProperty("debug") &&
-      v.__proto__.hasOwnProperty("info") &&
-      v.__proto__.hasOwnProperty("warn") &&
-      v.__proto__.hasOwnProperty("error") &&
-      v.__proto__.hasOwnProperty("assert")
+      (v.__proto__.hasOwnProperty("debug") || v.hasOwnProperty("debug")) &&
+      (v.__proto__.hasOwnProperty("info") || v.hasOwnProperty("info")) &&
+      (v.__proto__.hasOwnProperty("warn") || v.hasOwnProperty("warn")) &&
+      (v.__proto__.hasOwnProperty("error") || v.hasOwnProperty("error")) &&
+      (v.__proto__.hasOwnProperty("assert") || v.hasOwnProperty("assert"))
     )
   }
 }
