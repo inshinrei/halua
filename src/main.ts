@@ -144,6 +144,7 @@ export class Halua implements HaluaLogger {
   }
 
   private supposeIsHandler(v: any): boolean {
+    /** __proto__ checks for function declaration, ownProp checks for arrow func */
     return (
       (v.__proto__.hasOwnProperty("debug") || v.hasOwnProperty("debug")) &&
       (v.__proto__.hasOwnProperty("info") || v.hasOwnProperty("info")) &&
