@@ -151,7 +151,6 @@ export function NewWebBrowserConsoleHandler(
         }
 
         if (typeof v === "string") {
-          // remove spaces they are not needed
           str += `%s${last ? "" : " "}`
           continue
         }
