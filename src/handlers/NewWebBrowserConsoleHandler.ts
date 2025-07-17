@@ -32,7 +32,7 @@ export function NewWebBrowserConsoleHandler(
 ): WebBrowserConsoleLogHandler {
   return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
     public skipDeepCopyWhenSendingLog = true
-    
+
     private readonly colors: Colors = new Map([])
     // bg chrome #fefbff
     private readonly lightColors: Colors = new Map([
@@ -127,7 +127,7 @@ export function NewWebBrowserConsoleHandler(
           ...totalArgs,
         ]
       }
-      return [this.prepareDate(log.timestamp), ` ${log.level}`, ...totalArgs]
+      return [this.prepareDate(log.timestamp), `${log.level}`, ...totalArgs]
     }
 
     private composeConsoleSubstitution(data: Array<any>, startingVarConvertIndex = 2): string {

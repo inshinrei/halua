@@ -15,11 +15,11 @@ describe("WebBrowserConsoleHandler", () => {
   })
 
   test.each([
-    ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", " DEBUG", "log message"]],
-    ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", " INFO", "log message"]],
-    ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", " WARN", "log message"]],
-    ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", " ERR", "log message"]],
-    ["assert", [false, "%s %s %s", "6/30/2025 10:54:49 PM", " ERR", "log message"]],
+    ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
+    ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
+    ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
+    ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
+    ["assert", [false, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
   ])("outputs single messsage with %s", (field, expected) => {
     vi.clearAllMocks()
     if (field === "assert") {
@@ -40,7 +40,7 @@ describe("WebBrowserConsoleHandler", () => {
       ...[
         "%s %s %s %s %d %s %o %s %o %s %o %s %o %o %o",
         "6/30/2025 10:54:49 PM",
-        " DEBUG",
+        "DEBUG",
         "log message",
         "count =",
         1,
@@ -65,7 +65,7 @@ describe("WebBrowserConsoleHandler", () => {
       ...[
         "%s %s %s %s %s %d %o %s %s %d",
         "6/30/2025 10:54:49 PM",
-        " DEBUG",
+        "DEBUG",
         "log message",
         "|",
         "count =",
@@ -87,20 +87,20 @@ describe("WebBrowserConsoleHandler", () => {
       }),
     )
     expect(receiver.debug).toHaveBeenCalledWith(
-      ...["%s %s %s %s %s %d", "6/30/2025 10:54:49 PM", " DEBUG", "count", "count2", "count3 =", 5],
+      ...["%s %s %s %s %s %d", "6/30/2025 10:54:49 PM", "DEBUG", "count", "count2", "count3 =", 5],
     )
   })
 
   test("do not false assert", () => {
     vi.clearAllMocks()
     handler.assert(true, structuredClone(log))
-    expect(receiver.assert).toHaveBeenCalledWith(...[true, "%s %s %s", "6/30/2025 10:54:49 PM", " ERR", "log message"])
+    expect(receiver.assert).toHaveBeenCalledWith(...[true, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"])
   })
 
   test("supports date getter passing", () => {
     vi.clearAllMocks()
     handler.setDateGetter((_) => `abobus`)
     handler.debug(structuredClone(log))
-    expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %s", "abobus", " DEBUG", "log message"])
+    expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %s", "abobus", "DEBUG", "log message"])
   })
 })
