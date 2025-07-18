@@ -38,7 +38,6 @@ export function NewTextHandler(send: (data: string) => void): TextLogHandler {
 
     private composeVariablesString(data: Array<any>, nested = false): string {
       let str = ""
-      let c = ""
 
       for (let i = 0; i < data.length; i++) {
         let last = i === data.length - 1
