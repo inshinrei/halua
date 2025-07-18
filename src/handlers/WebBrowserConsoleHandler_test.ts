@@ -5,7 +5,7 @@ import { log, logWithArgs, logWithVars } from "../mocks/logs"
 describe("WebBrowserConsoleHandler", () => {
   let receiver = {
     debug: vi.fn(),
-    log: vi.fn(),
+    info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     assert: vi.fn(),
@@ -30,7 +30,7 @@ describe("WebBrowserConsoleHandler", () => {
     if (field === "info") {
       field = "log"
     }
-    expect(receiver[field as "assert" | "debug" | "log" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
+    expect(receiver[field as "assert" | "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
   })
 
   test("outputs message with variables", () => {

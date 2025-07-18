@@ -6,7 +6,7 @@ interface WebBrowserConsoleLogHandler extends Handler {
 
 interface ConsoleLogHandlerConsole {
   debug: (...args: any[]) => void
-  log: (...args: any[]) => void
+  info: (...args: any[]) => void
   warn: (...args: any[]) => void
   error: (...args: any[]) => void
   assert: (c: boolean, ...args: any[]) => void
@@ -21,6 +21,8 @@ interface WebBrowserConsoleHandlerOptions {
   fetchBrowserThemeOnInstanceCreation?: boolean
   /** provide custom colors map */
   customColors?: Colors
+  useWarn?: boolean
+  useError?: boolean
 }
 
 type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
@@ -81,17 +83,25 @@ export function NewWebBrowserConsoleHandler(
 
     info(log: Log) {
       let args = this.insertInternalEntries({ ...log, level: Level.Info })
-      c.log(this.composeConsoleSubstitution(args), ...args)
+      c.info(this.composeConsoleSubstitution(args), ...args)
     }
 
     warn(log: Log) {
       let args = this.insertInternalEntries({ ...log, level: Level.Warn })
-      c.warn(this.composeConsoleSubstitution(args), ...args)
+      if (this.options?.useWarn) {
+        c.warn(this.composeConsoleSubstitution(args), ...args)
+        return
+      }
+      c.info(this.composeConsoleSubstitution(args), ...args)
     }
 
     error(log: Log) {
       let args = this.insertInternalEntries({ ...log, level: Level.Error })
-      c.error(this.composeConsoleSubstitution(args), ...args)
+      if (this.options?.useError) {
+        c.error(this.composeConsoleSubstitution(args), ...args)
+        return
+      }
+      c.info(this.composeConsoleSubstitution(args), ...args)
     }
 
     assert(cond: boolean, log: Log) {
