@@ -30,6 +30,12 @@ describe("TextHandler", () => {
     )
   })
 
+  test.todo("correctly sets linked arguments in output", () => {})
+
+  test.todo("linked arguments can be turned off", () => {})
+
+  test.todo("does stringify nested objects with complex data structures", () => {})
+
   test("do not false assert", () => {
     vi.clearAllMocks()
     handler.assert(true, { ...log })

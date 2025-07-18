@@ -78,6 +78,12 @@ describe("WebBrowserConsoleHandler", () => {
     )
   })
 
+  test.todo("supports pretty option")
+
+  test.todo("supports custom colors")
+
+  test.todo("useWarn and useError can be turned on")
+
   test("correctly implies linked arguments", () => {
     vi.clearAllMocks()
     handler.debug(

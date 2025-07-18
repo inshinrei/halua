@@ -38,6 +38,12 @@ describe("JSONHandler", () => {
     )
   })
 
+  test.todo("correctly outputs linked arguments")
+
+  test.todo("date getter can be changed")
+
+  test.todo("json stringify replacer can be passed")
+
   test("linked arguments could be turned off", () => {
     vi.clearAllMocks()
     let handlerWithNoFlattening = NewJSONHandler(receiver, { linkedArgumentsFlatten: false })
