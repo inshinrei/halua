@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest"
-import { NewTextHandler } from "./NewTextHandler"
+import { NewTextHandler } from "./TextHandler"
 import { log, logWithVars } from "../mocks/logs"
 
 describe("TextHandler", () => {

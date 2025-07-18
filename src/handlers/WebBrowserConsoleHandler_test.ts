@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest"
-import { NewWebBrowserConsoleHandler } from "./NewWebBrowserConsoleHandler"
+import { NewWebBrowserConsoleHandler } from "./WebBrowserConsoleHandler"
 import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
 describe("WebBrowserConsoleHandler", () => {

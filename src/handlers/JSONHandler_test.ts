@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest"
-import { NewJSONHandler } from "./NewJSONHandler"
+import { NewJSONHandler } from "./JSONHandler"
 import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
 describe("JSONHandler", () => {
