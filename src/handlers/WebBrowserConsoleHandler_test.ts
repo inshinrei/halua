@@ -12,6 +12,8 @@ describe("WebBrowserConsoleHandler", () => {
   }
   let handler = NewWebBrowserConsoleHandler(receiver, {
     fetchBrowserThemeOnInstanceCreation: false,
+    useError: true,
+    useWarn: true,
   })
 
   test.each([
@@ -26,9 +28,6 @@ describe("WebBrowserConsoleHandler", () => {
       handler[field](false, structuredClone(log))
     } else {
       handler[field as "debug" | "info" | "warn" | "error"](structuredClone(log))
-    }
-    if (field === "info") {
-      field = "log"
     }
     expect(receiver[field as "assert" | "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
   })
