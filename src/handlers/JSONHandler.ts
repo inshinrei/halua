@@ -1,4 +1,5 @@
 import { Handler, Level, Log } from "./types"
+import { replaceDataBeforeStringify } from "../util/dataReplacer"
 
 interface JSONLogHandler extends Handler {
   setDateGetter: (getter: (timestamp: number) => string) => void
@@ -107,20 +108,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
           return v
         }
       }
-      if (typeof value === "symbol") {
-        return value.toString()
-      }
-      if (value instanceof Set) {
-        return Array.from(value)
-      }
-      if (value instanceof Map) {
-        let obj: Record<string, any> = {}
-        for (let key of value.keys()) {
-          obj[key] = value.get(key)
-        }
-        return obj
-      }
-      return value
+      return replaceDataBeforeStringify(value)
     }
   })(options)
 }
