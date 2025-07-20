@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest"
+import { afterEach, describe, expect, test, vi } from "vitest"
 import { NewWebBrowserConsoleHandler } from "./WebBrowserConsoleHandler"
 import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
@@ -16,6 +16,10 @@ describe("WebBrowserConsoleHandler", () => {
     useWarn: true,
   })
 
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
   test.each([
     ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
     ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
@@ -23,7 +27,6 @@ describe("WebBrowserConsoleHandler", () => {
     ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
     ["assert", [false, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
   ])("outputs single messsage with %s", (field, expected) => {
-    vi.clearAllMocks()
     if (field === "assert") {
       handler[field](false, structuredClone(log))
     } else {
@@ -33,7 +36,6 @@ describe("WebBrowserConsoleHandler", () => {
   })
 
   test("outputs message with variables", () => {
-    vi.clearAllMocks()
     handler.debug(structuredClone(logWithVars))
     expect(receiver.debug).toHaveBeenCalledWith(
       ...[
@@ -58,7 +60,6 @@ describe("WebBrowserConsoleHandler", () => {
   })
 
   test("separates withArgs from args", () => {
-    vi.clearAllMocks()
     handler.debug(structuredClone(logWithArgs))
     expect(receiver.debug).toHaveBeenCalledWith(
       ...[
@@ -77,14 +78,26 @@ describe("WebBrowserConsoleHandler", () => {
     )
   })
 
-  test.todo("supports pretty option")
+  test("supports pretty option with browser theme turned off", () => {
+    let prettyHandler = NewWebBrowserConsoleHandler(receiver, {
+      pretty: true,
+      fetchBrowserThemeOnInstanceCreation: false,
+    })
+    prettyHandler.info(log)
+    expect(receiver.info).toHaveBeenCalledWith(
+      ...["%s %s", "6/30/2025 10:54:49 PM %cINFO%c", "color:#195367;", "color:#224912", "log message"],
+    )
+  })
 
-  test.todo("supports custom colors")
-
-  test.todo("useWarn and useError can be turned on")
+  test("useWarn and useError can be turned on", () => {
+    let h = NewWebBrowserConsoleHandler(receiver, { useWarn: true, useError: true })
+    h.warn(log)
+    h.error(log)
+    expect(receiver.warn).toHaveBeenCalledTimes(1)
+    expect(receiver.error).toHaveBeenCalledTimes(1)
+  })
 
   test("correctly implies linked arguments", () => {
-    vi.clearAllMocks()
     handler.debug(
       structuredClone({
         ...log,
@@ -97,13 +110,11 @@ describe("WebBrowserConsoleHandler", () => {
   })
 
   test("do not false assert", () => {
-    vi.clearAllMocks()
     handler.assert(true, structuredClone(log))
     expect(receiver.assert).toHaveBeenCalledWith(...[true, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"])
   })
 
   test("supports date getter passing", () => {
-    vi.clearAllMocks()
     handler.setDateGetter((_) => `abobus`)
     handler.debug(structuredClone(log))
     expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %s", "abobus", "DEBUG", "log message"])
