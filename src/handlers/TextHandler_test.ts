@@ -45,8 +45,6 @@ describe("TextHandler", () => {
         )
     })
 
-    test.todo("does stringify nested objects with complex data structures", () => {})
-
     test("do not false assert", () => {
         handler.assert(true, { ...log })
         expect(receiver).not.toHaveBeenCalled()
