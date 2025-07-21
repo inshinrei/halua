@@ -1,91 +1,106 @@
 import { Handler, Level, Log } from "./types"
+import { replaceDataBeforeStringify } from "../util/dataReplacer"
+import { stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {}
 
-export function NewTextHandler(send: (data: string) => void): TextLogHandler {
-  return new (class TextLog implements TextLogHandler {
-    public skipDeepCopyWhenSendingLog = true
+interface TextLogHandlerOptions {
+    linkedArgumentsFlatten?: boolean
+}
 
-    debug(log: Log) {
-      this.log({ ...log, level: Level.Debug })
-    }
+export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
+    return new (class TextLog implements TextLogHandler {
+        public skipDeepCopyWhenSendingLog = true
 
-    info(log: Log) {
-      this.log({ ...log, level: Level.Info })
-    }
+        constructor(private options: TextLogHandlerOptions) {}
 
-    warn(log: Log) {
-      this.log({ ...log, level: Level.Warn })
-    }
-
-    error(log: Log) {
-      this.log({ ...log, level: Level.Error })
-    }
-
-    assert(c: boolean, log: Log) {
-      if (!c) {
-        this.log({ ...log, level: Level.Error })
-      }
-    }
-
-    private log(log: Log) {
-      let args = ""
-      if (log.args) {
-        args = this.composeVariablesString(log.args)
-      }
-      send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}`)
-    }
-
-    private composeVariablesString(data: Array<any>, nested = false): string {
-      let str = ""
-
-      for (let i = 0; i < data.length; i++) {
-        let last = i === data.length - 1
-        let v = data[i]
-
-        if (!last && typeof v === "string" && v.trim().indexOf(" ") === -1) {
-          str += `${v}=${this.formatValue(data[i + 1])} `
-          i += 1
-          continue
+        private get linkedArgumentsFlatten(): boolean {
+            return this.options.linkedArgumentsFlatten !== undefined && !this.options.linkedArgumentsFlatten
         }
 
-        str += `${this.formatValue(v)}${last ? "" : " "}`
-      }
-
-      return str
-    }
-
-    private formatValue(v: any): string {
-      if (typeof v === "symbol") {
-        return v.toString()
-      }
-
-      if (v instanceof Set) {
-        return `Set[${Array.from(v)}]`
-      }
-
-      if (v instanceof Map) {
-        let obj: Record<string, any> = {}
-        for (let key of v.keys()) {
-          obj[key] = this.formatValue(v.get(key))
+        debug(log: Log) {
+            this.log({ ...log, level: Level.Debug })
         }
-        return JSON.stringify(obj)
-      }
 
-      if (Array.isArray(v)) {
-        return `[${v}]`
-      }
+        info(log: Log) {
+            this.log({ ...log, level: Level.Info })
+        }
 
-      if (typeof v === "object") {
-        return JSON.stringify(v)
-      }
+        warn(log: Log) {
+            this.log({ ...log, level: Level.Warn })
+        }
 
-      return `${v}`
-    }
+        error(log: Log) {
+            this.log({ ...log, level: Level.Error })
+        }
 
-    private prepareDate(t: number) {
-      let d = new Date(t)
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-    }
-  })()
+        assert(c: boolean, log: Log) {
+            if (!c) {
+                this.log({ ...log, level: Level.Error })
+            }
+        }
+
+        private log(log: Log) {
+            let args = ""
+            let withArgs = ""
+            if (log.args) {
+                args = this.composeVariablesString(log.args)
+            }
+            if (log.withArgs) {
+                withArgs = ` ${this.composeVariablesString(log.withArgs)}`
+            }
+            send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}${withArgs}`)
+        }
+
+        private composeVariablesString(data: Array<any>): string {
+            let str = ""
+
+            for (let i = 0; i < data.length; i++) {
+                let last = i === data.length - 1
+                let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1])
+                let v = data[i]
+
+                if (
+                    !this.linkedArgumentsFlatten &&
+                    !last &&
+                    typeof v === "string" &&
+                    stringMatchesVar(v) &&
+                    !nextIsNotLinked
+                ) {
+                    str += `${v}=${this.formatValue(data[i + 1])} `
+                    i += 1
+                    continue
+                }
+
+                str += `${this.formatValue(v)}${last ? "" : " "}`
+            }
+
+            return str.trim()
+        }
+
+        private formatValue(v: any): string {
+            if (typeof v === "symbol") {
+                return v.toString()
+            }
+
+            if (v instanceof Set) {
+                return `Set[${Array.from(v)}]`
+            }
+
+            if (Array.isArray(v)) {
+                return `[${v}]`
+            }
+
+            if (typeof v === "string") {
+                return `${v}`
+            }
+
+            return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
+        }
+
+        private prepareDate(t: number) {
+            let d = new Date(t)
+            return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+        }
+    })(options)
 }
