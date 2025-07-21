@@ -1,4 +1,6 @@
 import { Handler, Level, Log } from "./types"
+import { replaceDataBeforeStringify } from "../util/dataReplacer"
+import { stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {}
 
@@ -30,20 +32,25 @@ export function NewTextHandler(send: (data: string) => void): TextLogHandler {
 
     private log(log: Log) {
       let args = ""
+      let withArgs = ""
       if (log.args) {
         args = this.composeVariablesString(log.args)
       }
-      send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}`)
+      if (log.withArgs) {
+        withArgs = ` ${this.composeVariablesString(log.withArgs)}`
+      }
+      send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}${withArgs}`)
     }
 
-    private composeVariablesString(data: Array<any>, nested = false): string {
+    private composeVariablesString(data: Array<any>): string {
       let str = ""
 
       for (let i = 0; i < data.length; i++) {
         let last = i === data.length - 1
+        let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1])
         let v = data[i]
 
-        if (!last && typeof v === "string" && v.trim().indexOf(" ") === -1) {
+        if (!last && typeof v === "string" && stringMatchesVar(v) && !nextIsNotLinked) {
           str += `${v}=${this.formatValue(data[i + 1])} `
           i += 1
           continue
@@ -52,7 +59,7 @@ export function NewTextHandler(send: (data: string) => void): TextLogHandler {
         str += `${this.formatValue(v)}${last ? "" : " "}`
       }
 
-      return str
+      return str.trim()
     }
 
     private formatValue(v: any): string {
@@ -64,23 +71,15 @@ export function NewTextHandler(send: (data: string) => void): TextLogHandler {
         return `Set[${Array.from(v)}]`
       }
 
-      if (v instanceof Map) {
-        let obj: Record<string, any> = {}
-        for (let key of v.keys()) {
-          obj[key] = this.formatValue(v.get(key))
-        }
-        return JSON.stringify(obj)
-      }
-
       if (Array.isArray(v)) {
         return `[${v}]`
       }
 
-      if (typeof v === "object") {
-        return JSON.stringify(v)
+      if (typeof v === "string") {
+        return `${v}`
       }
 
-      return `${v}`
+      return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
     }
 
     private prepareDate(t: number) {

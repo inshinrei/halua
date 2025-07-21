@@ -1,4 +1,5 @@
 import { Handler, Level, Log } from "./types"
+import { stringMatchesVar } from "../util/string"
 
 interface WebBrowserConsoleLogHandler extends Handler {
   setDateGetter: (getter: (timestamp: number) => string) => void
@@ -149,8 +150,8 @@ export function NewWebBrowserConsoleHandler(
         let last = i === data.length - 1
         let v = data[i]
 
-        let vWithEqualSign = typeof v === "string" && this.stringMatchesVar(v)
-        let nextVWithEqualSign = !last && typeof data[i + 1] === "string" && this.stringMatchesVar(data[i + 1])
+        let vWithEqualSign = typeof v === "string" && stringMatchesVar(v)
+        let nextVWithEqualSign = !last && typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1])
 
         if (nextVWithEqualSign) {
           startingVarConvertIndex = Math.max(startingVarConvertIndex, i)
@@ -181,10 +182,6 @@ export function NewWebBrowserConsoleHandler(
       }
       let d = new Date(t)
       return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-    }
-
-    private stringMatchesVar(str: string): boolean {
-      return str !== "|" && str.trim().indexOf(" ") === -1
     }
   })(options)
 }
