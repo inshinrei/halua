@@ -9,7 +9,7 @@ interface JSONLogHandlerOptions {
   /** change timestamp output */
   dateGetter?: (timestamp: number) => string
   /** replace value during stringify, return null to fallback on JSONHandler replacer */
-  replacer?: (value: any) => any
+  replaceBeforeStringify?: (value: any) => any
   linkedArgumentsFlatten?: boolean
 }
 
@@ -17,7 +17,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
   return new (class JSONLog implements JSONLogHandler {
     private readonly takenNames = new Set(["timestamp", "level", "args"])
 
-    constructor(private options: JSONLogHandlerOptions) {
+    constructor(private readonly options: JSONLogHandlerOptions) {
       this.options = options || {}
     }
 
@@ -50,7 +50,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
     private log(log: Log) {
       try {
         log.timestamp = this.formatDate(log.timestamp as number)
-        send(JSON.stringify(this.flattenLinkedArguments(log), this.replacer))
+        send(JSON.stringify(this.flattenLinkedArguments(log), this.replacer.bind(this)))
       } catch (err) {
         if (log.level !== Level.Error) {
           this.error({
@@ -102,8 +102,8 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
     }
 
     private replacer(_: string, value: any) {
-      if (this.options?.replacer) {
-        let v = this.options.replacer(value)
+      if (this.options.replaceBeforeStringify) {
+        let v = this.options.replaceBeforeStringify(value)
         if (v !== null) {
           return v
         }

@@ -39,11 +39,24 @@ describe("JSONHandler", () => {
     )
   })
 
-  test.todo("correctly outputs linked arguments")
+  test("date getter can be changed", () => {
+    NewJSONHandler(receiver, {
+      dateGetter: () => "2025",
+    }).info(structuredClone(log))
+    expect(receiver).toHaveBeenCalledWith(`{"timestamp":"2025","args":["log message"],"level":"INFO"}`)
+  })
 
-  test.todo("date getter can be changed")
-
-  test.todo("json stringify replacer can be passed")
+  test("json stringify replacer can be passed", () => {
+    NewJSONHandler(receiver, {
+      replaceBeforeStringify: (data: any) => {
+        if (typeof data === "string" && data === "log message") {
+          return "replaced"
+        }
+        return null
+      },
+    }).info(structuredClone(log))
+    expect(receiver).toHaveBeenCalledWith(`{"timestamp":"2025-06-30T19:54:49.663Z","args":["replaced"],"level":"INFO"}`)
+  })
 
   test("linked arguments could be turned off", () => {
     let handlerWithNoFlattening = NewJSONHandler(receiver, { linkedArgumentsFlatten: false })
