@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 import { Halua } from "./main"
+import { Level } from "./handlers/types"
+import type { HaluaLogger } from "./types"
 
 describe("Halua Logger", () => {
     let halua = new Halua([])
@@ -41,9 +43,35 @@ describe("Halua Logger", () => {
         expect(r2.info).toHaveBeenCalledTimes(1)
     })
 
-    test.todo("creates new instance with options as first argument, inherits the handler")
+    test("creates new instance with options as first argument, inherits the handler", () => {
+        let logger = halua.New(r1)
+        let logger2 = logger.New({ minLevel: Level.Debug })
+        logger2.info("logs")
+        expect(r1.info).toHaveBeenCalledTimes(1)
+    })
 
-    test.todo("turns off logging for levels, lower than required")
+    test("turns off logging for levels, lower than required", () => {
+        function log(l: HaluaLogger) {
+            l.debug("logs")
+            l.info("logs info")
+            l.warn("logs warning")
+            l.error("logs error")
+        }
 
-    test.todo("appends withArgs by With method")
+        log(halua.New(r1, { minLevel: Level.Debug }))
+        log(halua.New(r1, { minLevel: Level.Info }))
+        log(halua.New(r1, { minLevel: Level.Warn }))
+        log(halua.New(r1, { minLevel: Level.Error }))
+        expect(r1.debug).toHaveBeenCalledTimes(1)
+        expect(r1.info).toHaveBeenCalledTimes(2)
+        expect(r1.warn).toHaveBeenCalledTimes(3)
+        expect(r1.error).toHaveBeenCalledTimes(4)
+    })
+
+    test("appends withArgs by With method", () => {
+        let withArgs = ["string", [1, 2, 3], 1]
+        let logger = halua.New(r1).With(...withArgs)
+        logger.info("logs")
+        expect(r1.info).toHaveBeenCalledWith(expect.objectContaining({ withArgs }))
+    })
 })
