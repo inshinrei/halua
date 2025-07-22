@@ -19,7 +19,7 @@ interface WebConsoleHandlerOptions {
     dateGetter?: (timestamp: number) => string
     /** turn prettification on, adds colors to console output */
     pretty?: boolean
-    linkedArgumentsFlatten?: boolean
+    linkArguments?: boolean
     /** default: true, get browser theme with window.matchMedia */
     fetchBrowserThemeOnInstanceCreation?: boolean
     /** provide custom colors map */
@@ -79,8 +79,8 @@ export function NewWebConsoleHandler(
             }
         }
 
-        private get linkedArgumentsFlatten(): boolean {
-            return this.options.linkedArgumentsFlatten !== undefined && !this.options.linkedArgumentsFlatten
+        private get linkArguments(): boolean {
+            return this.options.linkArguments !== undefined && !this.options.linkArguments
         }
 
         debug(log: Log) {
@@ -163,7 +163,7 @@ export function NewWebConsoleHandler(
                     startingVarConvertIndex = Math.max(startingVarConvertIndex, i)
                 }
 
-                if (!this.linkedArgumentsFlatten && !last && i > startingVarConvertIndex && vWithEqualSign) {
+                if (!this.linkArguments && !last && i > startingVarConvertIndex && vWithEqualSign) {
                     data[i] = `${v} =`
                 }
 

@@ -37,8 +37,8 @@ describe("TextHandler", () => {
         )
     })
 
-    test("linked arguments can be turned off", () => {
-        let h = NewTextHandler(receiver, { linkedArgumentsFlatten: false })
+    test("link arguments can be turned off", () => {
+        let h = NewTextHandler(receiver, { linkArguments: false })
         h.info(logWithArgs)
         expect(receiver).toHaveBeenCalledWith(
             `6/30/2025 10:54:49 PM INFO log message count 2 [1,2,3] arr anotherCount 5`,

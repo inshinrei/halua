@@ -109,8 +109,8 @@ describe("WebConsoleHandler", () => {
         )
     })
 
-    test("linked arguments flattening can be turned off", () => {
-        let h = NewWebConsoleHandler(receiver, { linkedArgumentsFlatten: false })
+    test("link arguments can be turned off", () => {
+        let h = NewWebConsoleHandler(receiver, { linkArguments: false })
         h.info(
             structuredClone({
                 ...log,

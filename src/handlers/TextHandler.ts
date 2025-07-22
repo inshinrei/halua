@@ -5,7 +5,7 @@ import { stringMatchesVar } from "../util/string"
 interface TextLogHandler extends Handler {}
 
 interface TextLogHandlerOptions {
-    linkedArgumentsFlatten?: boolean
+    linkArguments?: boolean
 }
 
 export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
@@ -14,8 +14,8 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
 
         constructor(private options: TextLogHandlerOptions) {}
 
-        private get linkedArgumentsFlatten(): boolean {
-            return this.options.linkedArgumentsFlatten !== undefined && !this.options.linkedArgumentsFlatten
+        private get linkArguments(): boolean {
+            return this.options.linkArguments !== undefined && !this.options.linkArguments
         }
 
         debug(log: Log) {
@@ -60,13 +60,7 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
                 let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1])
                 let v = data[i]
 
-                if (
-                    !this.linkedArgumentsFlatten &&
-                    !last &&
-                    typeof v === "string" &&
-                    stringMatchesVar(v) &&
-                    !nextIsNotLinked
-                ) {
+                if (!this.linkArguments && !last && typeof v === "string" && stringMatchesVar(v) && !nextIsNotLinked) {
                     str += `${v}=${this.formatValue(data[i + 1])} `
                     i += 1
                     continue
