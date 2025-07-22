@@ -1,7 +1,8 @@
-import { Handler, Level, Log } from "./types"
+import type { Handler, Log } from "./types"
+import { Level } from "./types"
 import { stringMatchesVar } from "../util/string"
 
-interface WebBrowserConsoleLogHandler extends Handler {
+interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
 }
 
@@ -13,7 +14,7 @@ interface ConsoleLogHandlerConsole {
     assert: (c: boolean, ...args: any[]) => void
 }
 
-interface WebBrowserConsoleHandlerOptions {
+interface WebConsoleHandlerOptions {
     /** customize date output */
     dateGetter?: (timestamp: number) => string
     /** turn prettification on, adds colors to console output */
@@ -30,11 +31,11 @@ interface WebBrowserConsoleHandlerOptions {
 type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
 type Colors = Map<ColorKey, string>
 
-export function NewWebBrowserConsoleHandler(
+export function NewWebConsoleHandler(
     c: ConsoleLogHandlerConsole = console,
-    options: WebBrowserConsoleHandlerOptions = {},
-): WebBrowserConsoleLogHandler {
-    return new (class WebBrowserConsoleLog implements WebBrowserConsoleLogHandler {
+    options: WebConsoleHandlerOptions = {},
+): WebConsoleLogHandler {
+    return new (class WebBrowserConsoleLog implements WebConsoleLogHandler {
         public skipDeepCopyWhenSendingLog = true
 
         private readonly colors: Colors = new Map([])
@@ -57,7 +58,7 @@ export function NewWebBrowserConsoleHandler(
             ["red", "#FC9292"],
         ])
 
-        constructor(private options: WebBrowserConsoleHandlerOptions) {
+        constructor(private options: WebConsoleHandlerOptions) {
             this.options = options || {}
             this.options.fetchBrowserThemeOnInstanceCreation ??= true
 

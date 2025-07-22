@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
-import { NewWebBrowserConsoleHandler } from "./WebBrowserConsoleHandler"
+import { NewWebConsoleHandler } from "./WebConsoleHandler"
 import { log, logWithArgs, logWithVars } from "../mocks/logs"
 
-describe("WebBrowserConsoleHandler", () => {
+describe("WebConsoleHandler", () => {
     let receiver = {
         debug: vi.fn(),
         info: vi.fn(),
@@ -10,7 +10,7 @@ describe("WebBrowserConsoleHandler", () => {
         error: vi.fn(),
         assert: vi.fn(),
     }
-    let handler = NewWebBrowserConsoleHandler(receiver, {
+    let handler = NewWebConsoleHandler(receiver, {
         fetchBrowserThemeOnInstanceCreation: false,
         useError: true,
         useWarn: true,
@@ -79,7 +79,7 @@ describe("WebBrowserConsoleHandler", () => {
     })
 
     test("supports pretty option with browser theme turned off", () => {
-        let prettyHandler = NewWebBrowserConsoleHandler(receiver, {
+        let prettyHandler = NewWebConsoleHandler(receiver, {
             pretty: true,
             fetchBrowserThemeOnInstanceCreation: false,
         })
@@ -90,7 +90,7 @@ describe("WebBrowserConsoleHandler", () => {
     })
 
     test("useWarn and useError can be turned on", () => {
-        let h = NewWebBrowserConsoleHandler(receiver, { useWarn: true, useError: true })
+        let h = NewWebConsoleHandler(receiver, { useWarn: true, useError: true })
         h.warn(log)
         h.error(log)
         expect(receiver.warn).toHaveBeenCalledTimes(1)
@@ -110,7 +110,7 @@ describe("WebBrowserConsoleHandler", () => {
     })
 
     test("linked arguments flattening can be turned off", () => {
-        let h = NewWebBrowserConsoleHandler(receiver, { linkedArgumentsFlatten: false })
+        let h = NewWebConsoleHandler(receiver, { linkedArgumentsFlatten: false })
         h.info(
             structuredClone({
                 ...log,
