@@ -1,9 +1,17 @@
 import type { HaluaLogger, HaluaOptions } from "./types"
 import type { Handler, Log } from "./handlers/types"
 import { Level } from "./handlers/types"
+import { toLevel } from "./util/level"
 
 export class Halua implements HaluaLogger {
     private handlers: Array<Handler> = []
+
+    private readonly MajorLevelMap = new Map([
+        [Level.Error, new Set([Level.Error])],
+        [Level.Warn, new Set([Level.Error, Level.Warn])],
+        [Level.Info, new Set([Level.Error, Level.Warn, Level.Info])],
+        [Level.Debug, new Set([Level.Error, Level.Warn, Level.Info, Level.Debug])],
+    ])
 
     constructor(
         handlers: Handler | Array<Handler>,
@@ -46,36 +54,29 @@ export class Halua implements HaluaLogger {
     }
 
     public debug(...args: any[]) {
-        if (this.canLogByMinLevelRestriction(Level.Debug)) {
-            this.sendToHandler("debug", true, ...args)
-        }
+        this.sendToHandler("debug", true, ...args)
     }
 
     public info(...args: any[]) {
-        if (this.canLogByMinLevelRestriction(Level.Info)) {
-            this.sendToHandler("info", true, ...args)
-        }
+        this.sendToHandler("info", true, ...args)
     }
 
     public warn(...args: any[]) {
-        if (this.canLogByMinLevelRestriction(Level.Warn)) {
-            this.sendToHandler("warn", true, ...args)
-        }
+        this.sendToHandler("warn", true, ...args)
     }
 
     public error(...args: any[]) {
-        if (this.canLogByMinLevelRestriction(Level.Error)) {
-            this.sendToHandler("error", true, ...args)
-        }
+        this.sendToHandler("error", true, ...args)
     }
 
     public assert(assertion: boolean, ...args: any[]) {
-        if (this.canLogByMinLevelRestriction(Level.Error)) {
-            this.sendToHandler("assert", assertion, ...args)
-        }
+        this.sendToHandler("assert", assertion, ...args)
     }
 
     private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", condition = true, ...args: any[]) {
+        if (!this.canSend(toLevel(field))) {
+            return
+        }
         let log: Log = {
             timestamp: Date.now(),
             args: args || [],
@@ -111,25 +112,12 @@ export class Halua implements HaluaLogger {
         }
     }
 
-    private canLogByMinLevelRestriction(level: Level): boolean {
-        const { minLevel } = this.options
-        if (!minLevel || level === Level.Error) {
-            return true
-        }
+    private canSend(l: Level): boolean {
+        return this.majorLevelCheckPassed(l)
+    }
 
-        if (level === Level.Warn) {
-            return minLevel !== Level.Error
-        }
-
-        if (level === Level.Info) {
-            return minLevel !== Level.Warn && minLevel !== Level.Error
-        }
-
-        if (level === Level.Debug) {
-            return minLevel === Level.Debug
-        }
-
-        return true
+    private majorLevelCheckPassed(l: Level): boolean {
+        return this.MajorLevelMap.get(this.options.minLevel || Level.Debug)!.has(l)
     }
 
     private validateHandlers(v: Handler | Array<Handler>) {
