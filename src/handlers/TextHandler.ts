@@ -6,6 +6,8 @@ interface TextLogHandler extends Handler {}
 
 interface TextLogHandlerOptions {
     linkArguments?: boolean
+    /** replace value during stringify, return null to fallback on JSONHandler replacer */
+    replaceBeforeStringify?: (value: any) => any
 }
 
 export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
@@ -55,6 +57,13 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
         }
 
         private formatValue(v: any): string {
+            if (this.options.replaceBeforeStringify) {
+                let val = this.options.replaceBeforeStringify(v)
+                if (val !== null) {
+                    return val
+                }
+            }
+
             if (typeof v === "symbol") {
                 return v.toString()
             }

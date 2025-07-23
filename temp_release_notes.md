@@ -8,3 +8,4 @@
 4. webbrowserconsolehandler renamed to webconsolehandler (breaking) (migration strat: rename)
 5. linkedArgumentsFlatten renamed to linkArguments (breaking) (migration strat: rename)
 6. Handler{} now only has to have log method (breaking) (migration strat: custom handler should ve define log method)
+7. TextHandler now has replaceBeforeStringify option

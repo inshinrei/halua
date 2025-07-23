@@ -43,4 +43,17 @@ describe("TextHandler", () => {
             `6/30/2025 10:54:49 PM DEBUG log message count 2 [1,2,3] arr anotherCount 5`,
         )
     })
+
+    test("replaceBeforeStringify option could be passed", () => {
+        let h = NewTextHandler(receiver, {
+            replaceBeforeStringify: (data: any) => {
+                if (typeof data === "string" && data === "log message") {
+                    return "replaced"
+                }
+                return null
+            },
+        })
+        h.log(log)
+        expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
+    })
 })
