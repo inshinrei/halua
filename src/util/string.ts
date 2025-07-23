@@ -1,7 +1,15 @@
-export function stringMatchesVar(str: string, ignoredStrings: Array<string>): boolean {
-    return !ignoredStrings.some((s) => s === str) && str.trim().indexOf(" ") === -1
+export function stringMatchesVar(str: string, ignoredStrings: Set<string>): boolean {
+    return !ignoredStrings.has(str) && str.trim().indexOf(" ") === -1
 }
 
-export function extractSeparatorFromMessageFormat(f: string): string {
-    return f.slice(f.indexOf("%a") + 3, f.indexOf("%w") - 1)
+let messageFormatExcludes = new Set([" ", "%a", "%w", "%t", "%l"])
+
+export function extractNonFormatChars(f: string): Set<string> {
+    let total: Set<string> = new Set()
+    for (let char of f) {
+        if (!messageFormatExcludes.has(char)) {
+            total.add(char)
+        }
+    }
+    return total
 }

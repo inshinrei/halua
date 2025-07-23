@@ -1,6 +1,6 @@
 import { Handler, Log } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
-import { extractSeparatorFromMessageFormat, stringMatchesVar } from "../util/string"
+import { extractNonFormatChars, stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {
     messageFormat: string
@@ -51,18 +51,18 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
 
         private composeVariablesString(data: Array<any>): string {
             let str = ""
-            let separator = extractSeparatorFromMessageFormat(this.messageFormat)
+            let excluded = extractNonFormatChars(this.messageFormat)
 
             for (let i = 0; i < data.length; i++) {
                 let last = i === data.length - 1
-                let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], [separator])
+                let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], excluded)
                 let v = data[i]
 
                 if (
                     !this.linkArguments &&
                     !last &&
                     typeof v === "string" &&
-                    stringMatchesVar(v, [separator]) &&
+                    stringMatchesVar(v, excluded) &&
                     !nextIsNotLinked
                 ) {
                     str += `${v}=${this.formatValue(data[i + 1])} `

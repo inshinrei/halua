@@ -39,6 +39,23 @@ export function NewWebConsoleHandler(
         public skipDeepCopyWhenSendingLog = true
         // extract withSeparator from here
         // public messageFormat = "%t %l %a | %w"
+        /**
+         * strategy to merge
+         *
+         * %t %l %a | %w
+         * [...strings, ...argsArr, ...withArgsArr]
+         *
+         * 1. definitely strings should be composed on total output
+         *
+         * notes:
+         * - a pretty option won't work if %a or %w come first
+         *
+         * proposed flow:
+         * - check if %t and %l are coming before %a or %w
+         * - if not, remove pretty coloring
+         * - compose string
+         * - output
+         * */
 
         private readonly colors: Colors = new Map([])
         // bg chrome #fefbff
@@ -147,11 +164,12 @@ export function NewWebConsoleHandler(
                 let last = i === data.length - 1
                 let v = data[i]
 
-                let vWithEqualSign = typeof v === "string" && stringMatchesVar(v, [this.options.withSeparator!])
+                let vWithEqualSign =
+                    typeof v === "string" && stringMatchesVar(v, new Set([this.options.withSeparator!]))
                 let nextVWithEqualSign =
                     !last &&
                     typeof data[i + 1] === "string" &&
-                    stringMatchesVar(data[i + 1], [this.options.withSeparator!])
+                    stringMatchesVar(data[i + 1], new Set([this.options.withSeparator!]))
 
                 if (nextVWithEqualSign) {
                     startingVarConvertIndex = Math.max(startingVarConvertIndex, i)
