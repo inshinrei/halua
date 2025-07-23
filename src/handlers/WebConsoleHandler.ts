@@ -23,6 +23,7 @@ interface WebConsoleHandlerOptions {
     fetchBrowserThemeOnInstanceCreation?: boolean
     /** provide custom colors map */
     customColors?: Colors
+    withSeparator?: string
     useWarn?: boolean
     useError?: boolean
 }
@@ -34,8 +35,10 @@ export function NewWebConsoleHandler(
     c: ConsoleLogHandlerConsole = console,
     options: WebConsoleHandlerOptions = {},
 ): WebConsoleLogHandler {
-    return new (class WebBrowserConsoleLog implements WebConsoleLogHandler {
+    return new (class WebConsoleLog implements WebConsoleLogHandler {
         public skipDeepCopyWhenSendingLog = true
+        // extract withSeparator from here
+        // public messageFormat = "%t %l %a | %w"
 
         private readonly colors: Colors = new Map([])
         // bg chrome #fefbff
@@ -60,6 +63,7 @@ export function NewWebConsoleHandler(
         constructor(private options: WebConsoleHandlerOptions) {
             this.options = options || {}
             this.options.fetchBrowserThemeOnInstanceCreation ??= true
+            this.options.withSeparator ??= "|"
 
             if (!this.options.pretty) {
                 return
@@ -110,7 +114,7 @@ export function NewWebConsoleHandler(
         private insertInternalEntries(log: Log) {
             let additionalArgs = []
             if (log.withArgs) {
-                additionalArgs.push("|")
+                additionalArgs.push(this.options.withSeparator!)
                 additionalArgs.push(...log.withArgs)
                 delete log.withArgs
             }
@@ -143,8 +147,11 @@ export function NewWebConsoleHandler(
                 let last = i === data.length - 1
                 let v = data[i]
 
-                let vWithEqualSign = typeof v === "string" && stringMatchesVar(v)
-                let nextVWithEqualSign = !last && typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1])
+                let vWithEqualSign = typeof v === "string" && stringMatchesVar(v, [this.options.withSeparator!])
+                let nextVWithEqualSign =
+                    !last &&
+                    typeof data[i + 1] === "string" &&
+                    stringMatchesVar(data[i + 1], [this.options.withSeparator!])
 
                 if (nextVWithEqualSign) {
                     startingVarConvertIndex = Math.max(startingVarConvertIndex, i)

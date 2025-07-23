@@ -123,4 +123,24 @@ describe("WebConsoleHandler", () => {
         handler.log(structuredClone(log))
         expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %s", "abobus", "DEBUG", "log message"])
     })
+
+    test("withSeparator could be passed", () => {
+        let h = NewWebConsoleHandler(receiver, { withSeparator: ">" })
+        h.log(logWithArgs)
+        expect(receiver.debug).toHaveBeenCalledWith(
+            ...[
+                "%s %s %s %s %s %d %o %s %s %d",
+                "6/30/2025 10:54:49 PM",
+                "DEBUG",
+                "log message",
+                ">",
+                "count =",
+                2,
+                [1, 2, 3],
+                "arr",
+                "anotherCount =",
+                5,
+            ],
+        )
+    })
 })

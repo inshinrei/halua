@@ -1,6 +1,6 @@
 import { describe, test } from "vitest"
 
-// are these needed ? seems like main_test covers that
+// are these even needed ? seems like main_test covers that
 describe("Halua logger e2e usage", () => {
     test.todo("create new instance for logging")
 

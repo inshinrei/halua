@@ -32,7 +32,7 @@ describe("TextHandler", () => {
     test("correctly sets linked arguments in output", () => {
         handler.log(logWithArgs)
         expect(receiver).toHaveBeenCalledWith(
-            `6/30/2025 10:54:49 PM DEBUG log message count=2 [1,2,3] arr anotherCount=5`,
+            `6/30/2025 10:54:49 PM DEBUG log message | count=2 [1,2,3] arr anotherCount=5`,
         )
     })
 
@@ -40,7 +40,7 @@ describe("TextHandler", () => {
         let h = NewTextHandler(receiver, { linkArguments: false })
         h.log(logWithArgs)
         expect(receiver).toHaveBeenCalledWith(
-            `6/30/2025 10:54:49 PM DEBUG log message count 2 [1,2,3] arr anotherCount 5`,
+            `6/30/2025 10:54:49 PM DEBUG log message | count 2 [1,2,3] arr anotherCount 5`,
         )
     })
 
@@ -55,5 +55,13 @@ describe("TextHandler", () => {
         })
         h.log(log)
         expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
+    })
+
+    test("withSeparator option could be passed", () => {
+        let h = NewTextHandler(receiver, { withSeparator: ">" })
+        h.log(logWithArgs)
+        expect(receiver).toHaveBeenCalledWith(
+            `6/30/2025 10:54:49 PM DEBUG log message > count=2 [1,2,3] arr anotherCount=5`,
+        )
     })
 })
