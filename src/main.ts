@@ -70,40 +70,32 @@ export class Halua implements HaluaLogger {
     }
 
     public assert(assertion: boolean, ...args: any[]) {
+        if (assertion) {
+            return
+        }
         this.sendToHandler("assert", assertion, ...args)
     }
 
-    private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", condition = true, ...args: any[]) {
-        if (!this.canSend(toLevel(field))) {
+    private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", assertion = true, ...args: any[]) {
+        let level = toLevel(field)
+        if (!this.canSend(level)) {
             return
         }
         let log: Log = {
             timestamp: Date.now(),
             args: args || [],
             withArgs: this.options?.withArgs || null,
+            assertion,
+            level,
         }
-        this.executeHandlers(field, { condition, log: log })
+        this.executeHandlers(log)
     }
 
-    private executeHandlers(
-        field: "debug" | "info" | "warn" | "error" | "assert",
-        {
-            condition,
-            log,
-        }: {
-            condition: boolean
-            log: Log
-        },
-    ) {
+    private executeHandlers(log: Log) {
         try {
             for (let h of this.handlers) {
                 let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
-                if (field === "assert") {
-                    h.assert(condition, logArgument)
-                }
-                if (field !== "assert") {
-                    h[field](logArgument)
-                }
+                h.log(logArgument)
             }
         } catch (err) {
             if (this.options.errorPolicy === "throw") {
@@ -133,12 +125,6 @@ export class Halua implements HaluaLogger {
 
     private supposeIsHandler(v: any): boolean {
         /** __proto__ checks for function declaration, ownProp checks for arrow func */
-        return (
-            (v.__proto__.hasOwnProperty("debug") || v.hasOwnProperty("debug")) &&
-            (v.__proto__.hasOwnProperty("info") || v.hasOwnProperty("info")) &&
-            (v.__proto__.hasOwnProperty("warn") || v.hasOwnProperty("warn")) &&
-            (v.__proto__.hasOwnProperty("error") || v.hasOwnProperty("error")) &&
-            (v.__proto__.hasOwnProperty("assert") || v.hasOwnProperty("assert"))
-        )
+        return v.__proto__.hasOwnProperty("log") || v.hasOwnProperty("log")
     }
 }

@@ -1,4 +1,4 @@
-import { Handler, Level, Log } from "./types"
+import { Handler, Log } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
 import { stringMatchesVar } from "../util/string"
 
@@ -18,29 +18,11 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
             return this.options.linkArguments !== undefined && !this.options.linkArguments
         }
 
-        debug(log: Log) {
-            this.log({ ...log, level: Level.Debug })
+        log(log: Log) {
+            this.sendLog(log)
         }
 
-        info(log: Log) {
-            this.log({ ...log, level: Level.Info })
-        }
-
-        warn(log: Log) {
-            this.log({ ...log, level: Level.Warn })
-        }
-
-        error(log: Log) {
-            this.log({ ...log, level: Level.Error })
-        }
-
-        assert(c: boolean, log: Log) {
-            if (!c) {
-                this.log({ ...log, level: Level.Error })
-            }
-        }
-
-        private log(log: Log) {
+        private sendLog(log: Log) {
             let args = ""
             let withArgs = ""
             if (log.args) {

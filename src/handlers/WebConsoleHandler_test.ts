@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 import { NewWebConsoleHandler } from "./WebConsoleHandler"
 import { log, logWithArgs, logWithVars } from "../mocks/logs"
+import { Level } from "./types"
+import { toLevel } from "../util/level"
 
 describe("WebConsoleHandler", () => {
     let receiver = {
@@ -8,7 +10,6 @@ describe("WebConsoleHandler", () => {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
-        assert: vi.fn(),
     }
     let handler = NewWebConsoleHandler(receiver, {
         fetchBrowserThemeOnInstanceCreation: false,
@@ -25,18 +26,13 @@ describe("WebConsoleHandler", () => {
         ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
         ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
         ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
-        ["assert", [false, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
     ])("outputs single messsage with %s", (field, expected) => {
-        if (field === "assert") {
-            handler[field](false, structuredClone(log))
-        } else {
-            handler[field as "debug" | "info" | "warn" | "error"](structuredClone(log))
-        }
-        expect(receiver[field as "assert" | "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
+        handler.log(structuredClone({ ...log, level: toLevel(field as "debug" | "info" | "warn" | "error") }))
+        expect(receiver[field as "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
     })
 
     test("outputs message with variables", () => {
-        handler.debug(structuredClone(logWithVars))
+        handler.log(structuredClone(logWithVars))
         expect(receiver.debug).toHaveBeenCalledWith(
             ...[
                 "%s %s %s %s %d %s %o %s %o %s %o %s %o %o %o",
@@ -60,7 +56,7 @@ describe("WebConsoleHandler", () => {
     })
 
     test("separates withArgs from args", () => {
-        handler.debug(structuredClone(logWithArgs))
+        handler.log(structuredClone(logWithArgs))
         expect(receiver.debug).toHaveBeenCalledWith(
             ...[
                 "%s %s %s %s %s %d %o %s %s %d",
@@ -83,22 +79,22 @@ describe("WebConsoleHandler", () => {
             pretty: true,
             fetchBrowserThemeOnInstanceCreation: false,
         })
-        prettyHandler.info(log)
-        expect(receiver.info).toHaveBeenCalledWith(
-            ...["%s %s", "6/30/2025 10:54:49 PM %cINFO%c", "color:#195367;", "color:#224912", "log message"],
+        prettyHandler.log(log)
+        expect(receiver.debug).toHaveBeenCalledWith(
+            ...["%s %s", "6/30/2025 10:54:49 PM %cDEBUG%c", "color:#8A228A;", "color:#224912", "log message"],
         )
     })
 
     test("useWarn and useError can be turned on", () => {
         let h = NewWebConsoleHandler(receiver, { useWarn: true, useError: true })
-        h.warn(log)
-        h.error(log)
+        h.log({ ...log, level: Level.Warn })
+        h.log({ ...log, level: Level.Error })
         expect(receiver.warn).toHaveBeenCalledTimes(1)
         expect(receiver.error).toHaveBeenCalledTimes(1)
     })
 
     test("correctly implies linked arguments", () => {
-        handler.debug(
+        handler.log(
             structuredClone({
                 ...log,
                 args: ["count", "count2", "count3", 5],
@@ -111,27 +107,20 @@ describe("WebConsoleHandler", () => {
 
     test("link arguments can be turned off", () => {
         let h = NewWebConsoleHandler(receiver, { linkArguments: false })
-        h.info(
+        h.log(
             structuredClone({
                 ...log,
                 args: ["count", "count2", "count3", 5],
             }),
         )
-        expect(receiver.info).toHaveBeenCalledWith(
-            ...["%s %s %s %s %s %d", "6/30/2025 10:54:49 PM", "INFO", "count", "count2", "count3", 5],
-        )
-    })
-
-    test("do not false assert", () => {
-        handler.assert(true, structuredClone(log))
-        expect(receiver.assert).toHaveBeenCalledWith(
-            ...[true, "%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"],
+        expect(receiver.debug).toHaveBeenCalledWith(
+            ...["%s %s %s %s %s %d", "6/30/2025 10:54:49 PM", "DEBUG", "count", "count2", "count3", 5],
         )
     })
 
     test("supports date getter passing", () => {
         handler.setDateGetter((_) => `abobus`)
-        handler.debug(structuredClone(log))
+        handler.log(structuredClone(log))
         expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %s", "abobus", "DEBUG", "log message"])
     })
 })

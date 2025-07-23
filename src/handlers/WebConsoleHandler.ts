@@ -11,7 +11,6 @@ interface ConsoleLogHandlerConsole {
     info: (...args: any[]) => void
     warn: (...args: any[]) => void
     error: (...args: any[]) => void
-    assert: (c: boolean, ...args: any[]) => void
 }
 
 interface WebConsoleHandlerOptions {
@@ -83,41 +82,29 @@ export function NewWebConsoleHandler(
             return this.options.linkArguments !== undefined && !this.options.linkArguments
         }
 
-        debug(log: Log) {
-            let args = this.insertInternalEntries({ ...log, level: Level.Debug })
-            c.debug(this.composeConsoleSubstitution(args), ...args)
-        }
-
-        info(log: Log) {
-            let args = this.insertInternalEntries({ ...log, level: Level.Info })
-            c.info(this.composeConsoleSubstitution(args), ...args)
-        }
-
-        warn(log: Log) {
-            let args = this.insertInternalEntries({ ...log, level: Level.Warn })
-            if (this.options?.useWarn) {
-                c.warn(this.composeConsoleSubstitution(args), ...args)
-                return
-            }
-            c.info(this.composeConsoleSubstitution(args), ...args)
-        }
-
-        error(log: Log) {
-            let args = this.insertInternalEntries({ ...log, level: Level.Error })
-            if (this.options?.useError) {
-                c.error(this.composeConsoleSubstitution(args), ...args)
-                return
-            }
-            c.info(this.composeConsoleSubstitution(args), ...args)
-        }
-
-        assert(cond: boolean, log: Log) {
-            let args = this.insertInternalEntries({ ...log, level: Level.Error })
-            c.assert(cond, this.composeConsoleSubstitution(args), ...args)
+        log(log: Log) {
+            this.sendLog(log)
         }
 
         public setDateGetter(dateGetter: (timestamp: number) => string) {
             this.options.dateGetter = dateGetter
+        }
+
+        private sendLog(log: Log) {
+            let args = this.insertInternalEntries(log)
+            if (log.level === Level.Debug) {
+                c.debug(this.composeConsoleSubstitution(args), ...args)
+                return
+            }
+            if (log.level === Level.Warn && this.options.useWarn) {
+                c.warn(this.composeConsoleSubstitution(args), ...args)
+                return
+            }
+            if (log.level === Level.Error && this.options.useError) {
+                c.error(this.composeConsoleSubstitution(args), ...args)
+                return
+            }
+            c.info(this.composeConsoleSubstitution(args), ...args)
         }
 
         private insertInternalEntries(log: Log) {

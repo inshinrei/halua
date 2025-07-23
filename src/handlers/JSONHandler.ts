@@ -21,41 +21,25 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
             this.options = options || {}
         }
 
-        debug(log: Log) {
-            this.log({ ...log, level: Level.Debug })
-        }
-
-        info(log: Log) {
-            this.log({ ...log, level: Level.Info })
-        }
-
-        warn(log: Log) {
-            this.log({ ...log, level: Level.Warn })
-        }
-
-        error(log: Log) {
-            this.log({ ...log, level: Level.Error })
-        }
-
-        assert(c: boolean, log: Log) {
-            if (!c) {
-                this.log({ ...log, level: Level.Error })
-            }
+        log(log: Log) {
+            this.sendLog(log)
         }
 
         public setDateGetter(getter: (timestamp: number) => string) {
             this.options.dateGetter = getter
         }
 
-        private log(log: Log) {
+        private sendLog(log: Log) {
             try {
+                delete log.assertion
                 log.timestamp = this.formatDate(log.timestamp as number)
                 send(JSON.stringify(this.flattenLinkedArguments(log), this.replacer.bind(this)))
             } catch (err) {
                 if (log.level !== Level.Error) {
-                    this.error({
+                    this.log({
                         args: [`err while trying to stringify JSON ${err}`],
                         timestamp: log.timestamp,
+                        level: Level.Error,
                     })
                 }
             }
