@@ -57,11 +57,28 @@ describe("TextHandler", () => {
         expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
     })
 
-    test("withSeparator option could be passed", () => {
-        let h = NewTextHandler(receiver, { withSeparator: ">" })
+    test("separator can be changed", () => {
+        let h = NewTextHandler(receiver)
+        h.messageFormat = "%t %l %a > %w"
         h.log(logWithArgs)
         expect(receiver).toHaveBeenCalledWith(
             `6/30/2025 10:54:49 PM DEBUG log message > count=2 [1,2,3] arr anotherCount=5`,
         )
+    })
+
+    test("message format can change output order", () => {
+        let h = NewTextHandler(receiver)
+        h.messageFormat = "%a %l %w %t"
+        h.log(logWithArgs)
+        expect(receiver).toHaveBeenCalledWith(
+            `log message DEBUG count=2 [1,2,3] arr anotherCount=5 6/30/2025 10:54:49 PM`,
+        )
+    })
+
+    test("message format can remove some things from output", () => {
+        let h = NewTextHandler(receiver)
+        h.messageFormat = "%l %a"
+        h.log(logWithArgs)
+        expect(receiver).toHaveBeenCalledWith(`DEBUG log message`)
     })
 })
