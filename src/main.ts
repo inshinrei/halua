@@ -44,6 +44,12 @@ export class Halua implements HaluaLogger {
         return new Halua(this.handlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
     }
 
+    public withMessageFormat(f: string): HaluaLogger {
+        this.unlinkInheritance()
+        this.options.messageFormat = f
+        return this
+    }
+
     public setHandler(handler: Handler | Array<Handler>) {
         this.validateHandlers(handler)
         this.handlers = Array.isArray(handler) ? handler : [handler]
@@ -130,5 +136,9 @@ export class Halua implements HaluaLogger {
         return (
             Object.prototype.hasOwnProperty.call(v.__proto__, "log") || Object.prototype.hasOwnProperty.call(v, "log")
         )
+    }
+
+    private unlinkInheritance(): void {
+        this.options = structuredClone(this.options)
     }
 }

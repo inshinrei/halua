@@ -14,6 +14,7 @@ export interface HaluaLogger {
         (arg1?: Handler | Array<Handler> | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
     }
     With: (...args: any[]) => HaluaLogger
+    withMessageFormat: (format: string) => HaluaLogger
     setHandler: (handler: Handler | Array<Handler>) => void
     appendHandler: (handler: Handler) => void
 

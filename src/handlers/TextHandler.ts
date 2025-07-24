@@ -1,6 +1,6 @@
 import { Handler, Log } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
-import { extractNonFormatChars, stringMatchesVar } from "../util/string"
+import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {}
 
@@ -35,9 +35,7 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
             if (log.withArgs) {
                 withArgs = this.composeVariablesString(msg, log.withArgs)
             }
-            if (!withArgs) {
-                msg = msg.slice(0, msg.indexOf("%a") + 2)
-            }
+            msg = removeTailingUndefinedValues(msg, log)
             send(
                 msg
                     .replace("%w", withArgs)

@@ -74,4 +74,10 @@ describe("Halua Logger", () => {
         logger.assert(false, "assertion")
         expect(r1.log).toHaveBeenCalledTimes(1)
     })
+
+    test("message format change", () => {
+        let logger = halua.New(r1).withMessageFormat("%l %a")
+        logger.info("logs info")
+        expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%l %a" }))
+    })
 })
