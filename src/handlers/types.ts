@@ -7,6 +7,7 @@ export interface Log {
     timestamp: number | string
     level: Level
     args: Array<any>
+    messageFormat?: string
     assertion?: boolean
     withArgs?: null | Array<any>
 }

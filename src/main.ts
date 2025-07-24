@@ -17,6 +17,7 @@ export class Halua implements HaluaLogger {
         handlers: Handler | Array<Handler>,
         private options: HaluaOptions = {},
     ) {
+        this.options.messageFormat ??= "%t %l %a | %w"
         this.validateHandlers(handlers)
         this.handlers = Array.isArray(handlers) ? handlers : [handlers]
     }
@@ -85,6 +86,7 @@ export class Halua implements HaluaLogger {
             timestamp: Date.now(),
             args: args || [],
             withArgs: this.options?.withArgs || null,
+            messageFormat: this.options.messageFormat,
             assertion,
             level,
         }

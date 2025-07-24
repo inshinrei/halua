@@ -4,6 +4,7 @@ export let log: Log = {
     timestamp: 1751313289663,
     args: ["log message"],
     level: Level.Debug,
+    messageFormat: "%t %l %a | %w",
 }
 
 export let logWithArgs = {

@@ -2,10 +2,7 @@ import { Handler, Log } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
 import { extractNonFormatChars, stringMatchesVar } from "../util/string"
 
-interface TextLogHandler extends Handler {
-    messageFormat: string
-    updateMessageFormat: (format: string) => void
-}
+interface TextLogHandler extends Handler {}
 
 interface TextLogHandlerOptions {
     linkArguments?: boolean
@@ -17,11 +14,8 @@ interface TextLogHandlerOptions {
 export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
     return new (class TextLog implements TextLogHandler {
         public skipDeepCopyWhenSendingLog = true
-        public messageFormat = ""
 
-        constructor(private options: TextLogHandlerOptions) {
-            this.messageFormat = options.messageFormat ?? "%t %l %a | %w"
-        }
+        constructor(private options: TextLogHandlerOptions) {}
 
         private get linkArguments(): boolean {
             return this.options.linkArguments !== undefined && !this.options.linkArguments
@@ -31,19 +25,15 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
             this.sendLog(log)
         }
 
-        public updateMessageFormat(format: string) {
-            this.messageFormat = format
-        }
-
         private sendLog(log: Log) {
             let args = ""
             let withArgs = ""
-            let msg = this.messageFormat
+            let msg = this.options.messageFormat || log.messageFormat!
             if (log.args) {
-                args = this.composeVariablesString(log.args)
+                args = this.composeVariablesString(msg, log.args)
             }
             if (log.withArgs) {
-                withArgs = this.composeVariablesString(log.withArgs)
+                withArgs = this.composeVariablesString(msg, log.withArgs)
             }
             if (!withArgs) {
                 msg = msg.slice(0, msg.indexOf("%a") + 2)
@@ -57,9 +47,9 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
             )
         }
 
-        private composeVariablesString(data: Array<any>): string {
+        private composeVariablesString(format: string, data: Array<any>): string {
             let str = ""
-            let excluded = extractNonFormatChars(this.messageFormat)
+            let excluded = extractNonFormatChars(format)
 
             for (let i = 0; i < data.length; i++) {
                 let last = i === data.length - 1
@@ -110,8 +100,6 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
 
             return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
         }
-
-        private substituteMessage(msg: string) {}
 
         private prepareDate(t: number) {
             let d = new Date(t)

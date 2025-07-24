@@ -32,6 +32,7 @@ export function NewJSONHandler(send: (data: string) => void, options: JSONLogHan
         private sendLog(log: Log) {
             try {
                 delete log.assertion
+                delete log.messageFormat
                 log.timestamp = this.formatDate(log.timestamp as number)
                 send(JSON.stringify(this.flattenLinkedArguments(log), this.replacer.bind(this)))
             } catch (err) {
