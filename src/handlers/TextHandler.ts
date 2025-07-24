@@ -4,10 +4,12 @@ import { extractNonFormatChars, stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {
     messageFormat: string
+    updateMessageFormat: (format: string) => void
 }
 
 interface TextLogHandlerOptions {
     linkArguments?: boolean
+    messageFormat?: string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
 }
@@ -15,9 +17,11 @@ interface TextLogHandlerOptions {
 export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
     return new (class TextLog implements TextLogHandler {
         public skipDeepCopyWhenSendingLog = true
-        public messageFormat = "%t %l %a | %w"
+        public messageFormat = ""
 
-        constructor(private options: TextLogHandlerOptions) {}
+        constructor(private options: TextLogHandlerOptions) {
+            this.messageFormat = options.messageFormat ?? "%t %l %a | %w"
+        }
 
         private get linkArguments(): boolean {
             return this.options.linkArguments !== undefined && !this.options.linkArguments
@@ -25,6 +29,10 @@ export function NewTextHandler(send: (data: string) => void, options: TextLogHan
 
         log(log: Log) {
             this.sendLog(log)
+        }
+
+        public updateMessageFormat(format: string) {
+            this.messageFormat = format
         }
 
         private sendLog(log: Log) {
