@@ -29,7 +29,7 @@ export function removeTailingUndefinedValues(format: string, log: Log) {
 }
 
 export function messageFormatPrettyCompatible(f: string): boolean {
-    return argsInDisposition(f)
+    return argsInDisposition(f) || (f.indexOf("t") === -1 && f.indexOf("%l") === -1)
 }
 
 function argsInDisposition(format: string): boolean {
