@@ -4,6 +4,7 @@ import { stringMatchesVar } from "../util/string"
 
 interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
+    messageFormat: Array<string>
 }
 
 interface ConsoleLogHandlerConsole {
@@ -23,7 +24,7 @@ interface WebConsoleHandlerOptions {
     fetchBrowserThemeOnInstanceCreation?: boolean
     /** provide custom colors map */
     customColors?: Colors
-    withSeparator?: string
+    messageFormat?: string
     useWarn?: boolean
     useError?: boolean
 }
