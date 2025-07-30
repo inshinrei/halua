@@ -37,26 +37,8 @@ export function NewWebConsoleHandler(
     options: WebConsoleHandlerOptions = {},
 ): WebConsoleLogHandler {
     return new (class WebConsoleLog implements WebConsoleLogHandler {
-        public skipDeepCopyWhenSendingLog = true
-        // extract withSeparator from here
-        // public messageFormat = "%t %l %a | %w"
-        /**
-         * strategy to merge
-         *
-         * %t %l %a | %w
-         * [...strings, ...argsArr, ...withArgsArr]
-         *
-         * 1. definitely strings should be composed on total output
-         *
-         * notes:
-         * - a pretty option won't work if %a or %w come first
-         *
-         * proposed flow:
-         * - check if %t and %l are coming before %a or %w
-         * - if not, remove pretty coloring
-         * - compose string
-         * - output
-         * */
+        public skipDeepCopyWhenSendingLog = false
+        public messageFormat: Array<string> = ["%t", "%l", "%a", "|", "%w"]
 
         private readonly colors: Colors = new Map([])
         // bg chrome #fefbff
@@ -81,7 +63,10 @@ export function NewWebConsoleHandler(
         constructor(private options: WebConsoleHandlerOptions) {
             this.options = options || {}
             this.options.fetchBrowserThemeOnInstanceCreation ??= true
-            this.options.withSeparator ??= "|"
+
+            let format = options.messageFormat ?? "%t %l %a | %w"
+            // %t%l is not covered, need to cover that, make separator func, either split by space or by taken char
+            this.messageFormat = format.split(" ")
 
             if (!this.options.pretty) {
                 return
@@ -130,47 +115,24 @@ export function NewWebConsoleHandler(
         }
 
         private insertInternalEntries(log: Log) {
-            let additionalArgs = []
-            if (log.withArgs) {
-                additionalArgs.push(this.options.withSeparator!)
-                additionalArgs.push(...log.withArgs)
-                delete log.withArgs
-            }
-            let totalArgs = [...(log.args || []), ...additionalArgs]
             if (this.options.pretty) {
-                let colorKey: ColorKey =
-                    log.level === Level.Debug
-                        ? "purple"
-                        : log.level === Level.Info
-                          ? "blue"
-                          : log.level === Level.Warn
-                            ? "orange"
-                            : "red"
-                return [
-                    `${this.prepareDate(log.timestamp)} %c${log.level}%c`,
-                    `color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)};`,
-                    `color:${this.options.customColors?.get("green") || this.colors.get("green")}`,
-                    ...totalArgs,
-                ]
+                return this.prepareMessagePretty(log)
             }
-            return [this.prepareDate(log.timestamp), `${log.level}`, ...totalArgs]
+            return this.prepareMessage(log)
         }
 
         private composeConsoleSubstitution(data: Array<any>, startingVarConvertIndex = 2): string {
             let str = ""
             if (this.options.pretty) {
-                startingVarConvertIndex = 2
+                startingVarConvertIndex = 3
             }
             for (let i = this.options.pretty ? startingVarConvertIndex : 0; i < data.length; i++) {
                 let last = i === data.length - 1
                 let v = data[i]
 
-                let vWithEqualSign =
-                    typeof v === "string" && stringMatchesVar(v, new Set([this.options.withSeparator!]))
+                let vWithEqualSign = typeof v === "string" && stringMatchesVar(v, new Set([]))
                 let nextVWithEqualSign =
-                    !last &&
-                    typeof data[i + 1] === "string" &&
-                    stringMatchesVar(data[i + 1], new Set([this.options.withSeparator!]))
+                    !last && typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], new Set([]))
 
                 if (nextVWithEqualSign) {
                     startingVarConvertIndex = Math.max(startingVarConvertIndex, i)
@@ -193,6 +155,76 @@ export function NewWebConsoleHandler(
                 str += `%o${last ? "" : " "}`
             }
             return str
+        }
+
+        private prepareMessagePretty(log: Log) {
+            let format = [...this.messageFormat]
+            if (!log.withArgs) {
+                format = format.slice(0, format.indexOf("%a") + 1)
+            }
+            let message = []
+            let colors = ""
+            let colorKeys = []
+            for (let i = 0; i <= format.length - 1; i++) {
+                if (format[i] === "%w") {
+                    message.push(...(log.withArgs || []))
+                    continue
+                }
+                if (format[i] === "%t") {
+                    colors += `%c${this.prepareDate(log.timestamp)} `
+                    colorKeys.push(`color:${this.options.customColors?.get("grey") || this.colors.get("grey")}`)
+                    continue
+                }
+                if (format[i] === "%a") {
+                    colors += "%c"
+                    colorKeys.push(`color:${this.options.customColors?.get("green") || this.colors.get("green")}`)
+                    message.push(...log.args)
+                    continue
+                }
+                if (format[i] === "%l") {
+                    colors += `%c${log.level}`
+                    let colorKey: ColorKey =
+                        log.level === Level.Debug
+                            ? "purple"
+                            : log.level === Level.Info
+                              ? "blue"
+                              : log.level === Level.Warn
+                                ? "orange"
+                                : "red"
+                    colorKeys.push(`color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)}`)
+                    continue
+                }
+                message.push(format[i])
+            }
+            return [colors, ...colorKeys, ...message]
+        }
+
+        private prepareMessage(log: Log) {
+            let format = [...this.messageFormat]
+            if (!log.withArgs) {
+                format = format.slice(0, format.indexOf("%a") + 1)
+            }
+            let message = []
+            for (let i = 0; i <= format.length - 1; i++) {
+                if (format[i] === "%w") {
+                    message.push(...(log.withArgs || []))
+                    continue
+                }
+                if (format[i] === "%t") {
+                    message.push(this.prepareDate(log.timestamp))
+                    continue
+                }
+                if (format[i] === "%a") {
+                    message.push(...log.args)
+                    continue
+                }
+                if (format[i] === "%l") {
+                    message.push(log.level)
+                    continue
+                }
+                message.push(format[i])
+            }
+            return message
         }
 
         private prepareDate(t: number | string) {

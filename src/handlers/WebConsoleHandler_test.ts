@@ -81,7 +81,14 @@ describe("WebConsoleHandler", () => {
         })
         prettyHandler.log(log)
         expect(receiver.debug).toHaveBeenCalledWith(
-            ...["%s %s", "6/30/2025 10:54:49 PM %cDEBUG%c", "color:#8A228A;", "color:#224912", "log message"],
+            ...[
+                "%s %s",
+                "%c6/30/2025 10:54:49 PM %cDEBUG%c",
+                "color:#565656",
+                "color:#8A228A",
+                "color:#224912",
+                "log message",
+            ],
         )
     })
 
@@ -125,7 +132,7 @@ describe("WebConsoleHandler", () => {
     })
 
     test("withSeparator could be passed", () => {
-        let h = NewWebConsoleHandler(receiver, { withSeparator: ">" })
+        let h = NewWebConsoleHandler(receiver, { messageFormat: "%t %l %a > %w" })
         h.log(logWithArgs)
         expect(receiver.debug).toHaveBeenCalledWith(
             ...[
