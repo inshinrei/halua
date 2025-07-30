@@ -57,25 +57,63 @@ describe("TextHandler", () => {
         expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
     })
 
-    test("separator can be changed", () => {
-        let h = NewTextHandler(receiver, { messageFormat: "%t %l %a > %w" })
-        h.log(logWithArgs)
-        expect(receiver).toHaveBeenCalledWith(
-            `6/30/2025 10:54:49 PM DEBUG log message > count=2 [1,2,3] arr anotherCount=5`,
-        )
-    })
+    describe("messageFormat", () => {
+        test("standard", () => {
+            let format = "%t %l %a > %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(
+                `6/30/2025 10:54:49 PM DEBUG log message > count=2 [1,2,3] arr anotherCount=5`,
+            )
+        })
 
-    test("message format can change output order", () => {
-        let h = NewTextHandler(receiver, { messageFormat: "%a %l %w %t" })
-        h.log(logWithArgs)
-        expect(receiver).toHaveBeenCalledWith(
-            `log message DEBUG count=2 [1,2,3] arr anotherCount=5 6/30/2025 10:54:49 PM`,
-        )
-    })
+        test("remove time and level", () => {
+            let format = "%a > %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(`log message > count=2 [1,2,3] arr anotherCount=5`)
+        })
 
-    test("message format can remove some things from output", () => {
-        let h = NewTextHandler(receiver, { messageFormat: "%l %a" })
-        h.log(logWithArgs)
-        expect(receiver).toHaveBeenCalledWith(`DEBUG log message`)
+        test("absent withArgs does remove separator", () => {
+            let format = "%t %l %a >> %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(log)
+            expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG log message`)
+        })
+
+        test("prefixed", () => {
+            let format = "[prefixed] %t %l %a > %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(log)
+            expect(receiver).toHaveBeenCalledWith(`[prefixed] 6/30/2025 10:54:49 PM DEBUG log message`)
+        })
+
+        test("no spaces", () => {
+            let format = "%t%l%a%w"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(
+                `6/30/2025 10:54:49 PMDEBUGlog messagecount=2 [1,2,3] arr anotherCount=5`,
+            )
+        })
+
+        test("args first", () => {
+            let format = "%a %w > %t %l"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(
+                `log message count=2 [1,2,3] arr anotherCount=5 > 6/30/2025 10:54:49 PM DEBUG`,
+            )
+        })
+
+        test("separator change", () => {
+            let format = "%t %l %a ::: %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(
+                `6/30/2025 10:54:49 PM DEBUG log message ::: count=2 [1,2,3] arr anotherCount=5`,
+            )
+        })
+
+        test("adding staff", () => {
+            let format = "[time] %t on level %l with args %a and with %w"
+            NewTextHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver).toHaveBeenCalledWith(
+                `[time] 6/30/2025 10:54:49 PM on level DEBUG with args log message and with count=2 [1,2,3] arr anotherCount=5`,
+            )
+        })
     })
 })
