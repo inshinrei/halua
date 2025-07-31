@@ -14,5 +14,6 @@
 3. TextHandler now has replaceBeforeStringify option
 4. text handler now has "linked arguments flatten" options, that can be turned off
 5. webbrowserconsolehandler now has "link arguments" options, that can be turned off
+6. WebConsoleHandler now has message format field
 
 REWRITE DOCS IN README
