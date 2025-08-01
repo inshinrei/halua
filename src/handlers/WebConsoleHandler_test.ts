@@ -156,7 +156,7 @@ describe("WebConsoleHandler", () => {
             let format = "%a > %w"
             NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
-                ...["%s %s %s %d %o %s %s %d", "log message", ">", "count", 2, [1, 2, 3], "arr", "anotherCount =", 5],
+                ...["%s %s %s %d %o %s %s %d", "log message", ">", "count =", 2, [1, 2, 3], "arr", "anotherCount =", 5],
             )
         })
 
@@ -191,26 +191,74 @@ describe("WebConsoleHandler", () => {
 
         test("no spaces", () => {
             let format = "%t%l%a%w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(log)
+            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith()
         })
 
         test("args first", () => {
             let format = "%a %w > %t %l"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(log)
-            expect(receiver.debug).toHaveBeenCalledWith()
+            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver.debug).toHaveBeenCalledWith(
+                ...[
+                    "%s %s %d %o %s %s %d %s %s %s",
+                    "log message",
+                    "count",
+                    2,
+                    [1, 2, 3],
+                    "arr",
+                    "anotherCount =",
+                    5,
+                    ">",
+                    "6/30/2025 10:54:49 PM",
+                    "DEBUG",
+                ],
+            )
         })
 
         test("separator change", () => {
             let format = "%t %l %a ::: %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(log)
-            expect(receiver.debug).toHaveBeenCalledWith()
+            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver.debug).toHaveBeenCalledWith(
+                ...[
+                    "%s %s %s %s %s %d %o %s %s %d",
+                    "6/30/2025 10:54:49 PM",
+                    "DEBUG",
+                    "log message",
+                    ":::",
+                    "count =",
+                    2,
+                    [1, 2, 3],
+                    "arr",
+                    "anotherCount =",
+                    5,
+                ],
+            )
         })
 
         test("adding staff", () => {
             let format = "[time] %t on level %l with args %a and with %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(log)
-            expect(receiver.debug).toHaveBeenCalledWith()
+            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            expect(receiver.debug).toHaveBeenCalledWith(
+                ...[
+                    "%s %s %s %s %s %s %s %s %s %s %s %d %o %s %s %d",
+                    "[time]",
+                    "6/30/2025 10:54:49 PM",
+                    "on",
+                    "level",
+                    "DEBUG",
+                    "with",
+                    "args",
+                    "log message",
+                    "and",
+                    "with",
+                    "count =",
+                    2,
+                    [1, 2, 3],
+                    "arr",
+                    "anotherCount =",
+                    5,
+                ],
+            )
         })
     })
 
