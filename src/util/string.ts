@@ -16,6 +16,28 @@ export function extractNonFormatChars(f: string): Set<string> {
     return total
 }
 
+export function extractTaken(f: string): Array<string> {
+    let total: Array<string> = []
+    let seq = ""
+    for (let rune of f) {
+        if (seq && (rune === "%" || rune === " ")) {
+            total.push(seq)
+            seq = ""
+            if (rune === "%") {
+                seq += rune
+            }
+            continue
+        }
+        seq += rune
+    }
+
+    if (seq) {
+        total.push(seq)
+    }
+
+    return total
+}
+
 export function removeTailingUndefinedValues(format: string, log: Log) {
     if (!argsInDisposition(format) || log.withArgs) {
         return format
@@ -38,4 +60,15 @@ function argsInDisposition(format: string): boolean {
     let indexOfTimestamp = format.indexOf("%t")
     let indexOfLevel = format.indexOf("l")
     return Math.max(indexOfTimestamp, indexOfLevel) < Math.min(indexOfArgs, indexOfWithArgs)
+}
+
+export function getConvertStartingIndex(format: string): number {
+    let sum = format.indexOf("%t") + format.indexOf("%l")
+    if (sum === -2) {
+        return 0
+    }
+    if (sum === 0) {
+        return 1
+    }
+    return 2
 }

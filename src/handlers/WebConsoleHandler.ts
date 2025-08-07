@@ -1,6 +1,6 @@
 import type { Handler, Log } from "./types"
 import { Level } from "./types"
-import { stringMatchesVar } from "../util/string"
+import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../util/string"
 
 interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
@@ -38,7 +38,8 @@ export function NewWebConsoleHandler(
 ): WebConsoleLogHandler {
     return new (class WebConsoleLog implements WebConsoleLogHandler {
         public skipDeepCopyWhenSendingLog = false
-        public messageFormat: Array<string> = ["%t", "%l", "%a", "|", "%w"]
+        public messageFormat: Array<string> = []
+        private readonly messageFormatRaw: string = "%t %l %a | %w"
 
         private readonly colors: Colors = new Map([])
         // bg chrome #fefbff
@@ -64,9 +65,8 @@ export function NewWebConsoleHandler(
             this.options = options || {}
             this.options.fetchBrowserThemeOnInstanceCreation ??= true
 
-            let format = options.messageFormat ?? "%t %l %a | %w"
-            // %t%l is not covered, need to cover that, make separator func, either split by space or by taken char
-            this.messageFormat = format.split(" ")
+            this.messageFormatRaw = options.messageFormat ?? this.messageFormatRaw
+            this.messageFormat = Array.from(extractTaken(this.messageFormatRaw))
 
             if (!this.options.pretty) {
                 return
@@ -123,13 +123,16 @@ export function NewWebConsoleHandler(
 
         private composeConsoleSubstitution(data: Array<any>, startingVarConvertIndex = 2): string {
             let str = ""
+            startingVarConvertIndex = getConvertStartingIndex(this.messageFormatRaw)
             if (this.options.pretty) {
                 startingVarConvertIndex = 3
             }
+
             for (let i = this.options.pretty ? startingVarConvertIndex : 0; i < data.length; i++) {
                 let last = i === data.length - 1
                 let v = data[i]
 
+                let takenNames = extractTaken(this.messageFormatRaw)
                 let vWithEqualSign = typeof v === "string" && stringMatchesVar(v, new Set([]))
                 let nextVWithEqualSign =
                     !last && typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], new Set([]))
@@ -138,7 +141,13 @@ export function NewWebConsoleHandler(
                     startingVarConvertIndex = Math.max(startingVarConvertIndex, i)
                 }
 
-                if (!this.linkArguments && !last && i > startingVarConvertIndex && vWithEqualSign) {
+                if (
+                    !this.linkArguments &&
+                    !takenNames.includes(v) &&
+                    !last &&
+                    i > startingVarConvertIndex &&
+                    vWithEqualSign
+                ) {
                     data[i] = `${v} =`
                 }
 

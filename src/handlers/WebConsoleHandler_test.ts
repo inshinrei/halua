@@ -192,7 +192,20 @@ describe("WebConsoleHandler", () => {
         test("no spaces", () => {
             let format = "%t%l%a%w"
             NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
-            expect(receiver.debug).toHaveBeenCalledWith()
+            expect(receiver.debug).toHaveBeenCalledWith(
+                ...[
+                    "%s %s %s %s %d %o %s %s %d",
+                    "6/30/2025 10:54:49 PM",
+                    "DEBUG",
+                    "log message",
+                    "count =",
+                    2,
+                    [1, 2, 3],
+                    "arr",
+                    "anotherCount =",
+                    5,
+                ],
+            )
         })
 
         test("args first", () => {
