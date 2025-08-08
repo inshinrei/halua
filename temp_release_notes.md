@@ -16,4 +16,6 @@
 5. webbrowserconsolehandler now has "link arguments" options, that can be turned off
 6. WebConsoleHandler now has message format field
 
-REWRITE DOCS IN README
+pre-release notes:
+
+- REWRITE DOCS IN README
