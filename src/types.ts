@@ -18,6 +18,7 @@ export interface HaluaLogger {
     setHandler: (handler: PassedHandler) => void
     appendHandler: (handler: () => Handler) => void
 
+    logTo: (level: Level, ...args: any[]) => void
     debug: (...args: any[]) => void
     info: (...args: any[]) => void
     warn: (...args: any[]) => void

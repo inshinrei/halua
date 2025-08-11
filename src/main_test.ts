@@ -98,6 +98,15 @@ describe("Halua Logger", () => {
             logger.info("logs info")
             expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%t %l %a" }))
         })
+
+        test("logTo method sends log to specified level", () => {
+            let logger = halua.New(makeHandler(r1))
+            logger.logTo(Level.Info, "string")
+            expect(r1.log).toHaveBeenNthCalledWith(1, expect.objectContaining({ level: Level.Info }))
+            vi.clearAllMocks()
+            logger.logTo(Level.Warn, "string")
+            expect(r1.log).toHaveBeenNthCalledWith(1, expect.objectContaining({ level: Level.Warn }))
+        })
     })
 
     describe("level controls", () => {

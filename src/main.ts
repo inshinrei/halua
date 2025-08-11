@@ -62,6 +62,10 @@ export class Halua implements HaluaLogger {
         this.handlers.push(...this.buildHandlers(handler))
     }
 
+    public logTo(level: Level, ...args: any[]) {
+        this.executeHandlers(this.composeLog(level, true, ...args))
+    }
+
     public debug(...args: any[]) {
         this.sendToHandler("debug", true, ...args)
     }
@@ -86,15 +90,18 @@ export class Halua implements HaluaLogger {
     }
 
     private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", assertion = true, ...args: any[]) {
-        let log: Log = {
+        this.executeHandlers(this.composeLog(toLevel(field), assertion, ...args))
+    }
+
+    private composeLog(level: Level, assertion: boolean, ...args: any[]): Log {
+        return {
             timestamp: Date.now(),
             args: args || [],
             withArgs: this.options?.withArgs || null,
             messageFormat: this.options.messageFormat,
             assertion,
-            level: toLevel(field),
+            level,
         }
-        this.executeHandlers(log)
     }
 
     private executeHandlers(log: Log) {
