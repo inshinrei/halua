@@ -9,14 +9,14 @@ export interface HaluaOptions {
 
 export interface HaluaLogger {
     New: {
-        (handler: Handler | Array<Handler>): HaluaLogger
+        (handler: PassedHandler): HaluaLogger
         (options: HaluaOptions): HaluaLogger
-        (arg1?: Handler | Array<Handler> | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
+        (arg1?: PassedHandler | HaluaOptions, arg2?: HaluaOptions): HaluaLogger
     }
     With: (...args: any[]) => HaluaLogger
     withMessageFormat: (format: string) => HaluaLogger
-    setHandler: (handler: Handler | Array<Handler>) => void
-    appendHandler: (handler: Handler) => void
+    setHandler: (handler: PassedHandler) => void
+    appendHandler: (handler: () => Handler) => void
 
     debug: (...args: any[]) => void
     info: (...args: any[]) => void
@@ -24,3 +24,5 @@ export interface HaluaLogger {
     error: (...args: any[]) => void
     assert: (assertion: boolean, ...args: any[]) => void
 }
+
+export type PassedHandler = (() => Handler) | Array<() => Handler>

@@ -1,12 +1,11 @@
-import type { HaluaLogger, HaluaOptions } from "./types"
+import type { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
 import type { Handler, Log } from "./handlers/types"
 import { Level } from "./handlers/types"
 import { toLevel } from "./util/level"
 
-type PassedHandler = () => Handler | Array<Handler>
-
 export class Halua implements HaluaLogger {
     private handlers: Array<Handler> = []
+    private readonly passedHandlers: PassedHandler
 
     private readonly MajorLevelMap = new Map([
         [Level.Error, new Set([Level.Error])],
@@ -16,34 +15,35 @@ export class Halua implements HaluaLogger {
     ])
 
     constructor(
-        handlers: PassedHandler,
+        passed: PassedHandler,
         private options: HaluaOptions = {},
     ) {
+        this.passedHandlers = passed
         this.options.messageFormat ??= "%t %l %a | %w"
-        this.validateHandlers(handlers)
-        this.handlers = Array.isArray(handlers) ? handlers : [handlers]
+        this.validateHandlers(this.buildHandlers(passed))
+        this.handlers = this.buildHandlers(passed)
     }
 
     public New(
-        arg1: PassedHandler | HaluaOptions = this.handlers,
+        arg1: PassedHandler | HaluaOptions = this.passedHandlers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
         if (Array.isArray(arg1)) {
-            this.validateHandlers(arg1)
-            return new Halua(arg1 as Array<Handler>, arg2)
+            this.validateHandlers(this.buildHandlers(arg1))
+            return new Halua(arg1 as PassedHandler, arg2)
         }
         if (this.supposeIsHandler(arg1)) {
-            return new Halua(arg1 as Handler, arg2)
+            return new Halua(arg1 as PassedHandler, arg2)
         }
         if (Object.keys(arg1).length) {
-            return new Halua(this.handlers, arg1 as HaluaOptions)
+            return new Halua(this.passedHandlers, arg1 as HaluaOptions)
         }
-        this.validateHandlers(arg1 as Handler)
-        return new Halua(arg1 as Handler, arg2)
+        this.validateHandlers(this.buildHandlers(arg1 as PassedHandler))
+        return new Halua(arg1 as PassedHandler, arg2)
     }
 
     public With(...args: any[]): HaluaLogger {
-        return new Halua(this.handlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
+        return new Halua(this.passedHandlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
     }
 
     public withMessageFormat(f: string): HaluaLogger {
@@ -53,13 +53,13 @@ export class Halua implements HaluaLogger {
     }
 
     public setHandler(handler: PassedHandler) {
-        this.validateHandlers(handler)
-        this.handlers = Array.isArray(handler) ? handler : [handler]
+        this.validateHandlers(this.buildHandlers(handler))
+        this.handlers = this.buildHandlers(handler)
     }
 
-    public appendHandler(handler: Handler) {
-        this.validateHandlers(handler)
-        this.handlers.push(handler)
+    public appendHandler(handler: () => Handler) {
+        this.validateHandlers(this.buildHandlers(handler))
+        this.handlers.push(...this.buildHandlers(handler))
     }
 
     public debug(...args: any[]) {
@@ -122,7 +122,7 @@ export class Halua implements HaluaLogger {
         return this.MajorLevelMap.get(this.options.minLevel || Level.Debug)!.has(l)
     }
 
-    private validateHandlers(v: PassedHandler) {
+    private validateHandlers(v: Array<Handler>) {
         let handlers = Array.isArray(v) ? v : [v]
         if (this.options.errorPolicy === "throw") {
             for (let h of handlers) {
@@ -142,5 +142,10 @@ export class Halua implements HaluaLogger {
 
     private unlinkInheritance(): void {
         this.options = structuredClone(this.options)
+    }
+
+    private buildHandlers(passed: PassedHandler): Array<Handler> {
+        let entries = Array.isArray(passed) ? passed : [passed]
+        return entries.map((v) => v())
     }
 }
