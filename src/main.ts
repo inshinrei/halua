@@ -3,6 +3,8 @@ import type { Handler, Log } from "./handlers/types"
 import { Level } from "./handlers/types"
 import { toLevel } from "./util/level"
 
+type PassedHandler = () => Handler | Array<Handler>
+
 export class Halua implements HaluaLogger {
     private handlers: Array<Handler> = []
 
@@ -14,7 +16,7 @@ export class Halua implements HaluaLogger {
     ])
 
     constructor(
-        handlers: Handler | Array<Handler>,
+        handlers: PassedHandler,
         private options: HaluaOptions = {},
     ) {
         this.options.messageFormat ??= "%t %l %a | %w"
@@ -23,7 +25,7 @@ export class Halua implements HaluaLogger {
     }
 
     public New(
-        arg1: Handler | Array<Handler> | HaluaOptions = this.handlers,
+        arg1: PassedHandler | HaluaOptions = this.handlers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
         if (Array.isArray(arg1)) {
@@ -50,7 +52,7 @@ export class Halua implements HaluaLogger {
         return this
     }
 
-    public setHandler(handler: Handler | Array<Handler>) {
+    public setHandler(handler: PassedHandler) {
         this.validateHandlers(handler)
         this.handlers = Array.isArray(handler) ? handler : [handler]
     }
@@ -120,7 +122,7 @@ export class Halua implements HaluaLogger {
         return this.MajorLevelMap.get(this.options.minLevel || Level.Debug)!.has(l)
     }
 
-    private validateHandlers(v: Handler | Array<Handler>) {
+    private validateHandlers(v: PassedHandler) {
         let handlers = Array.isArray(v) ? v : [v]
         if (this.options.errorPolicy === "throw") {
             for (let h of handlers) {
