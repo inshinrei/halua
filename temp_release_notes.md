@@ -6,6 +6,9 @@
 2. webbrowserconsolehandler renamed to webconsolehandler (breaking) (migration strat: rename)
 3. linkedArgumentsFlatten renamed to linkArguments (breaking) (migration strat: rename)
 4. Handler{} now only has to have log method (breaking) (migration strat: custom handler should ve define log method)
+5. Handler is not not a class, but a func that returns Handler (breaking) (migration strat: replace custom handlers with
+   func)
+6. Haluas' option "minLevel" changed to "level" (breaking) (migration strat: rename "minLevel" to "level")
 
 - added:
 

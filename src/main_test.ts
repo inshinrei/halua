@@ -34,7 +34,7 @@ describe("Halua Logger", () => {
 
     test("creates new instance with options as first argument, inherits the handler", () => {
         let logger = halua.New(makeHandler(r1))
-        let logger2 = logger.New({ minLevel: Level.Debug })
+        let logger2 = logger.New({ level: Level.Debug })
         logger2.info("logs")
         expect(r1.log).toHaveBeenCalledTimes(1)
     })
@@ -47,10 +47,10 @@ describe("Halua Logger", () => {
             l.error("logs error")
         }
 
-        log(halua.New(makeHandler(r1), { minLevel: Level.Debug }))
-        log(halua.New(makeHandler(r1), { minLevel: Level.Info }))
-        log(halua.New(makeHandler(r1), { minLevel: Level.Warn }))
-        log(halua.New(makeHandler(r1), { minLevel: Level.Error }))
+        log(halua.New(makeHandler(r1), { level: Level.Debug }))
+        log(halua.New(makeHandler(r1), { level: Level.Info }))
+        log(halua.New(makeHandler(r1), { level: Level.Warn }))
+        log(halua.New(makeHandler(r1), { level: Level.Error }))
         expect(r1.log).toHaveBeenNthCalledWith(1, expect.objectContaining({ level: Level.Debug }))
         expect(r1.log).toHaveBeenNthCalledWith(2, expect.objectContaining({ level: Level.Info }))
         expect(r1.log).toHaveBeenNthCalledWith(3, expect.objectContaining({ level: Level.Warn }))
@@ -70,12 +70,6 @@ describe("Halua Logger", () => {
         expect(r1.log).not.toHaveBeenCalled()
         logger.assert(false, "assertion")
         expect(r1.log).toHaveBeenCalledTimes(1)
-    })
-
-    test("message format change", () => {
-        let logger = halua.New(makeHandler(r1)).withMessageFormat("%l %a")
-        logger.info("logs info")
-        expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%l %a" }))
     })
 
     describe("instance creation", () => {
@@ -113,6 +107,14 @@ describe("Halua Logger", () => {
             expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%l %t" }))
             logger.info("logger log")
             expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%t %l" }))
+        })
+    })
+
+    describe("logging", () => {
+        test("message format is passed to handlers", () => {
+            let logger = halua.New(makeHandler(r1)).withMessageFormat("%t %l %a")
+            logger.info("logs info")
+            expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%t %l %a" }))
         })
     })
 })

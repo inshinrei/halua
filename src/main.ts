@@ -30,16 +30,16 @@ export class Halua implements HaluaLogger {
     ): HaluaLogger {
         if (Array.isArray(arg1)) {
             this.validateHandlers(this.buildHandlers(arg1))
-            return new Halua(arg1 as PassedHandler, arg2)
+            return new Halua(arg1 as PassedHandler, { ...arg2 })
         }
         if (this.supposeIsHandler(arg1)) {
-            return new Halua(arg1 as PassedHandler, arg2)
+            return new Halua(arg1 as PassedHandler, { ...arg2 })
         }
         if (Object.keys(arg1).length) {
-            return new Halua(this.passedHandlers, arg1 as HaluaOptions)
+            return new Halua(this.passedHandlers, { ...(arg1 as HaluaOptions) })
         }
         this.validateHandlers(this.buildHandlers(arg1 as PassedHandler))
-        return new Halua(arg1 as PassedHandler, arg2)
+        return new Halua(arg1 as PassedHandler, { ...arg2 })
     }
 
     public With(...args: any[]): HaluaLogger {
@@ -119,7 +119,7 @@ export class Halua implements HaluaLogger {
     }
 
     private majorLevelCheckPassed(l: Level): boolean {
-        return this.MajorLevelMap.get(this.options.minLevel || Level.Debug)!.has(l)
+        return this.MajorLevelMap.get(this.options.level || Level.Debug)!.has(l)
     }
 
     private validateHandlers(v: Array<Handler>) {

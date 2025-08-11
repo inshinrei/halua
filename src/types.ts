@@ -1,7 +1,7 @@
 import { Handler, Level } from "./handlers/types"
 
 export interface HaluaOptions {
-    minLevel?: Level
+    level?: Level
     withArgs?: Array<any>
     messageFormat?: string
     errorPolicy?: "throw" | "pass"
