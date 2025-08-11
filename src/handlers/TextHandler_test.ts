@@ -17,7 +17,7 @@ describe("TextHandler", () => {
         ["debug", "6/30/2025 10:54:49 PM DEBUG log message"],
         ["info", "6/30/2025 10:54:49 PM INFO log message"],
         ["warn", "6/30/2025 10:54:49 PM WARN log message"],
-        ["error", "6/30/2025 10:54:49 PM ERR log message"],
+        ["error", "6/30/2025 10:54:49 PM ERROR log message"],
     ])("outputs single message with %s", (field, expected) => {
         handler.log({
             ...log,

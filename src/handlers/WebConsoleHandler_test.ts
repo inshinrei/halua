@@ -29,8 +29,8 @@ describe("WebConsoleHandler", () => {
         ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
         ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
         ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
-        ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERR", "log message"]],
-    ])("outputs single messsage with %s", (field, expected) => {
+        ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERROR", "log message"]],
+    ])("outputs single message with %s", (field, expected) => {
         handler.log(structuredClone({ ...log, level: toLevel(field as "debug" | "info" | "warn" | "error") }))
         expect(receiver[field as "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
     })

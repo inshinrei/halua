@@ -17,5 +17,5 @@ export enum Level {
     Debug = "DEBUG",
     Info = "INFO",
     Warn = "WARN",
-    Error = "ERR",
+    Error = "ERROR",
 }

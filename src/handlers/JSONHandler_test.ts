@@ -19,15 +19,15 @@ describe("JSONHandler", () => {
         [Level.Debug, `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"DEBUG"}`],
         [Level.Info, `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"INFO"}`],
         [Level.Warn, `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"WARN"}`],
-        [Level.Error, `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERR"}`],
-        ["assert", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERR"}`],
+        [Level.Error, `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERROR"}`],
+        ["assert", `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"ERROR"}`],
     ])("outputs single message with %s", (field: string, expected) => {
         if (field === "assert") {
             handler.log(
                 structuredClone({
                     ...log,
                     assertion: false,
-                    level: "ERR" as Level,
+                    level: "ERROR" as Level,
                 }),
             )
         } else {

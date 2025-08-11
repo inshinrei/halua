@@ -9,6 +9,7 @@
 5. Handler is not not a class, but a func that returns Handler (breaking) (migration strat: replace custom handlers with
    func)
 6. Haluas' option "minLevel" changed to "level" (breaking) (migration strat: rename "minLevel" to "level")
+7. ERR level renamed to ERROR
 
 - added:
 
