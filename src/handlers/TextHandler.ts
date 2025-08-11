@@ -11,97 +11,101 @@ interface TextLogHandlerOptions {
     replaceBeforeStringify?: (value: any) => any
 }
 
-export function NewTextHandler(send: (data: string) => void, options: TextLogHandlerOptions = {}): TextLogHandler {
-    return new (class TextLog implements TextLogHandler {
-        public skipDeepCopyWhenSendingLog = true
+export function NewTextHandler(
+    send: (data: string) => void,
+    options: TextLogHandlerOptions = {},
+): () => TextLogHandler {
+    return () =>
+        new (class TextLog implements TextLogHandler {
+            public skipDeepCopyWhenSendingLog = true
 
-        constructor(private options: TextLogHandlerOptions) {}
+            constructor(private options: TextLogHandlerOptions) {}
 
-        private get linkArguments(): boolean {
-            return this.options.linkArguments !== undefined && !this.options.linkArguments
-        }
-
-        log(log: Log) {
-            this.sendLog(log)
-        }
-
-        private sendLog(log: Log) {
-            let args = ""
-            let withArgs = ""
-            let msg = this.options.messageFormat || log.messageFormat!
-            if (log.args) {
-                args = this.composeVariablesString(msg, log.args)
+            private get linkArguments(): boolean {
+                return this.options.linkArguments !== undefined && !this.options.linkArguments
             }
-            if (log.withArgs) {
-                withArgs = this.composeVariablesString(msg, log.withArgs)
+
+            log(log: Log) {
+                this.sendLog(log)
             }
-            msg = removeTailingUndefinedValues(msg, log)
-            send(
-                msg
-                    .replace("%w", withArgs)
-                    .replace("%a", args)
-                    .replace("%l", log.level)
-                    .replace("%t", this.prepareDate(log.timestamp as number)),
-            )
-        }
 
-        private composeVariablesString(format: string, data: Array<any>): string {
-            let str = ""
-            let excluded = extractNonFormatChars(format)
+            private sendLog(log: Log) {
+                let args = ""
+                let withArgs = ""
+                let msg = this.options.messageFormat || log.messageFormat!
+                if (log.args) {
+                    args = this.composeVariablesString(msg, log.args)
+                }
+                if (log.withArgs) {
+                    withArgs = this.composeVariablesString(msg, log.withArgs)
+                }
+                msg = removeTailingUndefinedValues(msg, log)
+                send(
+                    msg
+                        .replace("%w", withArgs)
+                        .replace("%a", args)
+                        .replace("%l", log.level)
+                        .replace("%t", this.prepareDate(log.timestamp as number)),
+                )
+            }
 
-            for (let i = 0; i < data.length; i++) {
-                let last = i === data.length - 1
-                let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], excluded)
-                let v = data[i]
+            private composeVariablesString(format: string, data: Array<any>): string {
+                let str = ""
+                let excluded = extractNonFormatChars(format)
 
-                if (
-                    !this.linkArguments &&
-                    !last &&
-                    typeof v === "string" &&
-                    stringMatchesVar(v, excluded) &&
-                    !nextIsNotLinked
-                ) {
-                    str += `${v}=${this.formatValue(data[i + 1])} `
-                    i += 1
-                    continue
+                for (let i = 0; i < data.length; i++) {
+                    let last = i === data.length - 1
+                    let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], excluded)
+                    let v = data[i]
+
+                    if (
+                        !this.linkArguments &&
+                        !last &&
+                        typeof v === "string" &&
+                        stringMatchesVar(v, excluded) &&
+                        !nextIsNotLinked
+                    ) {
+                        str += `${v}=${this.formatValue(data[i + 1])} `
+                        i += 1
+                        continue
+                    }
+
+                    str += `${this.formatValue(v)}${last ? "" : " "}`
                 }
 
-                str += `${this.formatValue(v)}${last ? "" : " "}`
+                return str.trim()
             }
 
-            return str.trim()
-        }
-
-        private formatValue(v: any): string {
-            if (this.options.replaceBeforeStringify) {
-                let val = this.options.replaceBeforeStringify(v)
-                if (val !== null) {
-                    return val
+            private formatValue(v: any): string {
+                if (this.options.replaceBeforeStringify) {
+                    let val = this.options.replaceBeforeStringify(v)
+                    if (val !== null) {
+                        return val
+                    }
                 }
+
+                if (typeof v === "symbol") {
+                    return v.toString()
+                }
+
+                if (v instanceof Set) {
+                    return `Set[${Array.from(v)}]`
+                }
+
+                if (Array.isArray(v)) {
+                    return `[${v}]`
+                }
+
+                if (typeof v === "string") {
+                    return `${v}`
+                }
+
+                return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
             }
 
-            if (typeof v === "symbol") {
-                return v.toString()
+            private prepareDate(t: number) {
+                let d = new Date(t)
+                return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
             }
-
-            if (v instanceof Set) {
-                return `Set[${Array.from(v)}]`
-            }
-
-            if (Array.isArray(v)) {
-                return `[${v}]`
-            }
-
-            if (typeof v === "string") {
-                return `${v}`
-            }
-
-            return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
-        }
-
-        private prepareDate(t: number) {
-            let d = new Date(t)
-            return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-        }
-    })(options)
+        })(options)
 }
