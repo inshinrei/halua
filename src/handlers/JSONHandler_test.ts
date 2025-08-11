@@ -4,8 +4,12 @@ import { log, logWithArgs, logWithVars } from "../mocks/logs"
 import { Level } from "./types"
 
 describe("JSONHandler", () => {
+    function setupHandler(receiver: any, options = {}) {
+        return NewJSONHandler(receiver, options)()
+    }
+
     let receiver = vi.fn()
-    let handler = NewJSONHandler(receiver)
+    let handler = setupHandler(receiver)
 
     afterEach(() => {
         vi.clearAllMocks()
@@ -52,14 +56,14 @@ describe("JSONHandler", () => {
     })
 
     test("date getter can be changed", () => {
-        NewJSONHandler(receiver, {
+        setupHandler(receiver, {
             dateGetter: () => "2025",
         }).log(structuredClone(log))
         expect(receiver).toHaveBeenCalledWith(`{"timestamp":"2025","args":["log message"],"level":"DEBUG"}`)
     })
 
     test("json stringify replacer can be passed", () => {
-        NewJSONHandler(receiver, {
+        setupHandler(receiver, {
             replaceBeforeStringify: (data: any) => {
                 if (typeof data === "string" && data === "log message") {
                     return "replaced"
@@ -73,7 +77,7 @@ describe("JSONHandler", () => {
     })
 
     test("link arguments could be turned off", () => {
-        let handlerWithNoFlattening = NewJSONHandler(receiver, { linkArguments: false })
+        let handlerWithNoFlattening = setupHandler(receiver, { linkArguments: false })
         handlerWithNoFlattening.log(structuredClone(logWithArgs))
         expect(receiver).toHaveBeenCalledWith(
             `{"timestamp":"2025-06-30T19:54:49.663Z","args":["log message"],"level":"DEBUG","withArgs":["count",2,[1,2,3],"arr","anotherCount",5]}`,
