@@ -145,4 +145,32 @@ describe("Halua Logger", () => {
             expect(logfn).toHaveBeenCalledTimes(1)
         })
     })
+
+    describe("custom handler", () => {
+        let logfn = vi.fn()
+
+        test("allows arrow declarations for handler", () => {
+            class CustomHandler {
+                log = (...args: any[]) => {
+                    logfn(...args)
+                }
+            }
+
+            let logger = halua.New(() => new CustomHandler())
+            logger.info("message")
+            expect(logfn).toHaveBeenCalledTimes(1)
+        })
+
+        test("allows func declarations for handler", () => {
+            class CustomHandler {
+                log(...args: any[]) {
+                    logfn(...args)
+                }
+            }
+
+            let logger = halua.New(() => new CustomHandler())
+            logger.debug("debug message")
+            expect(logfn).toHaveBeenCalledTimes(1)
+        })
+    })
 })
