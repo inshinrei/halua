@@ -11,6 +11,7 @@ interface JSONLogHandlerOptions {
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
     linkArguments?: boolean
+    level?: Level
 }
 
 export function NewJSONHandler(
@@ -19,9 +20,12 @@ export function NewJSONHandler(
 ): () => JSONLogHandler {
     return () =>
         new (class JSONLog implements JSONLogHandler {
+            public level?: Level
+
             private readonly takenNames = new Set(["timestamp", "level", "args"])
 
             constructor(private readonly options: JSONLogHandlerOptions) {
+                this.level = options.level
                 this.options = options || {}
             }
 

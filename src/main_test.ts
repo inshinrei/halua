@@ -39,24 +39,6 @@ describe("Halua Logger", () => {
         expect(r1.log).toHaveBeenCalledTimes(1)
     })
 
-    test("turns off logging for levels, lower than required", () => {
-        function log(l: HaluaLogger) {
-            l.debug("logs")
-            l.info("logs info")
-            l.warn("logs warning")
-            l.error("logs error")
-        }
-
-        log(halua.New(makeHandler(r1), { level: Level.Debug }))
-        log(halua.New(makeHandler(r1), { level: Level.Info }))
-        log(halua.New(makeHandler(r1), { level: Level.Warn }))
-        log(halua.New(makeHandler(r1), { level: Level.Error }))
-        expect(r1.log).toHaveBeenNthCalledWith(1, expect.objectContaining({ level: Level.Debug }))
-        expect(r1.log).toHaveBeenNthCalledWith(2, expect.objectContaining({ level: Level.Info }))
-        expect(r1.log).toHaveBeenNthCalledWith(3, expect.objectContaining({ level: Level.Warn }))
-        expect(r1.log).toHaveBeenNthCalledWith(4, expect.objectContaining({ level: Level.Error }))
-    })
-
     test("appends withArgs by With method", () => {
         let withArgs = ["string", [1, 2, 3], 1]
         let logger = halua.New(makeHandler(r1)).With(...withArgs)
@@ -115,6 +97,43 @@ describe("Halua Logger", () => {
             let logger = halua.New(makeHandler(r1)).withMessageFormat("%t %l %a")
             logger.info("logs info")
             expect(r1.log).toHaveBeenCalledWith(expect.objectContaining({ messageFormat: "%t %l %a" }))
+        })
+    })
+
+    describe("level controls", () => {
+        test("turns off logging for levels, lower than required", () => {
+            function log(l: HaluaLogger) {
+                l.debug("logs")
+                l.info("logs info")
+                l.warn("logs warning")
+                l.error("logs error")
+            }
+
+            log(halua.New(makeHandler(r1), { level: Level.Debug }))
+            log(halua.New(makeHandler(r1), { level: Level.Info }))
+            log(halua.New(makeHandler(r1), { level: Level.Warn }))
+            log(halua.New(makeHandler(r1), { level: Level.Error }))
+            expect(r1.log).toHaveBeenNthCalledWith(1, expect.objectContaining({ level: Level.Debug }))
+            expect(r1.log).toHaveBeenNthCalledWith(2, expect.objectContaining({ level: Level.Info }))
+            expect(r1.log).toHaveBeenNthCalledWith(3, expect.objectContaining({ level: Level.Warn }))
+            expect(r1.log).toHaveBeenNthCalledWith(4, expect.objectContaining({ level: Level.Error }))
+        })
+
+        test("handlers' level takes priority on sending", () => {
+            let logfn = vi.fn()
+
+            function NewHandler() {
+                return () => ({
+                    level: Level.Warn,
+                    log: logfn,
+                })
+            }
+
+            let logger = halua.New(NewHandler(), { level: Level.Info })
+            logger.debug("debug message")
+            logger.info("info message")
+            logger.warn("warn message")
+            expect(logfn).toHaveBeenCalledTimes(1)
         })
     })
 })

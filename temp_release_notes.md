@@ -18,3 +18,5 @@
 4. text handler now has "linked arguments flatten" options, that can be turned off
 5. webbrowserconsolehandler now has "link arguments" options, that can be turned off
 6. WebConsoleHandler now has message format field
+7. WebConsoleHandler, TextHandler, JSONHandler now have "level" option, that takes priority (check scheme:
+   Handler.level || HaluaOptions.level)

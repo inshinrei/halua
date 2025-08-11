@@ -1,4 +1,4 @@
-import { Handler, Log } from "./types"
+import { Handler, Level, Log } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
 import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
 
@@ -9,6 +9,7 @@ interface TextLogHandlerOptions {
     messageFormat?: string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
+    level?: Level
 }
 
 export function NewTextHandler(
@@ -18,8 +19,11 @@ export function NewTextHandler(
     return () =>
         new (class TextLog implements TextLogHandler {
             public skipDeepCopyWhenSendingLog = true
+            public level?: Level
 
-            constructor(private options: TextLogHandlerOptions) {}
+            constructor(private options: TextLogHandlerOptions) {
+                this.level = options.level
+            }
 
             private get linkArguments(): boolean {
                 return this.options.linkArguments !== undefined && !this.options.linkArguments

@@ -27,6 +27,7 @@ interface WebConsoleHandlerOptions {
     messageFormat?: string
     useWarn?: boolean
     useError?: boolean
+    level?: Level
 }
 
 type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
@@ -40,6 +41,7 @@ export function NewWebConsoleHandler(
         new (class WebConsoleLog implements WebConsoleLogHandler {
             public skipDeepCopyWhenSendingLog = false
             public messageFormat: Array<string> = []
+            public level?: Level
             private readonly messageFormatRaw: string = "%t %l %a | %w"
 
             private readonly colors: Colors = new Map([])
@@ -63,6 +65,7 @@ export function NewWebConsoleHandler(
             ])
 
             constructor(private options: WebConsoleHandlerOptions) {
+                this.level = options.level
                 this.options = options || {}
                 this.options.fetchBrowserThemeOnInstanceCreation ??= true
 

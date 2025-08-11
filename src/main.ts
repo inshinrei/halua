@@ -86,17 +86,13 @@ export class Halua implements HaluaLogger {
     }
 
     private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", assertion = true, ...args: any[]) {
-        let level = toLevel(field)
-        if (!this.canSend(level)) {
-            return
-        }
         let log: Log = {
             timestamp: Date.now(),
             args: args || [],
             withArgs: this.options?.withArgs || null,
             messageFormat: this.options.messageFormat,
             assertion,
-            level,
+            level: toLevel(field),
         }
         this.executeHandlers(log)
     }
@@ -105,7 +101,9 @@ export class Halua implements HaluaLogger {
         try {
             for (let h of this.handlers) {
                 let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
-                h.log(logArgument)
+                if (this.canSend(log.level, h.level)) {
+                    h.log(logArgument)
+                }
             }
         } catch (err) {
             if (this.options.errorPolicy === "throw") {
@@ -114,12 +112,12 @@ export class Halua implements HaluaLogger {
         }
     }
 
-    private canSend(l: Level): boolean {
-        return this.majorLevelCheckPassed(l)
+    private canSend(l: Level, to: Level = this.options.level || Level.Debug): boolean {
+        return this.majorLevelCheckPassed(l, to)
     }
 
-    private majorLevelCheckPassed(l: Level): boolean {
-        return this.MajorLevelMap.get(this.options.level || Level.Debug)!.has(l)
+    private majorLevelCheckPassed(l: Level, to: Level): boolean {
+        return this.MajorLevelMap.get(to)!.has(l)
     }
 
     private validateHandlers(v: Array<Handler>) {
