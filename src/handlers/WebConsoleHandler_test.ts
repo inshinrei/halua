@@ -5,13 +5,17 @@ import { Level } from "./types"
 import { toLevel } from "../util/level"
 
 describe("WebConsoleHandler", () => {
+    function setupHandler(receiver: any, options = {}) {
+        return NewWebConsoleHandler(receiver, options)()
+    }
+
     let receiver = {
         debug: vi.fn(),
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
     }
-    let handler = NewWebConsoleHandler(receiver, {
+    let handler = setupHandler(receiver, {
         fetchBrowserThemeOnInstanceCreation: false,
         useError: true,
         useWarn: true,
@@ -75,7 +79,7 @@ describe("WebConsoleHandler", () => {
     })
 
     test("supports pretty option with browser theme turned off", () => {
-        let prettyHandler = NewWebConsoleHandler(receiver, {
+        let prettyHandler = setupHandler(receiver, {
             pretty: true,
             fetchBrowserThemeOnInstanceCreation: false,
         })
@@ -93,7 +97,7 @@ describe("WebConsoleHandler", () => {
     })
 
     test("useWarn and useError can be turned on", () => {
-        let h = NewWebConsoleHandler(receiver, { useWarn: true, useError: true })
+        let h = setupHandler(receiver, { useWarn: true, useError: true })
         h.log({ ...log, level: Level.Warn })
         h.log({ ...log, level: Level.Error })
         expect(receiver.warn).toHaveBeenCalledTimes(1)
@@ -113,7 +117,7 @@ describe("WebConsoleHandler", () => {
     })
 
     test("link arguments can be turned off", () => {
-        let h = NewWebConsoleHandler(receiver, { linkArguments: false })
+        let h = setupHandler(receiver, { linkArguments: false })
         h.log(
             structuredClone({
                 ...log,
@@ -134,7 +138,7 @@ describe("WebConsoleHandler", () => {
     describe("messageFormat", () => {
         test("standard", () => {
             let format = "%t %l %a > %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %s %s %s %d %o %s %s %d",
@@ -154,7 +158,7 @@ describe("WebConsoleHandler", () => {
 
         test("remove time and level", () => {
             let format = "%a > %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...["%s %s %s %d %o %s %s %d", "log message", ">", "count =", 2, [1, 2, 3], "arr", "anotherCount =", 5],
             )
@@ -162,7 +166,7 @@ describe("WebConsoleHandler", () => {
 
         test("absent withArgs does remove separator", () => {
             let format = "%t %l %a >> %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(log)
+            setupHandler(receiver, { messageFormat: format }).log(log)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"],
             )
@@ -170,7 +174,7 @@ describe("WebConsoleHandler", () => {
 
         test("prefixed", () => {
             let format = "[prefixed] %t %l %a > %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %s %s %s %s %d %o %s %s %d",
@@ -191,7 +195,7 @@ describe("WebConsoleHandler", () => {
 
         test("no spaces", () => {
             let format = "%t%l%a%w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %s %s %d %o %s %s %d",
@@ -210,7 +214,7 @@ describe("WebConsoleHandler", () => {
 
         test("args first", () => {
             let format = "%a %w > %t %l"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %d %o %s %s %d %s %s %s",
@@ -230,7 +234,7 @@ describe("WebConsoleHandler", () => {
 
         test("separator change", () => {
             let format = "%t %l %a ::: %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %s %s %s %d %o %s %s %d",
@@ -250,7 +254,7 @@ describe("WebConsoleHandler", () => {
 
         test("adding staff", () => {
             let format = "[time] %t on level %l with args %a and with %w"
-            NewWebConsoleHandler(receiver, { messageFormat: format }).log(logWithArgs)
+            setupHandler(receiver, { messageFormat: format }).log(logWithArgs)
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %s %s %s %s %s %s %s %s %s %d %o %s %s %d",
@@ -278,7 +282,7 @@ describe("WebConsoleHandler", () => {
     describe("messageFormatPretty", () => {
         test("standard", () => {
             let format = "%t %l %a > %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -304,7 +308,7 @@ describe("WebConsoleHandler", () => {
 
         test("remove time and level", () => {
             let format = "%a > %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -328,7 +332,7 @@ describe("WebConsoleHandler", () => {
 
         test("absent withArgs does remove separator", () => {
             let format = "%t %l %a >> %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -347,7 +351,7 @@ describe("WebConsoleHandler", () => {
 
         test.todo("prefixed", () => {
             let format = "[prefixed] %t %l %a > %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -376,7 +380,7 @@ describe("WebConsoleHandler", () => {
 
         test("no spaces", () => {
             let format = "%t%l%a%w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -401,7 +405,7 @@ describe("WebConsoleHandler", () => {
 
         test.todo("args first", () => {
             let format = "%a %w > %t %l"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -430,7 +434,7 @@ describe("WebConsoleHandler", () => {
 
         test("separator change", () => {
             let format = "%t %l %a ::: %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
@@ -456,7 +460,7 @@ describe("WebConsoleHandler", () => {
 
         test.todo("adding staff", () => {
             let format = "[time] %t on level %l with args %a and with %w"
-            NewWebConsoleHandler(receiver, {
+            setupHandler(receiver, {
                 messageFormat: format,
                 pretty: true,
                 fetchBrowserThemeOnInstanceCreation: false,
