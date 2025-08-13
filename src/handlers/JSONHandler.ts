@@ -41,6 +41,7 @@ export function NewJSONHandler(
                 try {
                     delete log.assertion
                     delete log.messageFormat
+                    delete log.leveling
                     log.timestamp = this.formatDate(log.timestamp as number)
                     send(JSON.stringify(this.flattenLinkedArguments(log), this.replacer.bind(this)))
                 } catch (err) {
@@ -49,6 +50,7 @@ export function NewJSONHandler(
                             args: [`err while trying to stringify JSON ${err}`],
                             timestamp: log.timestamp,
                             level: Level.Error,
+                            leveling: [Level.Error, 0],
                         })
                     }
                 }

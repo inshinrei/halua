@@ -4,6 +4,7 @@ export let log: Log = {
     timestamp: 1751313289663,
     args: ["log message"],
     level: Level.Debug,
+    leveling: [Level.Debug, 0],
     messageFormat: "%t %l %a | %w",
 }
 

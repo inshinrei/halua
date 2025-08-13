@@ -1,4 +1,4 @@
-import type { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
+import type { HaluaLogger, HaluaOptions, HandlerField, PassedHandler } from "./types"
 import type { Handler, Log, LogLevel } from "./handlers/types"
 import { Level } from "./handlers/types"
 import { toLevel } from "./util/level"
@@ -73,6 +73,10 @@ export class Halua implements HaluaLogger {
         this.executeHandlers(this.composeLog(level, true, ...args))
     }
 
+    public trace(...args: any[]) {
+        this.sendToHandler("trace", true, ...args)
+    }
+
     public debug(...args: any[]) {
         this.sendToHandler("debug", true, ...args)
     }
@@ -85,8 +89,16 @@ export class Halua implements HaluaLogger {
         this.sendToHandler("warn", true, ...args)
     }
 
+    public notice(...args: any[]) {
+        this.sendToHandler("notice", true, ...args)
+    }
+
     public error(...args: any[]) {
         this.sendToHandler("error", true, ...args)
+    }
+
+    public fatal(...args: any[]) {
+        this.sendToHandler("fatal", true, ...args)
     }
 
     public assert(assertion: boolean, ...args: any[]) {
@@ -96,7 +108,7 @@ export class Halua implements HaluaLogger {
         this.sendToHandler("assert", assertion, ...args)
     }
 
-    private sendToHandler(field: "debug" | "info" | "warn" | "error" | "assert", assertion = true, ...args: any[]) {
+    private sendToHandler(field: HandlerField, assertion = true, ...args: any[]) {
         this.executeHandlers(this.composeLog(toLevel(field), assertion, ...args))
     }
 
@@ -108,6 +120,7 @@ export class Halua implements HaluaLogger {
             messageFormat: this.options.messageFormat,
             assertion,
             level,
+            leveling: extractLevels(level),
         }
     }
 
@@ -115,7 +128,7 @@ export class Halua implements HaluaLogger {
         try {
             for (let h of this.handlers) {
                 let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
-                if (this.canSend(log.level, h.level)) {
+                if (this.canSend(log.leveling!, h.level)) {
                     h.log(logArgument)
                 }
             }
@@ -126,10 +139,9 @@ export class Halua implements HaluaLogger {
         }
     }
 
-    private canSend(l: LogLevel, to: LogLevel = this.options.level || Level.Debug): boolean {
-        let levels = extractLevels(l)
+    private canSend(l: [Level, number], to: LogLevel = this.options.level || Level.Trace): boolean {
         let tol = extractLevels(to)
-        return this.majorLevelCheckPassed(levels[0], tol[0]) && this.minorLevelCheckPassed(levels[1], tol[1])
+        return this.majorLevelCheckPassed(l[0], tol[0]) && this.minorLevelCheckPassed(l[1], tol[1])
     }
 
     private majorLevelCheckPassed(l: Level, to: Level): boolean {

@@ -1,6 +1,8 @@
 import type { Handler, Log } from "./types"
 import { Level } from "./types"
 import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../util/string"
+import type { ColorKey, Colors } from "./webConsoleUtils"
+import { getColorKey } from "./webConsoleUtils"
 
 interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
@@ -29,9 +31,6 @@ interface WebConsoleHandlerOptions {
     useError?: boolean
     level?: Level
 }
-
-type ColorKey = "grey" | "green" | "blue" | "purple" | "orange" | "red"
-type Colors = Map<ColorKey, string>
 
 export function NewWebConsoleHandler(
     c: ConsoleLogHandlerConsole = console,
@@ -196,14 +195,7 @@ export function NewWebConsoleHandler(
                     }
                     if (format[i] === "%l") {
                         colors += `%c${log.level}`
-                        let colorKey: ColorKey =
-                            log.level === Level.Debug
-                                ? "purple"
-                                : log.level === Level.Info
-                                  ? "blue"
-                                  : log.level === Level.Warn
-                                    ? "orange"
-                                    : "red"
+                        let colorKey: ColorKey = getColorKey(log.leveling![0])
                         colorKeys.push(`color:${this.options.customColors?.get(colorKey) || this.colors.get(colorKey)}`)
                         continue
                     }

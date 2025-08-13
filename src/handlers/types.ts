@@ -7,6 +7,7 @@ export interface Handler {
 export interface Log {
     timestamp: number | string
     level: LogLevel
+    leveling?: [Level, number]
     args: Array<any>
     messageFormat?: string
     assertion?: boolean
@@ -23,4 +24,4 @@ export enum Level {
     Fatal = "FATAL",
 }
 
-export type LogLevel = keyof Level | string
+export type LogLevel = string
