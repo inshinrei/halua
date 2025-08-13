@@ -1,17 +1,24 @@
 import type { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
-import type { Handler, Log } from "./handlers/types"
+import type { Handler, Log, LogLevel } from "./handlers/types"
 import { Level } from "./handlers/types"
 import { toLevel } from "./util/level"
+import { extractLevels } from "./util/string"
 
 export class Halua implements HaluaLogger {
     private handlers: Array<Handler> = []
     private readonly passedHandlers: PassedHandler
 
     private readonly MajorLevelMap = new Map([
-        [Level.Error, new Set([Level.Error])],
-        [Level.Warn, new Set([Level.Error, Level.Warn])],
-        [Level.Info, new Set([Level.Error, Level.Warn, Level.Info])],
-        [Level.Debug, new Set([Level.Error, Level.Warn, Level.Info, Level.Debug])],
+        [Level.Fatal, new Set([Level.Fatal])],
+        [Level.Error, new Set([Level.Fatal, Level.Error])],
+        [Level.Warn, new Set([Level.Fatal, Level.Error, Level.Warn])],
+        [Level.Notice, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice])],
+        [Level.Info, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info])],
+        [Level.Debug, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info, Level.Debug])],
+        [
+            Level.Trace,
+            new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info, Level.Debug, Level.Trace]),
+        ],
     ])
 
     constructor(
@@ -62,7 +69,7 @@ export class Halua implements HaluaLogger {
         this.handlers.push(...this.buildHandlers(handler))
     }
 
-    public logTo(level: Level, ...args: any[]) {
+    public logTo(level: LogLevel, ...args: any[]) {
         this.executeHandlers(this.composeLog(level, true, ...args))
     }
 
@@ -93,7 +100,7 @@ export class Halua implements HaluaLogger {
         this.executeHandlers(this.composeLog(toLevel(field), assertion, ...args))
     }
 
-    private composeLog(level: Level, assertion: boolean, ...args: any[]): Log {
+    private composeLog(level: LogLevel, assertion: boolean, ...args: any[]): Log {
         return {
             timestamp: Date.now(),
             args: args || [],
@@ -119,12 +126,18 @@ export class Halua implements HaluaLogger {
         }
     }
 
-    private canSend(l: Level, to: Level = this.options.level || Level.Debug): boolean {
-        return this.majorLevelCheckPassed(l, to)
+    private canSend(l: LogLevel, to: LogLevel = this.options.level || Level.Debug): boolean {
+        let levels = extractLevels(l)
+        let tol = extractLevels(to)
+        return this.majorLevelCheckPassed(levels[0], tol[0]) && this.minorLevelCheckPassed(levels[1], tol[1])
     }
 
     private majorLevelCheckPassed(l: Level, to: Level): boolean {
         return this.MajorLevelMap.get(to)!.has(l)
+    }
+
+    private minorLevelCheckPassed(l: number, to: number): boolean {
+        return l >= to
     }
 
     private validateHandlers(v: Array<Handler>) {

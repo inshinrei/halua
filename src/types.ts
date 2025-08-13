@@ -1,7 +1,7 @@
-import { Handler, Level } from "./handlers/types"
+import { Handler, LogLevel } from "./handlers/types"
 
 export interface HaluaOptions {
-    level?: Level
+    level?: LogLevel
     withArgs?: Array<any>
     messageFormat?: string
     errorPolicy?: "throw" | "pass"
@@ -18,7 +18,7 @@ export interface HaluaLogger {
     setHandler: (handler: PassedHandler) => void
     appendHandler: (handler: () => Handler) => void
 
-    logTo: (level: Level, ...args: any[]) => void
+    logTo: (level: LogLevel, ...args: any[]) => void
     debug: (...args: any[]) => void
     info: (...args: any[]) => void
     warn: (...args: any[]) => void

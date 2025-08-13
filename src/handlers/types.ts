@@ -1,12 +1,12 @@
 export interface Handler {
     skipDeepCopyWhenSendingLog?: boolean
-    level?: Level
+    level?: LogLevel
     log: (log: Log) => void
 }
 
 export interface Log {
     timestamp: number | string
-    level: Level
+    level: LogLevel
     args: Array<any>
     messageFormat?: string
     assertion?: boolean
@@ -14,8 +14,13 @@ export interface Log {
 }
 
 export enum Level {
+    Trace = "TRACE",
     Debug = "DEBUG",
     Info = "INFO",
+    Notice = "NOTICE",
     Warn = "WARN",
     Error = "ERROR",
+    Fatal = "FATAL",
 }
+
+export type LogLevel = keyof Level | string

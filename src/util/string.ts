@@ -1,4 +1,5 @@
-import type { Log } from "../../lib"
+import type { Log } from "../handlers/types"
+import { Level } from "../handlers/types"
 
 export function stringMatchesVar(str: string, ignoredStrings: Set<string>): boolean {
     return !ignoredStrings.has(str) && str.trim().indexOf(" ") === -1
@@ -71,4 +72,12 @@ export function getConvertStartingIndex(format: string): number {
         return 1
     }
     return 2
+}
+
+export function extractLevels(level: unknown): [Level, number] {
+    if (typeof level !== "string") {
+        return [Level.Info, 0]
+    }
+    let data: Array<Level | string | number> = level.split("+")
+    return [data[0] as Level, Math.trunc(data[1] as number) || 0]
 }
