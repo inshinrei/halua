@@ -2,7 +2,7 @@ import { Level } from "./types"
 
 export function getColorKey(level: Level): ColorKey {
     return {
-        [Level.Trace]: "purple",
+        [Level.Trace]: "grey",
         [Level.Debug]: "purple",
         [Level.Info]: "blue",
         [Level.Warn]: "orange",
