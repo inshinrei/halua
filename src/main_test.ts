@@ -144,6 +144,37 @@ describe("Halua Logger", () => {
             logger.warn("warn message")
             expect(logfn).toHaveBeenCalledTimes(1)
         })
+
+        test("custom level can be set", () => {
+            let logfn = vi.fn()
+
+            function NewHandler() {
+                return () => ({
+                    log: logfn,
+                })
+            }
+
+            let logger = halua.New(NewHandler(), { level: Level.Info + 1 })
+            logger.info("info message")
+            expect(logfn).not.toHaveBeenCalled()
+            logger.logTo(Level.Info + 2, "test")
+            expect(logfn).toHaveBeenCalledTimes(1)
+        })
+
+        test("custom level correctly behaves with handler's level", () => {
+            let logfn = vi.fn()
+
+            function NewHandler() {
+                return () => ({
+                    log: logfn,
+                    level: "ERROR+2",
+                })
+            }
+
+            let logger = halua.New(NewHandler(), { level: "FATAL" })
+            logger.logTo(Level.Error + 5, "test")
+            expect(logfn).toHaveBeenCalledTimes(1)
+        })
     })
 
     describe("custom handler", () => {
