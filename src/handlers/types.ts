@@ -1,22 +1,27 @@
 export interface Handler {
-  skipDeepCopyWhenSendingLog?: boolean
-  debug: (log: Log) => void
-  info: (log: Log) => void
-  warn: (log: Log) => void
-  error: (log: Log) => void
-  assert: (assertion: boolean, log: Log) => void
+    skipDeepCopyWhenSendingLog?: boolean
+    level?: LogLevel
+    log: (log: Log) => void
 }
 
 export interface Log {
-  timestamp: number | string
-  level?: Level
-  args?: Array<any>
-  withArgs?: null | Array<any>
+    timestamp: number | string
+    level: LogLevel
+    leveling?: [Level, number]
+    args: Array<any>
+    messageFormat?: string
+    assertion?: boolean
+    withArgs?: null | Array<any>
 }
 
 export enum Level {
-  Debug = "DEBUG",
-  Info = "INFO",
-  Warn = "WARN",
-  Error = "ERR",
+    Trace = "TRACE",
+    Debug = "DEBUG",
+    Info = "INFO",
+    Notice = "NOTICE",
+    Warn = "WARN",
+    Error = "ERROR",
+    Fatal = "FATAL",
 }
+
+export type LogLevel = string

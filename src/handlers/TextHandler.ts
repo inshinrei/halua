@@ -1,91 +1,115 @@
 import { Handler, Level, Log } from "./types"
+import { replaceDataBeforeStringify } from "../util/dataReplacer"
+import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
 
 interface TextLogHandler extends Handler {}
 
-export function NewTextHandler(send: (data: string) => void): TextLogHandler {
-  return new (class TextLog implements TextLogHandler {
-    public skipDeepCopyWhenSendingLog = true
+interface TextLogHandlerOptions {
+    linkArguments?: boolean
+    messageFormat?: string
+    /** replace value during stringify, return null to fallback on JSONHandler replacer */
+    replaceBeforeStringify?: (value: any) => any
+    level?: Level
+}
 
-    debug(log: Log) {
-      this.log({ ...log, level: Level.Debug })
-    }
+export function NewTextHandler(
+    send: (data: string) => void,
+    options: TextLogHandlerOptions = {},
+): () => TextLogHandler {
+    return () =>
+        new (class TextLog implements TextLogHandler {
+            public skipDeepCopyWhenSendingLog = true
+            public level?: Level
 
-    info(log: Log) {
-      this.log({ ...log, level: Level.Info })
-    }
+            constructor(private options: TextLogHandlerOptions) {
+                this.level = options.level
+            }
 
-    warn(log: Log) {
-      this.log({ ...log, level: Level.Warn })
-    }
+            private get linkArguments(): boolean {
+                return this.options.linkArguments !== undefined && !this.options.linkArguments
+            }
 
-    error(log: Log) {
-      this.log({ ...log, level: Level.Error })
-    }
+            log(log: Log) {
+                this.sendLog(log)
+            }
 
-    assert(c: boolean, log: Log) {
-      if (!c) {
-        this.log({ ...log, level: Level.Error })
-      }
-    }
+            private sendLog(log: Log) {
+                let args = ""
+                let withArgs = ""
+                let msg = this.options.messageFormat || log.messageFormat!
+                if (log.args) {
+                    args = this.composeVariablesString(msg, log.args)
+                }
+                if (log.withArgs) {
+                    withArgs = this.composeVariablesString(msg, log.withArgs)
+                }
+                msg = removeTailingUndefinedValues(msg, log)
+                send(
+                    msg
+                        .replace("%w", withArgs)
+                        .replace("%a", args)
+                        .replace("%l", log.level)
+                        .replace("%t", this.prepareDate(log.timestamp as number)),
+                )
+            }
 
-    private log(log: Log) {
-      let args = ""
-      if (log.args) {
-        args = this.composeVariablesString(log.args)
-      }
-      send(`${this.prepareDate(log.timestamp as number)} ${log.level} ${args}`)
-    }
+            private composeVariablesString(format: string, data: Array<any>): string {
+                let str = ""
+                let excluded = extractNonFormatChars(format)
 
-    private composeVariablesString(data: Array<any>, nested = false): string {
-      let str = ""
+                for (let i = 0; i < data.length; i++) {
+                    let last = i === data.length - 1
+                    let nextIsNotLinked = typeof data[i + 1] === "string" && stringMatchesVar(data[i + 1], excluded)
+                    let v = data[i]
 
-      for (let i = 0; i < data.length; i++) {
-        let last = i === data.length - 1
-        let v = data[i]
+                    if (
+                        !this.linkArguments &&
+                        !last &&
+                        typeof v === "string" &&
+                        stringMatchesVar(v, excluded) &&
+                        !nextIsNotLinked
+                    ) {
+                        str += `${v}=${this.formatValue(data[i + 1])} `
+                        i += 1
+                        continue
+                    }
 
-        if (!last && typeof v === "string" && v.trim().indexOf(" ") === -1) {
-          str += `${v}=${this.formatValue(data[i + 1])} `
-          i += 1
-          continue
-        }
+                    str += `${this.formatValue(v)}${last ? "" : " "}`
+                }
 
-        str += `${this.formatValue(v)}${last ? "" : " "}`
-      }
+                return str.trim()
+            }
 
-      return str
-    }
+            private formatValue(v: any): string {
+                if (this.options.replaceBeforeStringify) {
+                    let val = this.options.replaceBeforeStringify(v)
+                    if (val !== null) {
+                        return val
+                    }
+                }
 
-    private formatValue(v: any): string {
-      if (typeof v === "symbol") {
-        return v.toString()
-      }
+                if (typeof v === "symbol") {
+                    return v.toString()
+                }
 
-      if (v instanceof Set) {
-        return `Set[${Array.from(v)}]`
-      }
+                if (v instanceof Set) {
+                    return `Set[${Array.from(v)}]`
+                }
 
-      if (v instanceof Map) {
-        let obj: Record<string, any> = {}
-        for (let key of v.keys()) {
-          obj[key] = this.formatValue(v.get(key))
-        }
-        return JSON.stringify(obj)
-      }
+                if (Array.isArray(v)) {
+                    return `[${v}]`
+                }
 
-      if (Array.isArray(v)) {
-        return `[${v}]`
-      }
+                if (typeof v === "string") {
+                    return `${v}`
+                }
 
-      if (typeof v === "object") {
-        return JSON.stringify(v)
-      }
+                return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
+            }
 
-      return `${v}`
-    }
-
-    private prepareDate(t: number) {
-      let d = new Date(t)
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
-    }
-  })()
+            private prepareDate(t: number) {
+                let d = new Date(t)
+                return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+            }
+        })(options)
 }
