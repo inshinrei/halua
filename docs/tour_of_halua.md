@@ -1,5 +1,7 @@
 # Tour of halua
 
+Last updated for version: 25.1
+
 For the basic logging you can use method straightforward
 
 ```ts
