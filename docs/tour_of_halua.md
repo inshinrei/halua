@@ -15,7 +15,8 @@ halua.assert(assertion, ...args)
 halua.fatal(...args)
 ```
 
-By default Halua will use console as output source. There is three logger handlers that can be used from the package:
+By default, Halua will use console as an output source. There is three logger handlers that can be used from the
+package:
 
 ```ts
 import {NewWebConsoleHandler, NewTextHandler, NewJSONHandler} from "halua"
@@ -31,7 +32,7 @@ jsonLogger.info("some message") // {"timestamp":"2025-08-13T20:06:58.857Z","args
 ```
 
 - `TextHandler` outputs string to the given func `has second argument of options`
-- `WebConsoleHandler` uses given object to to call corresponding methods `has second argument of options`
+- `WebConsoleHandler` uses given an object to call corresponding methods `has second argument of options`
 - `JSONHandler` outputs JSON'ed string to the given func `has second argument of options`
 
 You also could make a logger that will use multiple handlers by providing an array as
@@ -66,7 +67,7 @@ Signatures for `.New` and `.With`:
 - `.New(Handler())` accepts handler as first arguments, uses previous' instance options
 - `.New({ ...options })` accepts options as first arguments, uses previous' instance handlers
 - `.New(Handler(), { ...options })` accepts handler and options as it's arguments
-- `.With(...args: any[])` accepts any arguments, appends them to every logs of the instance
+- `.With(...args: any[])` accepts any arguments, appends them to every log of the instance
 
 To reset all args of the `.With` you can just call `.New({ withArgs: [] })` with `withArgs` empty option
 
@@ -118,7 +119,7 @@ logger.notice() // will be logged to TextHandler, won't be logged to WebConsoleH
 ```
 
 Package included `Text Web Json` handlers have a second arguments that accepts options, `level` option will override
-the level of `Halua` instance. So each handler could have it's own level for logs.
+the level of `Halua` instance. So each handler could have its own level for logs.
 
 There is one more thing about levels to cover, you can extend level controls with custom level by following the pattern:
 `LEVEL + {digit}` as:
