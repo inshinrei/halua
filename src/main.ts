@@ -3,23 +3,13 @@ import type { Handler, Log, LogLevel } from "./handlers/types"
 import { Level } from "./handlers/types"
 import { toLevel } from "./util/level"
 import { extractLevels } from "./util/string"
+import type { Balancer } from "./HandlersBalancer"
+import { HandlersBalancer } from "./HandlersBalancer"
 
 export class Halua implements HaluaLogger {
     private handlers: Array<Handler> = []
     private readonly passedHandlers: PassedHandler
-
-    private readonly MajorLevelMap = new Map([
-        [Level.Fatal, new Set([Level.Fatal])],
-        [Level.Error, new Set([Level.Fatal, Level.Error])],
-        [Level.Warn, new Set([Level.Fatal, Level.Error, Level.Warn])],
-        [Level.Notice, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice])],
-        [Level.Info, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info])],
-        [Level.Debug, new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info, Level.Debug])],
-        [
-            Level.Trace,
-            new Set([Level.Fatal, Level.Error, Level.Warn, Level.Notice, Level.Info, Level.Debug, Level.Trace]),
-        ],
-    ])
+    private balancer: Balancer
 
     constructor(
         passed: PassedHandler,
@@ -29,9 +19,11 @@ export class Halua implements HaluaLogger {
         this.options.messageFormat ??= "%t %l %a | %w"
         this.validateHandlers(this.buildHandlers(passed))
         this.handlers = this.buildHandlers(passed)
+
+        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
     }
 
-    public New(
+    New(
         arg1: PassedHandler | HaluaOptions = this.passedHandlers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
@@ -49,67 +41,73 @@ export class Halua implements HaluaLogger {
         return new Halua(arg1 as PassedHandler, { ...arg2 })
     }
 
-    public With(...args: any[]): HaluaLogger {
+    With(...args: any[]): HaluaLogger {
         return new Halua(this.passedHandlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
     }
 
-    public withMessageFormat(f: string): HaluaLogger {
+    withMessageFormat(f: string): HaluaLogger {
         this.unlinkInheritance()
         this.options.messageFormat = f
         return this
     }
 
-    public setHandler(handler: PassedHandler) {
+    setHandler(handler: PassedHandler) {
         this.validateHandlers(this.buildHandlers(handler))
         this.handlers = this.buildHandlers(handler)
+        this.updateBalancer()
     }
 
-    public appendHandler(handler: () => Handler) {
+    appendHandler(handler: () => Handler) {
         this.validateHandlers(this.buildHandlers(handler))
         this.handlers.push(...this.buildHandlers(handler))
+        this.updateBalancer()
     }
 
-    public logTo(level: LogLevel, ...args: any[]) {
-        this.executeHandlers(this.composeLog(level, true, ...args))
+    logTo(level: LogLevel, ...args: any[]) {
+        this.balancer.sendLog(this.composeLog(level, true, ...args))
     }
 
-    public trace(...args: any[]) {
+    trace(...args: any[]) {
         this.sendToHandler("trace", true, ...args)
     }
 
-    public debug(...args: any[]) {
+    debug(...args: any[]) {
         this.sendToHandler("debug", true, ...args)
     }
 
-    public info(...args: any[]) {
+    info(...args: any[]) {
         this.sendToHandler("info", true, ...args)
     }
 
-    public warn(...args: any[]) {
+    warn(...args: any[]) {
         this.sendToHandler("warn", true, ...args)
     }
 
-    public notice(...args: any[]) {
+    notice(...args: any[]) {
         this.sendToHandler("notice", true, ...args)
     }
 
-    public error(...args: any[]) {
+    error(...args: any[]) {
         this.sendToHandler("error", true, ...args)
     }
 
-    public fatal(...args: any[]) {
+    fatal(...args: any[]) {
         this.sendToHandler("fatal", true, ...args)
     }
 
-    public assert(assertion: boolean, ...args: any[]) {
+    assert(assertion: boolean, ...args: any[]) {
         if (assertion) {
             return
         }
         this.sendToHandler("assert", assertion, ...args)
     }
 
+    private updateBalancer() {
+        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
+    }
+
     private sendToHandler(field: HandlerField, assertion = true, ...args: any[]) {
-        this.executeHandlers(this.composeLog(toLevel(field), assertion, ...args))
+        this.balancer.sendLog(this.composeLog(toLevel(field), assertion, ...args))
     }
 
     private composeLog(level: LogLevel, assertion: boolean, ...args: any[]): Log {
@@ -122,40 +120,6 @@ export class Halua implements HaluaLogger {
             level,
             leveling: extractLevels(level),
         }
-    }
-
-    private executeHandlers(log: Log) {
-        try {
-            for (let h of this.handlers) {
-                let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
-                if (h.exact) {
-                    if (h.exact.some((l) => l === log.level)) {
-                        h.log(logArgument)
-                    }
-                    continue
-                }
-                if (this.canSend(log.leveling!, h.level)) {
-                    h.log(logArgument)
-                }
-            }
-        } catch (err) {
-            if (this.options.errorPolicy === "throw") {
-                throw err
-            }
-        }
-    }
-
-    private canSend(l: [Level, number], to: LogLevel = this.options.level || Level.Trace): boolean {
-        let tol = extractLevels(to)
-        return this.majorLevelCheckPassed(l[0], tol[0]) && this.minorLevelCheckPassed(l[1], tol[1])
-    }
-
-    private majorLevelCheckPassed(l: Level, to: Level): boolean {
-        return this.MajorLevelMap.get(to)!.has(l)
-    }
-
-    private minorLevelCheckPassed(l: number, to: number): boolean {
-        return l >= to
     }
 
     private validateHandlers(v: Array<Handler>) {
