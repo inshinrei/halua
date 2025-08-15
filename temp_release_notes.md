@@ -24,3 +24,4 @@
 8. logTo method, allows sending a log to a specified level
 9. custom levels introduced
 10. "exact" option for Text, Web, JSON handlers introduced
+11. HandlersBalancer introduced
