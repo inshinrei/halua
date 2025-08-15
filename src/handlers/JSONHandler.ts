@@ -1,5 +1,7 @@
-import { Handler, Level, Log } from "./types"
+import type { Handler, Log, LogLevel } from "./types"
+import { Level } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
+import { arrayed } from "../util/array"
 
 interface JSONLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
@@ -11,7 +13,8 @@ interface JSONLogHandlerOptions {
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
     linkArguments?: boolean
-    level?: Level
+    level?: LogLevel
+    exact?: LogLevel | Array<LogLevel>
 }
 
 export function NewJSONHandler(
@@ -20,12 +23,14 @@ export function NewJSONHandler(
 ): () => JSONLogHandler {
     return () =>
         new (class JSONLog implements JSONLogHandler {
-            public level?: Level
+            public level?: LogLevel
+            public exact?: Array<LogLevel>
 
             private readonly takenNames = new Set(["timestamp", "level", "args"])
 
             constructor(private readonly options: JSONLogHandlerOptions) {
                 this.level = options.level
+                this.exact = options.exact ? arrayed(options.exact) : undefined
                 this.options = options || {}
             }
 

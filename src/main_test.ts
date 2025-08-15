@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest"
 import { Halua } from "./main"
 import { Level } from "./handlers/types"
 import type { HaluaLogger } from "./types"
+import { arrayed } from "./util/array"
 
 describe("Halua Logger", () => {
     let halua = new Halua([])
@@ -174,6 +175,33 @@ describe("Halua Logger", () => {
             let logger = halua.New(NewHandler(), { level: "FATAL" })
             logger.logTo(Level.Error + 5, "test")
             expect(logfn).toHaveBeenCalledTimes(1)
+        })
+
+        test("exact option of a handler exactly receive its levels", () => {
+            let logfn = vi.fn()
+
+            function NewHandler(value: string | Array<string>) {
+                return () => ({
+                    log: logfn,
+                    exact: arrayed(value),
+                })
+            }
+
+            let logger = halua.New(NewHandler("INFO+5"))
+            logger.debug("debug message")
+            logger.info("info message")
+            logger.warn("warn message")
+            logger.logTo("INFO+5", "info")
+            expect(logfn).toHaveBeenCalledTimes(1)
+            vi.clearAllMocks()
+
+            let logger2 = halua.New(NewHandler(["INFO+1", "WARN+77"]))
+            logger2.debug("debug message")
+            logger2.info("info message")
+            logger2.warn("warn message")
+            logger2.logTo("INFO+1")
+            logger2.logTo("WARN+77")
+            expect(logfn).toHaveBeenCalledTimes(2)
         })
     })
 

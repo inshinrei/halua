@@ -1,7 +1,7 @@
 {
   "name": "halua",
   "version": "25.1-d",
-  "description": "logger for JS",
+  "description": "Package that takes control of logging, metrics and other stuff",
   "type": "module",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
@@ -24,7 +24,8 @@
     "logging",
     "node",
     "console",
-    "web"
+    "web",
+    "json logs"
   ],
   "author": "inshinrei",
   "license": "MIT",

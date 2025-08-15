@@ -1,6 +1,7 @@
 export interface Handler {
     skipDeepCopyWhenSendingLog?: boolean
     level?: LogLevel
+    exact?: Array<LogLevel>
     log: (log: Log) => void
 }
 

@@ -1,5 +1,7 @@
 # Tour of halua
 
+Last updated for version: 25.1.0.0
+
 For the basic logging you can use method straightforward
 
 ```ts
@@ -85,6 +87,9 @@ class CustomHandler implements Handler {
 
 let logger = halua.New(() => new CustomHandler()) // passed handler should be a func that returns an interface of Handler{}
 ```
+
+`Note: how Halua works with many handlers. Halua will run discovery on the first log for specified level. Later, when logging the same level, 
+the discovered info will be used, without the need to iterate over handlers again`
 
 ## Level controls
 

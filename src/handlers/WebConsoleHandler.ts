@@ -1,8 +1,9 @@
-import type { Handler, Log } from "./types"
+import type { Handler, Log, LogLevel } from "./types"
 import { Level } from "./types"
 import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../util/string"
 import type { ColorKey, Colors } from "./webConsoleUtils"
 import { getColorKey } from "./webConsoleUtils"
+import { arrayed } from "../util/array"
 
 interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
@@ -29,7 +30,8 @@ interface WebConsoleHandlerOptions {
     messageFormat?: string
     useWarn?: boolean
     useError?: boolean
-    level?: Level
+    level?: LogLevel
+    exact?: LogLevel | Array<LogLevel>
 }
 
 export function NewWebConsoleHandler(
@@ -40,7 +42,8 @@ export function NewWebConsoleHandler(
         new (class WebConsoleLog implements WebConsoleLogHandler {
             public skipDeepCopyWhenSendingLog = false
             public messageFormat: Array<string> = []
-            public level?: Level
+            public level?: LogLevel
+            public exact?: Array<LogLevel>
             private readonly messageFormatRaw: string = "%t %l %a | %w"
 
             private readonly colors: Colors = new Map([])
@@ -65,6 +68,7 @@ export function NewWebConsoleHandler(
 
             constructor(private options: WebConsoleHandlerOptions) {
                 this.level = options.level
+                this.exact = options.exact ? arrayed(options.exact) : undefined
                 this.options = options || {}
                 this.options.fetchBrowserThemeOnInstanceCreation ??= true
 
