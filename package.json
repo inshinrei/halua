@@ -1,6 +1,6 @@
 {
   "name": "halua",
-  "version": "25.1",
+  "version": "25.1.0.0",
   "description": "Package that takes control of logging, metrics and other stuff",
   "type": "module",
   "main": "lib/index.js",
