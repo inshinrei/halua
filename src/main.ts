@@ -128,6 +128,12 @@ export class Halua implements HaluaLogger {
         try {
             for (let h of this.handlers) {
                 let logArgument = h.skipDeepCopyWhenSendingLog ? log : structuredClone(log)
+                if (h.exact) {
+                    if (h.exact.some((l) => l === log.level)) {
+                        h.log(logArgument)
+                    }
+                    continue
+                }
                 if (this.canSend(log.leveling!, h.level)) {
                     h.log(logArgument)
                 }
