@@ -67,14 +67,17 @@ export class HandlersBalancer implements Balancer {
 
     private canSend(l: [Level, number], to: LogLevel = this.level || Level.Trace): boolean {
         let tol = extractLevels(to)
-        return this.majorLevelCheckPassed(l[0], tol[0]) && this.minorLevelCheckPassed(l[1], tol[1])
+        return this.majorLevelCheck(l[0], tol[0]) + this.minorLevelCheck(l[1], tol[1]) > 0
     }
 
-    private majorLevelCheckPassed(l: Level, to: Level): boolean {
-        return MajorLevelMap.get(to)!.has(l)
+    private majorLevelCheck(l: Level, to: Level): number {
+        if (!MajorLevelMap.get(to)!.has(l)) {
+            return -1
+        }
+        return l === to ? 0 : 1
     }
 
-    private minorLevelCheckPassed(l: number, to: number): boolean {
-        return l >= to
+    private minorLevelCheck(l: number, to: number): number {
+        return l >= to ? 1 : 0
     }
 }
