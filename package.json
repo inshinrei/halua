@@ -35,6 +35,7 @@
   "homepage": "https://github.com/inshinrei/halua#readme",
   "devDependencies": {
     "prettier": "^3.6.1",
+    "tinybench": "^5.0.0",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
