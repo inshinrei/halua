@@ -10,7 +10,7 @@ import {Level, halua, NewTextHandler, NewJSONHandler, NewWebConsoleHandler} from
 // an array of handlers that would accept logs
 let handlers = [
   NewJSONHandler(writeToZipArchive, {level: Level.Info}), // writes to client-side archive, only logs that are Info-Level or higher
-  NewTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs tat are Notice-level or higher
+  NewTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs that are Notice-level or higher
   NewTextHandler(sendUserAction, {level: Level.Info + 1}), // we will log user actions on a different level, so that it will be easy to filter
   NewTextHandler(sendToErrorMonitoringSystem, {level: Level.Fatal}) // writes to monitoring system
 ]
