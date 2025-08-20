@@ -119,6 +119,22 @@ let logger = halua.New(() => new CustomHandler()) // passed handler should be a 
 `Note: how Halua works with many handlers. Halua will run discovery on the first log for specified level. Later, when logging the same level, 
 the discovered info will be used, without the need to iterate over handlers again`
 
+```ts
+// handler's interface
+interface Handler {
+  // all Halua integrated options for the handler:
+
+  level?: string // specifies min level that would be accepted by the handler
+  exact?: Array<string> // specifies the exact levels that would be accepted only, if present - "level" is ignored 
+
+  skipDeepCopyWhenSendingLog?: boolean // controls, whether Halua will deep copy a log before sending it to handler
+  // deep copy is needed, because "log" can be sent to multiple handlers. Given that custom handlers can be created, we need a protection from
+  // accidently mutating a nested object in it 
+
+  log: (log: Log) => void // accepts log
+}
+```
+
 ## Level controls
 
 First, lets cover all levels and methods of Halua for logging to levels:
