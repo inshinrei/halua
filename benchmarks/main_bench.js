@@ -18,7 +18,7 @@ bench
         consoleLogger.info("hello!")
     })
     .add("text handler obj", () => {
-        textLogger.info("hello", { from: "world " })
+        textLogger.info("hello", { from: "world" })
     })
     .add("json handler obj", () => {
         jsonLogger.info("hello", { from: "world" })
