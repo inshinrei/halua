@@ -16,6 +16,7 @@ let handlers = [
 ]
 
 if (debug) {
+  // the handlers accept a console to call methods on, so it may be: console, window.console, self.console or your console implementation
   handlers.push(NewWebConsoleHandler(self.console)) // writes to web / nodejs console
 }
 
