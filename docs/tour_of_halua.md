@@ -1,6 +1,31 @@
 # Tour of halua
 
-Last updated for version: 25.1.0.0
+Last updated for version: 25.1.1.0
+
+### The example of production app setup
+
+```ts
+import {Level, halua, NewTextHandler, NewJSONHandler, NewWebConsoleHandler} from 'halua'
+
+// an array of handlers that would accept logs
+let handlers = [
+  NewJSONHandler(writeToZipArchive, {level: Level.Info}), // writes to client-size archive, only logs that are Info-Level or higher
+  NewTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs tat are Notice-level or higher
+  NewTextHandler(sendUserAction, {level: Level.Info + 1}), // we will log user actions on a different level, so that it will be easy to filter
+  NewTextHandler(sendToErrorMonitoringSystem, {level: Level.Fatal}) // writes to monitoring system
+]
+
+if (debug) {
+  handlers.push(NewWebConsoleHandler(self.console)) // writes to web / nodejs console
+}
+
+// now we have to apply the handlers we created
+let logger = halua.New(handlers)
+// or 
+halua.setHandler(handlers)
+
+// later, you may call .New on any logger instance to get a new instance
+```
 
 For the basic logging you can use method straightforward
 
