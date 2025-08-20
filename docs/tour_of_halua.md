@@ -1,6 +1,34 @@
 # Tour of halua
 
-Last updated for version: 25.1.0.0
+Last updated for version: 25.1.1.0
+
+### The example of production app setup
+
+```ts
+import {Level, halua, NewTextHandler, NewJSONHandler, NewWebConsoleHandler} from 'halua'
+
+// an array of handlers that would accept logs
+let handlers = [
+  // JSON handler accepts a func to output to, and options: "level" in this case
+  NewJSONHandler(writeToZipArchive, {level: Level.Info}), // writes to client-side archive, only logs that are Info-Level or higher
+  // Text handler accepts a func to output to, and options: "level" in this case
+  NewTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs that are Notice-level or higher
+  NewTextHandler(sendUserAction, {level: Level.Info + 1}), // we will log user actions on a different level, so that it will be easy to filter
+  NewTextHandler(sendToErrorMonitoringSystem, {level: Level.Fatal}) // writes to monitoring system
+]
+
+if (debug) {
+  // the handler accept a console to call methods on, so it may be: console, window.console, self.console or your console implementation
+  handlers.push(NewWebConsoleHandler(self.console)) // writes to web / nodejs console
+}
+
+// now we have to apply the handlers we created
+let logger = halua.New(handlers)
+// or 
+halua.setHandler(handlers)
+
+// later, you may call .New on any logger instance to get a new instance
+```
 
 For the basic logging you can use method straightforward
 
@@ -81,15 +109,37 @@ import type {Handler, Log} from "halua"
 class CustomHandler implements Handler {
   public log(log: Log) {
   }
-
-...
 }
 
 let logger = halua.New(() => new CustomHandler()) // passed handler should be a func that returns an interface of Handler{}
+
+// or 
+
+function NewCustomHandler() {
+  return () => new CustomHandler()
+}
+
+let logger2 = halua.New(NewCustomHandler())
 ```
 
 `Note: how Halua works with many handlers. Halua will run discovery on the first log for specified level. Later, when logging the same level, 
 the discovered info will be used, without the need to iterate over handlers again`
+
+```ts
+// handler's interface
+interface Handler {
+  // all Halua integrated options for the handler:
+
+  level?: string // specifies min level that would be accepted by the handler
+  exact?: Array<string> // specifies the exact levels that would be accepted only, if present - "level" is ignored 
+
+  skipDeepCopyWhenSendingLog?: boolean // controls, whether Halua will deep copy a log before sending it to handler
+  // deep copy is needed, because "log" can be sent to multiple handlers. Given that custom handlers can be created, we need a protection from
+  // accidently mutating a nested object in it 
+
+  log: (log: Log) => void // accepts log
+}
+```
 
 ## Level controls
 

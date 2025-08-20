@@ -203,6 +203,21 @@ describe("Halua Logger", () => {
             logger2.logTo("WARN+77")
             expect(logfn).toHaveBeenCalledTimes(2)
         })
+
+        test("custom: if major level is higher, minor are passed", () => {
+            let logfn = vi.fn()
+
+            function NewHandler() {
+                return () => ({
+                    log: logfn,
+                    level: "NOTICE+3",
+                })
+            }
+
+            let logger = halua.New(NewHandler())
+            logger.fatal("fatal message")
+            expect(logfn).toHaveBeenCalledTimes(1)
+        })
     })
 
     describe("custom handler", () => {
