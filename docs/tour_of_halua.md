@@ -109,11 +109,17 @@ import type {Handler, Log} from "halua"
 class CustomHandler implements Handler {
   public log(log: Log) {
   }
-
-...
 }
 
 let logger = halua.New(() => new CustomHandler()) // passed handler should be a func that returns an interface of Handler{}
+
+// or 
+
+function NewCustomHandler() {
+  return () => new CustomHandler()
+}
+
+let logger2 = halua.New(NewCustomHandler())
 ```
 
 `Note: how Halua works with many handlers. Halua will run discovery on the first log for specified level. Later, when logging the same level, 
