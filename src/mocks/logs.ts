@@ -13,6 +13,16 @@ export let logWithArgs = {
     withArgs: ["count", 2, [1, 2, 3], "arr", "anotherCount", 5],
 }
 
+export let logArrayOfObjects = {
+    ...log,
+    args: [
+        [
+            { prop: "value", type: "string" },
+            { prop: "number", type: "string" },
+        ],
+    ],
+}
+
 export let logWithVars = {
     ...log,
     args: [

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 import { NewTextHandler } from "./TextHandler"
-import { log, logWithArgs, logWithVars } from "../mocks/logs"
+import { log, logArrayOfObjects, logWithArgs, logWithVars } from "../mocks/logs"
 import { toLevel } from "../util/level"
 
 describe("TextHandler", () => {
@@ -59,6 +59,15 @@ describe("TextHandler", () => {
         })
         h.log(log)
         expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
+    })
+
+    describe("correct output", () => {
+        test("array of objects", () => {
+            setupHandler(receiver).log(logArrayOfObjects)
+            expect(receiver).toHaveBeenCalledWith(
+                `6/30/2025 10:54:49 PM DEBUG [{"prop":"value","type":"string"},{"prop":"number","type":"string"}]`,
+            )
+        })
     })
 
     describe("messageFormat", () => {
