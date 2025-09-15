@@ -1,7 +1,7 @@
 import type { Handler, Log, LogLevel } from "./types"
-import { replaceDataBeforeStringify } from "../util/dataReplacer"
 import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
 import { arrayed } from "../util/array"
+import { stringifyValue } from "../util/stringify"
 
 interface TextLogHandler extends Handler {}
 
@@ -92,23 +92,7 @@ export function NewTextHandler(
                     }
                 }
 
-                if (typeof v === "symbol") {
-                    return v.toString()
-                }
-
-                if (v instanceof Set) {
-                    return `Set[${Array.from(v)}]`
-                }
-
-                if (Array.isArray(v)) {
-                    return `[${v}]`
-                }
-
-                if (typeof v === "string") {
-                    return `${v}`
-                }
-
-                return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
+                return stringifyValue(v)
             }
 
             private prepareDate(t: number) {
