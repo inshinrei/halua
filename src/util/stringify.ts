@@ -1,6 +1,9 @@
 import { replaceDataBeforeStringify } from "./dataReplacer"
 
-export function stringifyValue(value: any): string {
+export function stringifyValue(
+    value: any,
+    stringifier: (v: any, replacer: (key: string, value: any) => any) => string = JSON.stringify,
+): string {
     if (typeof value === "symbol") {
         return value.toString()
     }
@@ -17,5 +20,5 @@ export function stringifyValue(value: any): string {
         return `${value}`
     }
 
-    return JSON.stringify(value, (_, data: any) => replaceDataBeforeStringify(data))
+    return stringifier(value, (_, data: any) => replaceDataBeforeStringify(data))
 }
