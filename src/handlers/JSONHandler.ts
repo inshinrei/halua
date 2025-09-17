@@ -2,6 +2,7 @@ import type { Handler, Log, LogLevel } from "./types"
 import { Level } from "./types"
 import { replaceDataBeforeStringify } from "../util/dataReplacer"
 import { arrayed } from "../util/array"
+import { stringMatchesVar } from "../util/string"
 
 interface JSONLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
@@ -12,6 +13,7 @@ interface JSONLogHandlerOptions {
     dateGetter?: (timestamp: number) => string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
+    stringifier?: (value: any, replace: (value: any) => any) => string
     linkArguments?: boolean
     level?: LogLevel
     exact?: LogLevel | Array<LogLevel>
@@ -83,7 +85,7 @@ export function NewJSONHandler(
                 let composedLog: Record<string, any> = log
                 let name = ""
                 for (let arg of log.withArgs!) {
-                    if (typeof arg === "string" && this.stringMatchesVar(arg)) {
+                    if (typeof arg === "string" && stringMatchesVar(arg)) {
                         name = arg
                         continue
                     }
@@ -95,10 +97,6 @@ export function NewJSONHandler(
                     log.args?.push(arg)
                 }
                 return log
-            }
-
-            private stringMatchesVar(str: string): boolean {
-                return str.trim().indexOf(" ") === -1
             }
 
             private replacer(_: string, value: any) {

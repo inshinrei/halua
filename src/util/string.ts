@@ -1,7 +1,9 @@
 import type { Log } from "../handlers/types"
 import { Level } from "../handlers/types"
 
-export function stringMatchesVar(str: string, ignoredStrings: Set<string>): boolean {
+const defaultIgnored: Set<string> = new Set()
+
+export function stringMatchesVar(str: string, ignoredStrings: Set<string> = defaultIgnored): boolean {
     return !ignoredStrings.has(str) && str.trim().indexOf(" ") === -1
 }
 
