@@ -1,8 +1,8 @@
-import type { Handler, Log, LogLevel } from "./types"
-import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
-import { arrayed } from "../util/array"
-import { stringifyValue } from "../util/stringify"
-import { getPrettyDate } from "../util/date"
+import type { Handler, Log, LogLevel } from "../types"
+import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../../util/string"
+import { arrayed } from "../../util/array"
+import { stringifyValue } from "../../util/stringify"
+import { getPrettyDate } from "../../util/date"
 
 interface TextLogHandler extends Handler {}
 
