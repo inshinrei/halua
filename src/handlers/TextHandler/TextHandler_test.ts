@@ -69,6 +69,8 @@ describe("TextHandler", () => {
                 setupHandler(receiver, { replaceBeforeStringify }).log(mockLogSimple)
                 expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
             })
+
+            test.todo("called n of values times")
         })
 
         describe("stringifier", () => {

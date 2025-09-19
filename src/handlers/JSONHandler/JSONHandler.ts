@@ -1,8 +1,8 @@
-import type { Handler, Log, LogLevel } from "./types"
-import { Level } from "./types"
-import { replaceDataBeforeStringify } from "../util/dataReplacer"
-import { arrayed } from "../util/array"
-import { stringMatchesVar } from "../util/string"
+import type { Handler, Log, LogLevel } from "../types"
+import { Level } from "../types"
+import { replaceDataBeforeStringify } from "../../util/dataReplacer"
+import { arrayed } from "../../util/array"
+import { stringMatchesVar } from "../../util/string"
 
 interface JSONLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
