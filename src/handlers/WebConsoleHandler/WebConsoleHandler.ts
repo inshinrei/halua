@@ -1,10 +1,10 @@
-import type { Handler, Log, LogLevel } from "./types"
-import { Level } from "./types"
-import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../util/string"
-import type { ColorKey, Colors } from "./webConsoleUtils"
-import { getColorKey } from "./webConsoleUtils"
-import { arrayed } from "../util/array"
-import { getPrettyDate } from "../util/date"
+import type { Handler, Log, LogLevel } from "../types"
+import { Level } from "../types"
+import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../../util/string"
+import type { ColorKey, Colors } from "../webConsoleUtils"
+import { getColorKey } from "../webConsoleUtils"
+import { arrayed } from "../../util/array"
+import { getPrettyDate } from "../../util/date"
 
 interface WebConsoleLogHandler extends Handler {
     setDateGetter: (getter: (timestamp: number) => string) => void
