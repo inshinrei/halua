@@ -1,7 +1,8 @@
-import type { Handler, Log, LogLevel } from "./types"
-import { replaceDataBeforeStringify } from "../util/dataReplacer"
-import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../util/string"
-import { arrayed } from "../util/array"
+import type { Handler, Log, LogLevel } from "../types"
+import { extractNonFormatChars, removeTailingUndefinedValues, stringMatchesVar } from "../../util/string"
+import { arrayed } from "../../util/array"
+import { stringifyValue } from "../../util/stringify"
+import { getPrettyDate } from "../../util/date"
 
 interface TextLogHandler extends Handler {}
 
@@ -10,6 +11,8 @@ interface TextLogHandlerOptions {
     messageFormat?: string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
+    /** func to stringify a value */
+    stringifier?: (value: any) => string
     level?: LogLevel
     exact?: LogLevel | Array<LogLevel>
 }
@@ -53,7 +56,7 @@ export function NewTextHandler(
                         .replace("%w", withArgs)
                         .replace("%a", args)
                         .replace("%l", log.level)
-                        .replace("%t", this.prepareDate(log.timestamp as number)),
+                        .replace("%t", getPrettyDate(log.timestamp as number)),
                 )
             }
 
@@ -92,28 +95,7 @@ export function NewTextHandler(
                     }
                 }
 
-                if (typeof v === "symbol") {
-                    return v.toString()
-                }
-
-                if (v instanceof Set) {
-                    return `Set[${Array.from(v)}]`
-                }
-
-                if (Array.isArray(v)) {
-                    return `[${v}]`
-                }
-
-                if (typeof v === "string") {
-                    return `${v}`
-                }
-
-                return JSON.stringify(v, (_, data: any) => replaceDataBeforeStringify(data))
-            }
-
-            private prepareDate(t: number) {
-                let d = new Date(t)
-                return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+                return stringifyValue(v, this.options.stringifier)
             }
         })(options)
 }

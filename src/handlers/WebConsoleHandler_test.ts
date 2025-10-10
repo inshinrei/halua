@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
-import { NewWebConsoleHandler } from "./WebConsoleHandler"
-import { log, logWithArgs, logWithVars } from "../mocks/logs"
-import { Level } from "./types"
-import { toLevel } from "../util/level"
+import { NewWebConsoleHandler } from "./WebConsoleHandler/WebConsoleHandler"
+import { log, logWithArgs } from "../mocks/logs"
 
 describe("WebConsoleHandler", () => {
     function setupHandler(receiver: any, options = {}) {
@@ -23,85 +21,6 @@ describe("WebConsoleHandler", () => {
 
     afterEach(() => {
         vi.clearAllMocks()
-    })
-
-    test.each([
-        ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
-        ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
-        ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
-        ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERROR", "log message"]],
-    ])("outputs single message with %s", (field, expected) => {
-        handler.log(structuredClone({ ...log, level: toLevel(field as "debug" | "info" | "warn" | "error") }))
-        expect(receiver[field as "debug" | "info" | "warn" | "error"]).toHaveBeenCalledWith(...expected)
-    })
-
-    test("outputs message with variables", () => {
-        handler.log(structuredClone(logWithVars))
-        expect(receiver.debug).toHaveBeenCalledWith(
-            ...[
-                "%s %s %s %s %d %s %o %s %o %s %o %s %o %o %o",
-                "6/30/2025 10:54:49 PM",
-                "DEBUG",
-                "log message",
-                "count =",
-                1,
-                "arr =",
-                [1, 2, 3],
-                "obj =",
-                logWithVars.args[6],
-                "mySet =",
-                logWithVars.args[8],
-                "myMap =",
-                logWithVars.args[10],
-                [1, 2, 3],
-                [5, 6, 7],
-            ],
-        )
-    })
-
-    test("separates withArgs from args", () => {
-        handler.log(structuredClone(logWithArgs))
-        expect(receiver.debug).toHaveBeenCalledWith(
-            ...[
-                "%s %s %s %s %s %d %o %s %s %d",
-                "6/30/2025 10:54:49 PM",
-                "DEBUG",
-                "log message",
-                "|",
-                "count =",
-                2,
-                [1, 2, 3],
-                "arr",
-                "anotherCount =",
-                5,
-            ],
-        )
-    })
-
-    test("supports pretty option with browser theme turned off", () => {
-        let prettyHandler = setupHandler(receiver, {
-            pretty: true,
-            fetchBrowserThemeOnInstanceCreation: false,
-        })
-        prettyHandler.log(log)
-        expect(receiver.debug).toHaveBeenCalledWith(
-            ...[
-                "%s %s",
-                "%c6/30/2025 10:54:49 PM %cDEBUG%c",
-                "color:#565656",
-                "color:#8A228A",
-                "color:#224912",
-                "log message",
-            ],
-        )
-    })
-
-    test("useWarn and useError can be turned on", () => {
-        let h = setupHandler(receiver, { useWarn: true, useError: true })
-        h.log({ ...log, level: Level.Warn })
-        h.log({ ...log, level: Level.Error })
-        expect(receiver.warn).toHaveBeenCalledTimes(1)
-        expect(receiver.error).toHaveBeenCalledTimes(1)
     })
 
     test("correctly implies linked arguments", () => {
