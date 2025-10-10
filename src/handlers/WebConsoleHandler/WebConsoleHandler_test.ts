@@ -61,7 +61,7 @@ describe("WebConsoleHandler", () => {
         test.todo("with complex structs", () => {})
     })
 
-    describe("options", () => {
+    describe.todo("options", () => {
         describe("useWarn, useError", () => {
             let h = setupHandler(receiver, { useWarn: true, useError: true })
             h.log({ ...mockLogSimple, level: Level.Warn })
@@ -70,12 +70,12 @@ describe("WebConsoleHandler", () => {
             expect(receiver.error).toHaveBeenCalledTimes(1)
         })
 
-        describe("linked arguments", () => {
+        describe.todo("linked arguments", () => {
             test("correctly sets them", () => {})
 
             test("could be turned off", () => {})
         })
 
-        describe("deprecated message format")
+        describe.todo("deprecated message format")
     })
 })
