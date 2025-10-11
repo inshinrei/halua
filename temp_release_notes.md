@@ -5,4 +5,3 @@ todo:
 - deprecate "messageFormat" option
 - implement WebPrettyConsoleHandler
 - deprecate WebConsoleHandler pretty option
-- 
