@@ -36,6 +36,13 @@ describe("JSONHandler", () => {
                 `{"timestamp":"2025-06-30T19:54:49.663Z","args":[{"field":"value","nesting":{"prop":{"nestedProp":"value2"}}},[{"prop":"value"},{"type":"propped"}],[1,2,[{"prop":1}],[1,2,3,4,5],{"field":"value","map":{"key":"value"},"set":[1,2]}]],"level":"DEBUG"}`,
             )
         })
+
+        test("errors output", () => {
+            handler.log({ ...mockLogSimple, args: [new Error("test error")] })
+            expect(receiver).toHaveBeenCalledWith(
+                `{"timestamp":"2025-06-30T19:54:49.663Z","args":["Error: test error"],"level":"DEBUG"}`,
+            )
+        })
     })
 
     describe("options", () => {

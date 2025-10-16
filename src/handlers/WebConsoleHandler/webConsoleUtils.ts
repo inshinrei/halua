@@ -1,4 +1,4 @@
-import { Level } from "./types"
+import { Level } from "../types"
 
 export function getColorKey(level: Level): ColorKey {
     return {
