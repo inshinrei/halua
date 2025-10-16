@@ -14,7 +14,7 @@
   "include": [
     "src/index.ts",
     "src/loggerCore.ts",
-    "src/types.ts"
+    "src/legacy/types.ts"
   ],
   "exclude": ["node_modules", "src/**/*.test.ts"]
 }
