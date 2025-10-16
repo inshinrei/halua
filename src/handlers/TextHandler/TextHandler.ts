@@ -8,6 +8,7 @@ interface TextLogHandler extends Handler {}
 
 interface TextLogHandlerOptions {
     linkArguments?: boolean
+    dateGetter?: (t: number) => string
     /** @deprecated will be removed in version 2.0.0 */
     messageFormat?: string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
@@ -57,7 +58,11 @@ export function NewTextHandler(
                         .replace("%w", withArgs)
                         .replace("%a", args)
                         .replace("%l", log.level)
-                        .replace("%t", getPrettyDate(log.timestamp as number)),
+                        .replace(
+                            "%t",
+                            this.options.dateGetter?.(log.timestamp as number) ??
+                                getPrettyDate(log.timestamp as number),
+                        ),
                 )
             }
 
