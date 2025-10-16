@@ -8,6 +8,7 @@ interface TextLogHandler extends Handler {}
 
 interface TextLogHandlerOptions {
     linkArguments?: boolean
+    /** @deprecated will be removed in version 2.0.0 */
     messageFormat?: string
     /** replace value during stringify, return null to fallback on JSONHandler replacer */
     replaceBeforeStringify?: (value: any) => any
