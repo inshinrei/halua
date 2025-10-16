@@ -38,6 +38,11 @@ describe("TextHandler", () => {
             handler.log(structuredClone(mockLogWithComplexStructs))
             expect(receiver).toHaveBeenCalledWith(``)
         })
+
+        test("errors output", () => {
+            handler.log({ ...mockLogSimple, args: [new Error("test error")] })
+            expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG Error: test error`)
+        })
     })
 
     describe("options", () => {

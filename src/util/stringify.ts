@@ -12,6 +12,10 @@ export function stringifyValue(
         return `Set[${Array.from(value)}]`
     }
 
+    if (value instanceof Error) {
+        return value.toString()
+    }
+
     if (Array.isArray(value)) {
         return `[${value}]`
     }

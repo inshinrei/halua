@@ -1,8 +1,8 @@
 import type { Handler, Log, LogLevel } from "../types"
 import { Level } from "../types"
 import { extractTaken, getConvertStartingIndex, stringMatchesVar } from "../../util/string"
-import type { ColorKey, Colors } from "../webConsoleUtils"
-import { getColorKey } from "../webConsoleUtils"
+import type { ColorKey, Colors } from "./webConsoleUtils"
+import { getColorKey } from "./webConsoleUtils"
 import { arrayed } from "../../util/array"
 import { getPrettyDate } from "../../util/date"
 

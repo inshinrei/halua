@@ -59,6 +59,12 @@ describe("WebConsoleHandler", () => {
         })
 
         test.todo("with complex structs", () => {})
+
+        test("errors output", () => {
+            let e = new Error("test error")
+            handler.log({ ...mockLogSimple, args: [e] })
+            expect(receiver.debug).toHaveBeenCalledWith(...["%s %s %o", "6/30/2025 10:54:49 PM", "DEBUG", e])
+        })
     })
 
     describe.todo("options", () => {

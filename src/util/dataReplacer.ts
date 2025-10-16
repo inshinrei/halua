@@ -1,16 +1,19 @@
 export function replaceDataBeforeStringify(value: any): any {
-  if (typeof value === "symbol") {
-    return value.toString()
-  }
-  if (value instanceof Set) {
-    return Array.from(value)
-  }
-  if (value instanceof Map) {
-    let obj: Record<string, any> = {}
-    for (let key of value.keys()) {
-      obj[key] = value.get(key)
+    if (typeof value === "symbol") {
+        return value.toString()
     }
-    return obj
-  }
-  return value
+    if (value instanceof Set) {
+        return Array.from(value)
+    }
+    if (value instanceof Map) {
+        let obj: Record<string, any> = {}
+        for (let key of value.keys()) {
+            obj[key] = value.get(key)
+        }
+        return obj
+    }
+    if (value instanceof Error) {
+        return value.toString()
+    }
+    return value
 }
