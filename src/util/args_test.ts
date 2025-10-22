@@ -96,6 +96,27 @@ describe("args module", () => {
                     },
                 },
             }
+            /**
+             * {
+             * "value": "string",
+             * "nested": "{
+             * "prop": "1",
+             * "nestedType": "{
+             * "type": "array"
+             * }"
+             * }"
+             * }
+             *
+             * {
+             *     "value": "string",
+             *     "nested": {
+             *         "prop": 1,
+             *         "nestedType": {
+             *             "type": "array"
+             *         }
+             *     }
+             * }
+             * */
             console.log(parseArg(o).parsed)
             expect(parseArg(o)).toStrictEqual({
                 bare: o,
