@@ -53,4 +53,34 @@ describe("format", () => {
             expect(format({ type: "infinity", value: -Infinity })).toEqual("-Infinity")
         })
     })
+
+    describe("formatting complex values", () => {
+        it("array", () => {
+            expect(format({ type: "array", value: [1, 2, 3, 4, 5] })).toEqual("[1, 2, 3, 4, 5]")
+            expect(format({ type: "array", value: ["s1", "s2", "s3"] })).toEqual(`["s1", "s2", "s3"]`)
+            expect(format({ type: "array", value: [false, true] })).toEqual("[false, true]")
+        })
+
+        it("array of mixed types", () => {})
+
+        it("array buffer", () => {})
+
+        it("object", () => {})
+
+        it("nested object", () => {})
+
+        it("map", () => {})
+
+        it("map of mixed types", () => {})
+
+        it("set", () => {})
+
+        it("weakmap", () => {})
+
+        it("weakset", () => {})
+
+        it("function", () => {})
+
+        it("error", () => {})
+    })
 })
