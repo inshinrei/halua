@@ -10,6 +10,11 @@ describe("getType", () => {
         expect(getType(null)).toEqual("null")
     })
 
+    it("gets boolean type", () => {
+        expect(getType(false)).toEqual("boolean")
+        expect(getType(true)).toEqual("boolean")
+    })
+
     it("gets string type", () => {
         expect(getType("str")).toEqual("string")
     })

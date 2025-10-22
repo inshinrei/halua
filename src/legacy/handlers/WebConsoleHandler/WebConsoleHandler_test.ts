@@ -25,10 +25,10 @@ describe("WebConsoleHandler", () => {
 
     describe("output and formatting", () => {
         test.each([
-            ["debug", ["%s %s %s", "6/30/2025 10:54:49 PM", "DEBUG", "log message"]],
-            ["info", ["%s %s %s", "6/30/2025 10:54:49 PM", "INFO", "log message"]],
-            ["warn", ["%s %s %s", "6/30/2025 10:54:49 PM", "WARN", "log message"]],
-            ["error", ["%s %s %s", "6/30/2025 10:54:49 PM", "ERROR", "log message"]],
+            ["debug", ["%s %s %s", "6/30/2025 7:54:49 PM", "DEBUG", "log message"]],
+            ["info", ["%s %s %s", "6/30/2025 7:54:49 PM", "INFO", "log message"]],
+            ["warn", ["%s %s %s", "6/30/2025 7:54:49 PM", "WARN", "log message"]],
+            ["error", ["%s %s %s", "6/30/2025 7:54:49 PM", "ERROR", "log message"]],
         ])("outputs single message with %s", (field, expected) => {
             handler.log(
                 structuredClone({
@@ -44,7 +44,7 @@ describe("WebConsoleHandler", () => {
             expect(receiver.debug).toHaveBeenCalledWith(
                 ...[
                     "%s %s %o %o %s %s %d %o %s %d",
-                    "6/30/2025 10:54:49 PM",
+                    "6/30/2025 7:54:49 PM",
                     "DEBUG",
                     { field: "of value" },
                     [1, 2, 3, 4, 5],

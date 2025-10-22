@@ -15,10 +15,10 @@ describe("TextHandler", () => {
 
     describe("output and formatting", () => {
         test.each([
-            ["debug", "6/30/2025 10:54:49 PM DEBUG log message"],
-            ["info", "6/30/2025 10:54:49 PM INFO log message"],
-            ["warn", "6/30/2025 10:54:49 PM WARN log message"],
-            ["error", "6/30/2025 10:54:49 PM ERROR log message"],
+            ["debug", "6/30/2025 7:54:49 PM DEBUG log message"],
+            ["info", "6/30/2025 7:54:49 PM INFO log message"],
+            ["warn", "6/30/2025 7:54:49 PM WARN log message"],
+            ["error", "6/30/2025 7:54:49 PM ERROR log message"],
         ])("single message with %s", (field, expected) => {
             handler.log({
                 ...mockLogSimple,
@@ -30,7 +30,7 @@ describe("TextHandler", () => {
         test("with args", () => {
             handler.log({ ...mockLogWithArgs })
             expect(receiver).toHaveBeenCalledWith(
-                `6/30/2025 10:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count=2 [array of,not strings,3,4] count=22`,
+                `6/30/2025 7:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count=2 [array of,not strings,3,4] count=22`,
             )
         })
 
@@ -45,14 +45,14 @@ describe("TextHandler", () => {
             test("correctly sets them", () => {
                 handler.log({ ...mockLogWithArgs })
                 expect(receiver).toHaveBeenCalledWith(
-                    `6/30/2025 10:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count=2 [array of,not strings,3,4] count=22`,
+                    `6/30/2025 7:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count=2 [array of,not strings,3,4] count=22`,
                 )
             })
 
             test("could be turned off", () => {
                 setupHandler(receiver, { linkArguments: false }).log({ ...mockLogWithArgs })
                 expect(receiver).toHaveBeenCalledWith(
-                    `6/30/2025 10:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count 2 [array of,not strings,3,4] count 22`,
+                    `6/30/2025 7:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] | count 2 [array of,not strings,3,4] count 22`,
                 )
             })
         })
@@ -67,7 +67,7 @@ describe("TextHandler", () => {
                 }
 
                 setupHandler(receiver, { replaceBeforeStringify }).log(mockLogSimple)
-                expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG replaced`)
+                expect(receiver).toHaveBeenCalledWith(`6/30/2025 7:54:49 PM DEBUG replaced`)
             })
 
             test.todo("called n of values times")
@@ -82,7 +82,7 @@ describe("TextHandler", () => {
                 let format = "%t %l %a > %w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogWithArgs)
                 expect(receiver).toHaveBeenCalledWith(
-                    `6/30/2025 10:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] > count=2 [array of,not strings,3,4] count=22`,
+                    `6/30/2025 7:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] > count=2 [array of,not strings,3,4] count=22`,
                 )
             })
 
@@ -97,20 +97,20 @@ describe("TextHandler", () => {
             test("absent withArgs does remove separator", () => {
                 let format = "%t %l %a >> %w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogSimple)
-                expect(receiver).toHaveBeenCalledWith(`6/30/2025 10:54:49 PM DEBUG log message`)
+                expect(receiver).toHaveBeenCalledWith(`6/30/2025 7:54:49 PM DEBUG log message`)
             })
 
             test("prefixed", () => {
                 let format = "[prefixed] %t %l %a > %w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogSimple)
-                expect(receiver).toHaveBeenCalledWith(`[prefixed] 6/30/2025 10:54:49 PM DEBUG log message`)
+                expect(receiver).toHaveBeenCalledWith(`[prefixed] 6/30/2025 7:54:49 PM DEBUG log message`)
             })
 
             test("no spaces", () => {
                 let format = "%t%l%a%w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogWithArgs)
                 expect(receiver).toHaveBeenCalledWith(
-                    `6/30/2025 10:54:49 PMDEBUG{"field":"of value"} [1,2,3,4,5]count=2 [array of,not strings,3,4] count=22`,
+                    `6/30/2025 7:54:49 PMDEBUG{"field":"of value"} [1,2,3,4,5]count=2 [array of,not strings,3,4] count=22`,
                 )
             })
 
@@ -118,7 +118,7 @@ describe("TextHandler", () => {
                 let format = "%a %w > %t %l"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogWithArgs)
                 expect(receiver).toHaveBeenCalledWith(
-                    `{"field":"of value"} [1,2,3,4,5] count=2 [array of,not strings,3,4] count=22 > 6/30/2025 10:54:49 PM DEBUG`,
+                    `{"field":"of value"} [1,2,3,4,5] count=2 [array of,not strings,3,4] count=22 > 6/30/2025 7:54:49 PM DEBUG`,
                 )
             })
 
@@ -126,7 +126,7 @@ describe("TextHandler", () => {
                 let format = "%t %l %a ::: %w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogWithArgs)
                 expect(receiver).toHaveBeenCalledWith(
-                    `6/30/2025 10:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] ::: count=2 [array of,not strings,3,4] count=22`,
+                    `6/30/2025 7:54:49 PM DEBUG {"field":"of value"} [1,2,3,4,5] ::: count=2 [array of,not strings,3,4] count=22`,
                 )
             })
 
@@ -134,7 +134,7 @@ describe("TextHandler", () => {
                 let format = "[time] %t on level %l with args %a and with %w"
                 setupHandler(receiver, { messageFormat: format }).log(mockLogWithArgs)
                 expect(receiver).toHaveBeenCalledWith(
-                    `[time] 6/30/2025 10:54:49 PM on level DEBUG with args {"field":"of value"} [1,2,3,4,5] and with count=2 [array of,not strings,3,4] count=22`,
+                    `[time] 6/30/2025 7:54:49 PM on level DEBUG with args {"field":"of value"} [1,2,3,4,5] and with count=2 [array of,not strings,3,4] count=22`,
                 )
             })
         })

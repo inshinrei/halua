@@ -1,23 +1,4 @@
-export type ArgumentType =
-    | "undefined"
-    | "null"
-    | "string"
-    | "number"
-    | "array"
-    | "object"
-    | "symbol"
-    | "typedarray"
-    | "arraybuffer"
-    | "bigint"
-    | "map"
-    | "set"
-    | "weakmap"
-    | "weakset"
-    | "date"
-    | "nan"
-    | "infinity"
-    | "function"
-    | "error"
+import { type ArgumentType } from "./types"
 
 export function getType(arg: any): ArgumentType {
     if (typeof arg === "undefined") {
