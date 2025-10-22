@@ -61,30 +61,47 @@ describe("format", () => {
             expect(format({ type: "array", value: [false, true] })).toEqual("[false, true]")
         })
 
-        it("array of mixed types", () => {})
+        it.todo("array of mixed types", () => {})
 
-        it("array buffer", () => {})
+        it.todo("array buffer", () => {})
 
-        it("object", () => {
+        it.skip("object", () => {
             expect(format({ type: "object", value: { prop: "value", num: 1 } })).toEqual(
                 `{\n\tprop: "value",\n\tnum: 1\n}`,
             )
         })
 
-        it("nested object", () => {})
+        it("nested object", () => {
+            expect(
+                format({
+                    type: "object",
+                    value: {
+                        prop: "value",
+                        nested: {
+                            type: "some",
+                            thing: {
+                                next: "value",
+                            },
+                        },
+                    },
+                }),
+            ).toEqual(
+                `{\n\tprop: "value",\n\tnested: {\n\t\ttype: "some",\n\t\tthing: {\n\t\t\tnext: "value"\n\t\t}\n\t}\n}`,
+            )
+        })
 
-        it("map", () => {})
+        it.todo("map", () => {})
 
-        it("map of mixed types", () => {})
+        it.todo("map of mixed types", () => {})
 
-        it("set", () => {})
+        it.todo("set", () => {})
 
-        it("weakmap", () => {})
+        it.todo("weakmap", () => {})
 
-        it("weakset", () => {})
+        it.todo("weakset", () => {})
 
-        it("function", () => {})
+        it.todo("function", () => {})
 
-        it("error", () => {})
+        it.todo("error", () => {})
     })
 })

@@ -2,6 +2,7 @@ import type { Argument, ArgumentType } from "./types"
 import { EmptySpacing, Spacing } from "../util/spacing"
 import { HaluaParseError } from "../util/errors"
 import { getType } from "./getType"
+import { printTimes } from "../util/string"
 
 const FormatAsIs: Array<ArgumentType> = [
     "undefined",
@@ -28,7 +29,7 @@ const FormatNeeded: Array<ArgumentType> = [
     "error",
 ]
 
-export function format(arg: Argument, spacing: boolean = true) {
+export function format(arg: Argument, spacing: boolean = true): string {
     try {
         const SpacingEnum = spacing ? Spacing : EmptySpacing
         if (FormatAsIs.some((f) => f === arg.type)) {
@@ -43,7 +44,7 @@ export function format(arg: Argument, spacing: boolean = true) {
     return arg.value
 }
 
-function formatAsIs(arg: any, type: ArgumentType) {
+function formatAsIs(arg: any, type: ArgumentType): string {
     if (type === "number") {
         return arg
     }
@@ -53,12 +54,17 @@ function formatAsIs(arg: any, type: ArgumentType) {
     return String(arg)
 }
 
-function formatComplex(arg: any, type: ArgumentType, spacing: typeof Spacing | typeof EmptySpacing) {
+function formatComplex(
+    arg: any,
+    type: ArgumentType,
+    spacing: typeof Spacing | typeof EmptySpacing,
+    nestingLevel = 1,
+): string {
     if (type === "array") {
         return formatArray(arg, spacing)
     }
     if (type === "object") {
-        return formatObject(arg, spacing)
+        return formatObject(arg, spacing, nestingLevel)
     }
 
     return arg
@@ -79,17 +85,25 @@ function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpac
     return stringify
 }
 
-function formatObject(arg: any, spacing: typeof Spacing | typeof EmptySpacing): string {
+function formatObject(arg: any, spacing: typeof Spacing | typeof EmptySpacing, nestingLevel = 1): string {
     let stringify = `{${spacing.Line}`
     let len = Object.keys(arg).length
     for (let key in arg) {
         len -= 1
 
         let entryType = getType(arg[key])
-        let formatted = format({ type: entryType, value: arg[key] })
+        let formatted =
+            entryType === "object"
+                ? formatComplex(arg[key], entryType, spacing, nestingLevel + 1)
+                : format({
+                      type: entryType,
+                      value: arg[key],
+                  })
         let entryValue = entryType === "string" ? `"${formatted}"` : formatted
-        stringify += `${spacing.Tab}${key}: ${entryValue}${len ? `,${spacing.Line}` : ""}`
+        stringify += `${printTimes(nestingLevel, spacing.Tab)}${key}: ${entryValue}${len ? `,${spacing.Line}` : ""}`
     }
-    stringify += `${spacing.Line}}`
+    
+    let level = nestingLevel - 1
+    stringify += `${spacing.Line}${printTimes(level, spacing.Tab)}}`
     return stringify
 }
