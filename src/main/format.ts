@@ -57,6 +57,10 @@ function formatComplex(arg: any, type: ArgumentType, spacing: typeof Spacing | t
     if (type === "array") {
         return formatArray(arg, spacing)
     }
+    if (type === "object") {
+        return formatObject(arg, spacing)
+    }
+
     return arg
 }
 
@@ -67,9 +71,25 @@ function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpac
         len -= 1
 
         let entryType = getType(entry)
-        let entryValue = entryType === "string" ? `"${entry}"` : entry
+        let formatted = format({ type: entryType, value: entry })
+        let entryValue = entryType === "string" ? `"${formatted}"` : formatted
         stringify += `${entryValue}${len ? `,${spacing.Space}` : ""}`
     }
     stringify += "]"
+    return stringify
+}
+
+function formatObject(arg: any, spacing: typeof Spacing | typeof EmptySpacing): string {
+    let stringify = `{${spacing.Line}`
+    let len = Object.keys(arg).length
+    for (let key in arg) {
+        len -= 1
+
+        let entryType = getType(arg[key])
+        let formatted = format({ type: entryType, value: arg[key] })
+        let entryValue = entryType === "string" ? `"${formatted}"` : formatted
+        stringify += `${spacing.Tab}${key}: ${entryValue}${len ? `,${spacing.Line}` : ""}`
+    }
+    stringify += `${spacing.Line}}`
     return stringify
 }

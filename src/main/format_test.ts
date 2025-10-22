@@ -65,7 +65,11 @@ describe("format", () => {
 
         it("array buffer", () => {})
 
-        it("object", () => {})
+        it("object", () => {
+            expect(format({ type: "object", value: { prop: "value", num: 1 } })).toEqual(
+                `{\n\tprop: "value",\n\tnum: 1\n}`,
+            )
+        })
 
         it("nested object", () => {})
 
