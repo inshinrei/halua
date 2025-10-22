@@ -108,19 +108,29 @@ describe("format", () => {
                         ["key2", "str"],
                     ]),
                 }),
-            ).toEqual(`{\n\t1 => 1,\n\tkey2 => "str"\n}`)
+            ).toEqual(`{\n\tkey1 => 1,\n\tkey2 => "str"\n}`)
         })
 
-        it.todo("map of mixed types", () => {})
+        it("map of mixed types", () => {
+            expect(
+                format({
+                    type: "map",
+                    value: new Map<string | number, any>([
+                        ["key1", { prop: "value" }],
+                        [1, [1, 2, 3]],
+                    ]),
+                }),
+            ).toEqual(`{\n\t1 => "[1, 2, 3]",\n\tkey1 => "{\n\tprop: "value"\n}"\n}`)
+        })
 
-        it.todo("set", () => {})
+        it("set", () => {})
 
-        it.todo("weakmap", () => {})
+        it("weakmap", () => {})
 
-        it.todo("weakset", () => {})
+        it("weakset", () => {})
 
-        it.todo("function", () => {})
+        it("function", () => {})
 
-        it.todo("error", () => {})
+        it("error", () => {})
     })
 })

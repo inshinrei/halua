@@ -122,9 +122,11 @@ function formatObject(
 function convertMapToObj(value: Map<any, any>): Record<any, any> {
     let obj: Record<string, any> = {}
     for (let [key, v] of value) {
-        let entryType = getType(v)
-        let objKey: string = entryType === "string" ? key : format({ type: entryType, value: v })
-        obj[objKey] = v
+        let keyType = getType(key)
+        let objKey: string = keyType === "string" ? key : format({ type: keyType, value: key })
+
+        let valueType = getType(v)
+        obj[objKey] = format({ type: valueType, value: v })
     }
     return obj
 }
