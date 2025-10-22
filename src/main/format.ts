@@ -60,6 +60,19 @@ function formatComplex(
     spacing: typeof Spacing | typeof EmptySpacing,
     nestingLevel = 1,
 ): string {
+    if (type === "set") {
+        return `Set${formatArray(convertSetToArray(arg), spacing)}`
+    }
+    if (type === "weakset") {
+        return `WeakSet [inaccessible]`
+    }
+    if (type === "weakmap") {
+        return `WeakMap {inaccessible}`
+    }
+    if (type === "function") {
+        let name = arg.name
+        return `Function ${name === "value" ? "anonymous" : name}`
+    }
     if (type === "array") {
         return formatArray(arg, spacing)
     }
@@ -68,6 +81,9 @@ function formatComplex(
     }
     if (type === "map") {
         return formatObject(convertMapToObj(arg), spacing, nestingLevel, " => ")
+    }
+    if (type === "error") {
+        return arg.toString()
     }
     if (type === "object") {
         return formatObject(arg, spacing, nestingLevel)
@@ -129,4 +145,12 @@ function convertMapToObj(value: Map<any, any>): Record<any, any> {
         obj[objKey] = format({ type: valueType, value: v })
     }
     return obj
+}
+
+function convertSetToArray(value: Set<any>): Array<any> {
+    let arr: Array<any> = []
+    for (let entry of value) {
+        arr.push(entry)
+    }
+    return arr
 }

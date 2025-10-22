@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { format } from "./format"
+import { HaluaParseError } from "../util/errors"
 
 describe("format", () => {
     describe("formatting as is", () => {
@@ -123,14 +124,40 @@ describe("format", () => {
             ).toEqual(`{\n\t1 => "[1, 2, 3]",\n\tkey1 => "{\n\tprop: "value"\n}"\n}`)
         })
 
-        it("set", () => {})
+        it("set", () => {
+            expect(format({ type: "set", value: new Set([1, 2, 3, 4]) })).toEqual(`Set[1, 2, 3, 4]`)
+        })
 
-        it("weakmap", () => {})
+        it("weakmap", () => {
+            expect(format({ type: "weakmap", value: new WeakMap() })).toEqual("WeakMap {inaccessible}")
+        })
 
-        it("weakset", () => {})
+        it("weakset", () => {
+            expect(format({ type: "weakset", value: new WeakSet() })).toEqual("WeakSet [inaccessible]")
+        })
 
-        it("function", () => {})
+        it("function", () => {
+            function name() {
+                return "keka"
+            }
 
-        it("error", () => {})
+            expect(format({ type: "function", value: name })).toEqual(`Function name`)
+            expect(
+                format({
+                    type: "function",
+                    value: () => {},
+                }),
+            ).toEqual(`Function anonymous`)
+        })
+
+        it("error", () => {
+            expect(format({ type: "error", value: new Error("test message") })).toEqual(`Error: test message`)
+            expect(
+                format({
+                    type: "error",
+                    value: new HaluaParseError("test"),
+                }),
+            ).toEqual(`Error: HaluaParseError: test`)
+        })
     })
 })
