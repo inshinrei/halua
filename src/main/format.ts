@@ -63,6 +63,12 @@ function formatComplex(
     if (type === "array") {
         return formatArray(arg, spacing)
     }
+    if (type === "arraybuffer") {
+        return `ArrayBuffer []`
+    }
+    if (type === "map") {
+        return formatObject(convertMapToObj(arg), spacing, nestingLevel, " => ")
+    }
     if (type === "object") {
         return formatObject(arg, spacing, nestingLevel)
     }
@@ -85,7 +91,12 @@ function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpac
     return stringify
 }
 
-function formatObject(arg: any, spacing: typeof Spacing | typeof EmptySpacing, nestingLevel = 1): string {
+function formatObject(
+    arg: any,
+    spacing: typeof Spacing | typeof EmptySpacing,
+    nestingLevel = 1,
+    delimiter = ": ",
+): string {
     let stringify = `{${spacing.Line}`
     let len = Object.keys(arg).length
     for (let key in arg) {
@@ -100,10 +111,20 @@ function formatObject(arg: any, spacing: typeof Spacing | typeof EmptySpacing, n
                       value: arg[key],
                   })
         let entryValue = entryType === "string" ? `"${formatted}"` : formatted
-        stringify += `${printTimes(nestingLevel, spacing.Tab)}${key}: ${entryValue}${len ? `,${spacing.Line}` : ""}`
+        stringify += `${printTimes(nestingLevel, spacing.Tab)}${key}${delimiter}${entryValue}${len ? `,${spacing.Line}` : ""}`
     }
-    
+
     let level = nestingLevel - 1
     stringify += `${spacing.Line}${printTimes(level, spacing.Tab)}}`
     return stringify
+}
+
+function convertMapToObj(value: Map<any, any>): Record<any, any> {
+    let obj: Record<string, any> = {}
+    for (let [key, v] of value) {
+        let entryType = getType(v)
+        let objKey: string = entryType === "string" ? key : format({ type: entryType, value: v })
+        obj[objKey] = v
+    }
+    return obj
 }

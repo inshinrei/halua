@@ -61,9 +61,18 @@ describe("format", () => {
             expect(format({ type: "array", value: [false, true] })).toEqual("[false, true]")
         })
 
-        it.todo("array of mixed types", () => {})
+        it("array of mixed types", () => {
+            expect(
+                format({
+                    type: "array",
+                    value: [1, "str", { prop: "s2" }],
+                }),
+            ).toEqual(`[1, "str", {\n\tprop: "s2"\n}]`)
+        })
 
-        it.todo("array buffer", () => {})
+        it("array buffer", () => {
+            expect(format({ type: "arraybuffer", value: new ArrayBuffer() })).toEqual(`ArrayBuffer []`)
+        })
 
         it("object", () => {
             expect(format({ type: "object", value: { prop: "value", num: 1 } })).toEqual(
@@ -90,7 +99,17 @@ describe("format", () => {
             )
         })
 
-        it.todo("map", () => {})
+        it("map", () => {
+            expect(
+                format({
+                    type: "map",
+                    value: new Map<string, any>([
+                        ["key1", 1],
+                        ["key2", "str"],
+                    ]),
+                }),
+            ).toEqual(`{\n\t1 => 1,\n\tkey2 => "str"\n}`)
+        })
 
         it.todo("map of mixed types", () => {})
 
