@@ -8,21 +8,21 @@ export interface Handler {
     /** indicates if objects should contain spaces and tabs */
     spacing?: boolean
 
-    execute: () => Generator<ExecuteResponse, void, ExecuteMessage>
+    execute: () => Generator<YieldMessage, void, NextMessage>
 
     formatArg?: (value: any) => any
 }
 
-export interface ExecuteMessage {
-    type: MessageType
+export interface NextMessage {
+    type: NextMessageType
     value: any
     prev?: string
 }
 
-export interface ExecuteResponse {
-    type: ExecuteResponseType
+export interface YieldMessage {
+    type: YieldMessageType
 }
 
-type ExecuteResponseType = "pass" | "done" | "init"
+type YieldMessageType = "pass" | "done" | "init"
 
-type MessageType = "arg" | "done" | "init"
+type NextMessageType = "arg" | "done" | "init"

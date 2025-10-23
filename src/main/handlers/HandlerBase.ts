@@ -1,4 +1,4 @@
-import type { ExecuteMessage, ExecuteResponse, Handler } from "./types"
+import type { Handler, NextMessage, YieldMessage } from "./types"
 
 export class HandlerBase implements Handler {
     formatArg = undefined
@@ -7,9 +7,9 @@ export class HandlerBase implements Handler {
         this.execute = this.execute.bind(this)
     }
 
-    *execute(): Generator<ExecuteResponse, void, ExecuteMessage> {
+    *execute(): Generator<YieldMessage, void, NextMessage> {
         let arg = ""
-        let current: ExecuteMessage = { value: null, type: "init" }
+        let current: NextMessage = { value: null, type: "init" }
         while (current.type !== "done") {
             if (current.type === "init") {
                 yield { type: "init" }
