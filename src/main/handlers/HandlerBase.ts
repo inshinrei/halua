@@ -10,6 +10,7 @@ export class HandlerBase implements Handler {
     *execute(): Generator<YieldMessage, void, NextMessage> {
         let arg = ""
         let current: NextMessage = { value: null, type: "init" }
+        
         while (current.type !== "done") {
             if (current.type === "init") {
                 yield { type: "init" }
