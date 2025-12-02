@@ -1,39 +1,44 @@
 import type { Handler, NextMessage, YieldMessage } from "./types"
 
-export class HandlerBase implements Handler {
-    formatArg = undefined
+export type SendMethod = (data: string) => void
 
-    constructor(private send: (value: string) => {}) {
+export class HandlerBase implements Handler {
+    sendMethod: SendMethod
+    formatArg: ((value: any) => any) | undefined = undefined
+
+    constructor(send: SendMethod) {
         this.execute = this.execute.bind(this)
+        this.sendMethod = send
     }
 
     *execute(): Generator<YieldMessage, void, NextMessage> {
         let arg = ""
         let current: NextMessage = { value: null, type: "init" }
-        
-        while (current.type !== "done") {
+
+        while (true) {
             if (current.type === "init") {
-                yield { type: "init" }
+                current = yield { type: "init" }
             }
 
             if (current.prev) {
-                arg += current.prev
+                arg += " " + current.prev
+            }
+
+            if (current.type === "done") {
+                break
             }
 
             if (current.type === "arg") {
                 if (typeof this.formatArg === "function") {
-                    arg += (this.formatArg as Function)(current.value)
+                    arg += " " + this.formatArg(current.value)
                     current = yield { type: "done" }
+                    continue
                 }
             }
 
             current = yield { type: "pass" }
         }
 
-        if (current.prev) {
-            arg += current.prev
-        }
-
-        this.send(arg)
+        this.sendMethod(arg.trimStart())
     }
 }
