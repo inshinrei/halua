@@ -68,7 +68,7 @@ describe("format", () => {
                     type: "array",
                     value: [1, "str", { prop: "s2" }],
                 }),
-            ).toEqual(`[1, "str", {\n\tprop: "s2"\n}]`)
+            ).toEqual(`[1, "str", {\n\t"prop": "s2"\n}]`)
         })
 
         it("array buffer", () => {
@@ -77,7 +77,7 @@ describe("format", () => {
 
         it("object", () => {
             expect(format({ type: "object", value: { prop: "value", num: 1 } })).toEqual(
-                `{\n\tprop: "value",\n\tnum: 1\n}`,
+                `{\n\t"prop": "value",\n\t"num": 1\n}`,
             )
         })
 
@@ -96,7 +96,7 @@ describe("format", () => {
                     },
                 }),
             ).toEqual(
-                `{\n\tprop: "value",\n\tnested: {\n\t\ttype: "some",\n\t\tthing: {\n\t\t\tnext: "value"\n\t\t}\n\t}\n}`,
+                `{\n\t"prop": "value",\n\t"nested": {\n\t\t"type": "some",\n\t\t"thing": {\n\t\t\t"next": "value"\n\t\t}\n\t}\n}`,
             )
         })
 
@@ -109,7 +109,7 @@ describe("format", () => {
                         ["key2", "str"],
                     ]),
                 }),
-            ).toEqual(`{\n\tkey1 => 1,\n\tkey2 => "str"\n}`)
+            ).toEqual(`{\n\t"key1" => 1,\n\t"key2" => "str"\n}`)
         })
 
         it("map of mixed types", () => {
@@ -121,7 +121,7 @@ describe("format", () => {
                         [1, [1, 2, 3]],
                     ]),
                 }),
-            ).toEqual(`{\n\t1 => "[1, 2, 3]",\n\tkey1 => "{\n\tprop: "value"\n}"\n}`)
+            ).toEqual(`{\n\t"1" => "[1, 2, 3]",\n\t"key1" => "{\n\t"prop": "value"\n}"\n}`)
         })
 
         it("set", () => {
@@ -151,13 +151,13 @@ describe("format", () => {
         })
 
         it("error", () => {
-            expect(format({ type: "error", value: new Error("test message") })).toEqual(`Error: test message`)
+            expect(format({ type: "error", value: new Error("test message") })).toContain(`Error: test message`)
             expect(
                 format({
                     type: "error",
                     value: new HaluaParseError("test"),
                 }),
-            ).toEqual(`Error: HaluaParseError: test`)
+            ).toContain(`Error: HaluaParseError: test`)
         })
     })
 })

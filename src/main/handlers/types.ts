@@ -1,5 +1,10 @@
 import { type LogLevel } from "../../types/log"
 
+export interface HandlerExecuteMeta {
+    timestamp: number
+    level: LogLevel
+}
+
 export interface Handler {
     /** indicates min level to log */
     level?: LogLevel
@@ -8,9 +13,13 @@ export interface Handler {
     /** indicates if objects should contain spaces and tabs */
     spacing?: boolean
 
-    execute: () => Generator<YieldMessage, void, NextMessage>
+    printTimestamp?: boolean
+    printLevel?: boolean
+
+    execute: (meta: HandlerExecuteMeta) => Generator<YieldMessage, void, NextMessage>
 
     formatArg?: (value: any) => any
+    formatTimestamp?: (value: number) => string
 }
 
 export interface NextMessage {

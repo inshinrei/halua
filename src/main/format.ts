@@ -44,6 +44,13 @@ export function format(arg: Argument, spacing: boolean = true): string {
     return arg.value
 }
 
+export function formatJSON(arg: Argument) {
+    if (arg.type === "error") {
+        return `${arg.value.toString()} stack: ${arg.value.stack?.replace("\n", "")}`
+    }
+    return format(arg, false)
+}
+
 function formatAsIs(arg: any, type: ArgumentType): string {
     if (type === "number") {
         return arg
@@ -64,10 +71,10 @@ function formatComplex(
         return `Set${formatArray(convertSetToArray(arg), spacing)}`
     }
     if (type === "weakset") {
-        return `WeakSet [inaccessible]`
+        return `WeakSet \[inaccessible\]`
     }
     if (type === "weakmap") {
-        return `WeakMap {inaccessible}`
+        return `WeakMap \{inaccessible\}`
     }
     if (type === "function") {
         let name = arg.name
@@ -77,13 +84,13 @@ function formatComplex(
         return formatArray(arg, spacing)
     }
     if (type === "arraybuffer") {
-        return `ArrayBuffer []`
+        return `ArrayBuffer \[\]`
     }
     if (type === "map") {
-        return formatObject(convertMapToObj(arg), spacing, nestingLevel, " => ")
+        return formatObject(convertMapToObj(arg), spacing, nestingLevel, ` => `)
     }
     if (type === "error") {
-        return arg.toString()
+        return `${arg.toString()} stack: ${arg.stack}`
     }
     if (type === "object") {
         return formatObject(arg, spacing, nestingLevel)
@@ -93,17 +100,17 @@ function formatComplex(
 }
 
 function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpacing): string {
-    let stringify = "["
+    let stringify = "\["
     let len = arg.length
     for (let entry of arg) {
         len -= 1
 
         let entryType = getType(entry)
         let formatted = format({ type: entryType, value: entry })
-        let entryValue = entryType === "string" ? `"${formatted}"` : formatted
-        stringify += `${entryValue}${len ? `,${spacing.Space}` : ""}`
+        let entryValue = entryType === "string" ? `\"${formatted}\"` : formatted
+        stringify += `${entryValue}${len ? `,${spacing.Space}` : spacing.Empty}`
     }
-    stringify += "]"
+    stringify += "\]"
     return stringify
 }
 
@@ -111,9 +118,9 @@ function formatObject(
     arg: any,
     spacing: typeof Spacing | typeof EmptySpacing,
     nestingLevel = 1,
-    delimiter = ": ",
+    delimiter = `: `,
 ): string {
-    let stringify = `{${spacing.Line}`
+    let stringify = `\{${spacing.Line}`
     let len = Object.keys(arg).length
     for (let key in arg) {
         len -= 1
@@ -126,12 +133,12 @@ function formatObject(
                       type: entryType,
                       value: arg[key],
                   })
-        let entryValue = entryType === "string" ? `"${formatted}"` : formatted
-        stringify += `${printTimes(nestingLevel, spacing.Tab)}${key}${delimiter}${entryValue}${len ? `,${spacing.Line}` : ""}`
+        let entryValue = entryType === "string" ? `\"${formatted}\"` : formatted
+        stringify += `${printTimes(nestingLevel, spacing.Tab)}\"${key}\"${delimiter}${entryValue}${len ? `,${spacing.Line}` : spacing.Empty}`
     }
 
     let level = nestingLevel - 1
-    stringify += `${spacing.Line}${printTimes(level, spacing.Tab)}}`
+    stringify += `${spacing.Line}${printTimes(level, spacing.Tab)}\}`
     return stringify
 }
 
