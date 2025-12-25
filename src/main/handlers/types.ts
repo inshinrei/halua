@@ -7,9 +7,9 @@ export interface HandlerExecuteMeta {
 
 export interface Handler {
     /** indicates min level to log */
-    level?: LogLevel
+    level: LogLevel
     /** indicates exact levels to log */
-    exact?: Array<LogLevel> | LogLevel
+    exact: Array<LogLevel> | LogLevel
     /** indicates if objects should contain spaces and tabs */
     spacing?: boolean
 
@@ -20,6 +20,14 @@ export interface Handler {
 
     formatArg?: (value: any) => any
     formatTimestamp?: (value: number) => string
+}
+
+export interface BaseHandlerOptions {
+    level?: LogLevel
+    exact?: LogLevel | Array<LogLevel>
+    spacing?: boolean
+    printTimestamp?: boolean
+    printLevel?: boolean
 }
 
 export interface NextMessage {
