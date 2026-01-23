@@ -98,7 +98,7 @@ export class Halua implements HaluaLogger {
     }
 
     private sendToBalancer(level: LogLevel, args: Array<any>) {
-        this.balancer.sendLog({ level, timestamp: Date.now() }, args.concat(this.options.withArgs))
+        this.balancer.sendLog({ level, timestamp: Date.now() }, args.concat(this.options.withArgs ?? []))
     }
 
     private supposeIsHandler(v: any, reportError = true): boolean {
