@@ -15,8 +15,8 @@ interface ConsoleHandlerOptions extends Omit<BaseHandlerOptions, "spacing"> {}
 export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandlerOptions) {
     return () =>
         new (class ConsoleHandler extends HandlerBase {
-            public level: LogLevel
-            public exact: Array<LogLevel>
+            public level: LogLevel | undefined
+            public exact: Array<LogLevel> | null = null
 
             constructor(
                 readonly console: OutputConsole,
@@ -25,8 +25,8 @@ export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandl
                 super()
 
                 this.applyOptionalOptions(options)
-                this.level = options.level ?? "TRACE"
-                this.exact = toarray(options.exact ?? []) as Array<LogLevel>
+                this.level = options.level
+                this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
             readonly formatArg = (arg: any) => arg

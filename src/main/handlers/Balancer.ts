@@ -1,11 +1,10 @@
 import { Level, LogLevel } from "../../types/log"
 import { Handler, HandlerExecuteMeta } from "./types"
-import { format } from "../format"
 import { getType } from "../getType"
 import { extractLevels } from "../util/string"
 import { HaluaFailedToCallHandler } from "../errors"
-import { arrayed } from "../util/array"
 import { tryReportAnError } from "../util/errors"
+import { Argument } from "../types"
 
 const MajorLevelMap = new Map([
     [Level.Fatal, new Set([Level.Fatal])],
@@ -28,6 +27,7 @@ export class HandlersBalancer implements Balancer {
     constructor(
         private level: LogLevel,
         private handlers: Array<Handler>,
+        private format: (arg: Argument, spacing?: boolean) => string,
     ) {
         this.sendLog = this.sendLog.bind(this)
         this.reset = this.reset.bind(this)
@@ -51,12 +51,12 @@ export class HandlersBalancer implements Balancer {
         this.map.set(level, discovered)
         for (let h of this.handlers) {
             if (h.exact) {
-                if (arrayed(h.exact).some((l) => l === level)) {
+                if (h.exact.some((l) => l === level)) {
                     discovered.push(h)
                 }
                 continue
             }
-            if (this.canSend(level, h.level)) {
+            if (this.canSend(level, h.level ?? this.level)) {
                 discovered.push(h)
             }
         }
@@ -66,12 +66,12 @@ export class HandlersBalancer implements Balancer {
         try {
             this.sendToHandlers(meta, args)
         } catch (e) {
-            tryReportAnError(new HaluaFailedToCallHandler(`Unable to call log method of a handler`, { cause: e }))
+            tryReportAnError(new HaluaFailedToCallHandler(`Unable to call execution method of a handler`, { cause: e }))
         }
     }
 
     private sendToHandlers(meta: HandlerExecuteMeta, args: Array<any>) {
-        let generators = this.handlers.map((h) => h.execute(meta))
+        let generators = (this.map.get(meta.level) ?? []).map((h) => h.execute(meta))
         generators.forEach((e) => e.next({ type: "init", value: null }))
 
         let state = Array.from<string | undefined>({ length: generators.length }).fill(undefined)
@@ -81,8 +81,7 @@ export class HandlersBalancer implements Balancer {
                 state[i] = undefined
 
                 if (result.value?.type === "pass") {
-                    // move format to dependencies in constructor
-                    state[i] = format({ type: getType(arg), value: arg })
+                    state[i] = this.format({ type: getType(arg), value: arg })
                 }
             })
         }
@@ -94,13 +93,13 @@ export class HandlersBalancer implements Balancer {
     }
 
     private canSend(l: LogLevel, to: LogLevel = this.level || Level.Trace) {
-        let level = extractLevels(l)
-        let toLevel = extractLevels(to)
-        return this.majorLevelCheck(level[0], toLevel[0]) + this.minorLevelCheck(level[1], toLevel[1]) > 0
+        let lvl = extractLevels(l)
+        let toLvl = extractLevels(to)
+        return this.majorLevelCheck(lvl[0], toLvl[0]) + this.minorLevelCheck(lvl[1], toLvl[1]) > 0
     }
 
     private majorLevelCheck(l: Level, to: Level): number {
-        if (!MajorLevelMap.get(l)!.has(l)) {
+        if (!MajorLevelMap.get(to)!.has(l)) {
             return -1
         }
         return l === to ? 0 : 1

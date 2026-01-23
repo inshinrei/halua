@@ -7,8 +7,8 @@ export class HandlerBase implements Handler {
     public sendMethod: SendMethod
     public formatArg: ((value: any) => any) | undefined = undefined
 
-    public level: LogLevel = "TRACE"
-    public exact: Array<LogLevel> = []
+    public level: LogLevel | undefined
+    public exact: Array<LogLevel> | null = null
 
     public printTimestamp: boolean = true
     public printLevel: boolean = true

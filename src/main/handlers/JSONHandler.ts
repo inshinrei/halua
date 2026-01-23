@@ -10,15 +10,15 @@ interface JSONLogHandlerOptions extends BaseHandlerOptions {}
 export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHandlerOptions) {
     return () =>
         new (class JSONHandler extends HandlerBase {
-            public level: LogLevel
-            public exact: Array<LogLevel>
+            public level: LogLevel | undefined
+            public exact: Array<LogLevel> | null = null
 
             constructor(send: SendMethod, options: JSONLogHandlerOptions = {}) {
                 super(send)
 
                 this.applyOptionalOptions(options)
-                this.level = options.level ?? "TRACE"
-                this.exact = toarray(options.exact ?? []) as Array<LogLevel>
+                this.level = options.level
+                this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
             readonly formatArg = (arg: any) => {

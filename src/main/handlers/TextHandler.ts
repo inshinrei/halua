@@ -10,8 +10,8 @@ interface TextLogHandlerOptions extends BaseHandlerOptions {}
 export function NewTextHandler(send: (data: string) => void, options?: TextLogHandlerOptions) {
     return () =>
         new (class TextHandler extends HandlerBase {
-            public level: LogLevel
-            public exact: Array<LogLevel>
+            public level: LogLevel | undefined
+            public exact: Array<LogLevel> | null = null
 
             readonly formatArg
 
@@ -19,10 +19,10 @@ export function NewTextHandler(send: (data: string) => void, options?: TextLogHa
                 super(send)
 
                 this.applyOptionalOptions(options)
-                this.level = options.level ?? "TRACE"
-                this.exact = toarray(options?.exact ?? []) as Array<LogLevel>
+                this.level = options.level
+                this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
 
-                this.formatArg = (value: any) => format({ type: getType(value), value })
+                this.formatArg = (value: any) => format({ type: getType(value), value }, options.spacing)
             }
 
             applyOptionalOptions(options: TextLogHandlerOptions) {

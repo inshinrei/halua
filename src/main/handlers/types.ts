@@ -7,9 +7,9 @@ export interface HandlerExecuteMeta {
 
 export interface Handler {
     /** indicates min level to log */
-    level: LogLevel
+    level: LogLevel | undefined
     /** indicates exact levels to log */
-    exact: Array<LogLevel> | LogLevel
+    exact: Array<LogLevel> | null
     /** indicates if objects should contain spaces and tabs */
     spacing?: boolean
 
