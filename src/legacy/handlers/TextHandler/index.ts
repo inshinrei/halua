@@ -1,1 +1,0 @@
-export { NewTextHandler } from "./TextHandler"
