@@ -1,7 +1,12 @@
 import { Halua } from "./main/halua"
 import { NewConsoleHandler } from "./main/handlers/ConsoleHandler"
 
-export const halua = new Halua(NewConsoleHandler(console))
+let logConsole: Console | null = null
+try {
+    logConsole = "self" in window ? self.console : console
+} catch (_) {}
+
+export const halua = new Halua(logConsole ? NewConsoleHandler(logConsole) : [])
 
 export type { Handler } from "./main/handlers/types"
 export type { HaluaLogger } from "./main/types"
