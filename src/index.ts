@@ -1,12 +1,12 @@
-import { Halua } from "./legacy/main"
-import { NewWebConsoleHandler } from "./legacy/handlers/WebConsoleHandler"
+import { Halua } from "./main/halua"
+import { NewConsoleHandler } from "./main/handlers/ConsoleHandler"
 
-export const halua = new Halua(NewWebConsoleHandler())
+export const halua = new Halua(NewConsoleHandler(console))
 
-export type { Log, Handler } from "./legacy/handlers/types"
-export type { HaluaLogger } from "./legacy/types"
+export type { Handler } from "./main/handlers/types"
+export type { HaluaLogger } from "./main/types"
 
-export { Level } from "./legacy/handlers/types"
-export { NewWebConsoleHandler }
-export { NewJSONHandler } from "./legacy/handlers/JSONHandler"
-export { NewTextHandler } from "./legacy/handlers/TextHandler"
+export { Level } from "./types/log"
+export { NewConsoleHandler }
+export { NewJSONHandler } from "./main/handlers/JSONHandler"
+export { NewTextHandler } from "./main/handlers/TextHandler"
