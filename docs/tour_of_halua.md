@@ -1,6 +1,6 @@
 # Tour of halua
 
-Last updated for version: 25.1.1.0
+Last updated for version: 2
 
 ### The example of production app setup
 
@@ -52,10 +52,10 @@ package:
 import {NewWebConsoleHandler, NewTextHandler, NewJSONHandler} from "halua"
 
 let webLogger = halua.New(NewWebConsoleHandler(self.console))
-webLogger.info("some message") // 13/08/2025 23:06:58 INFO some message []
+webLogger.info("some message") // 13/08/2025 23:06:58  INFO some message []
 
 let textLogger = halua.New(NewTextHandler(self.console))
-logger.info("some message") // 13/08/2025 23:06:58 INFO some message []
+logger.info("some message") // 13/08/2025 23:06:58  INFO some message []
 
 let jsonLogger = halua.New(NewJSONHandler(self.console.info))
 jsonLogger.info("some message") // {"timestamp":"2025-08-13T20:06:58.857Z","args":["some message",[]],"level":"INFO"}
@@ -100,46 +100,6 @@ Signatures for `.New` and `.With`:
 - `.With(...args: any[])` accepts any arguments, appends them to every log of the instance
 
 To reset all args of the `.With` you can just call `.New({ withArgs: [] })` with `withArgs` empty option
-
-## Custom handlers
-
-```ts
-import type {Handler, Log} from "halua"
-
-class CustomHandler implements Handler {
-  public log(log: Log) {
-  }
-}
-
-let logger = halua.New(() => new CustomHandler()) // passed handler should be a func that returns an interface of Handler{}
-
-// or 
-
-function NewCustomHandler() {
-  return () => new CustomHandler()
-}
-
-let logger2 = halua.New(NewCustomHandler())
-```
-
-`Note: how Halua works with many handlers. Halua will run discovery on the first log for specified level. Later, when logging the same level, 
-the discovered info will be used, without the need to iterate over handlers again`
-
-```ts
-// handler's interface
-interface Handler {
-  // all Halua integrated options for the handler:
-
-  level?: string // specifies min level that would be accepted by the handler
-  exact?: Array<string> // specifies the exact levels that would be accepted only, if present - "level" is ignored 
-
-  skipDeepCopyWhenSendingLog?: boolean // controls, whether Halua will deep copy a log before sending it to handler
-  // deep copy is needed, because "log" can be sent to multiple handlers. Given that custom handlers can be created, we need a protection from
-  // accidently mutating a nested object in it 
-
-  log: (log: Log) => void // accepts log
-}
-```
 
 ## Level controls
 
@@ -195,29 +155,3 @@ The logic for level check is simple:
 - and there are two checks, major level should pass, and minor level should be >= to the set level
 
 `By default, when using just "INFO" or any other level without a digit, the minor level is set to 0`
-
-## Changing message format for Text and WebConsole handlers
-
-`TextHandler` and `WebConsoleHandler` both have an option called `messageFormat` that can change what they'll output
-
-```ts
-let logger = halua.New(NewTextHandler(self.console.log, {messageFormat: "%l %a > %w"}))
-logger.With("count", 2).info("message") // INFO message > count=2
-```
-
-In message format's string substitution, there is:
-
-- `%t` - timestamp
-- `%l` - level
-- `%a` - arguments
-- `%w` - arguments appended by `.With` method
-
-You may change the format as you like, for example:
-
-```ts
-logger.With('with').withMessageFormat("[%t] - %l> %a | %w").info("message!")
-// [13/08/2025 23:06:58] - INFO> message! | with  
-```
-
-`withMessageFormat` will pass its format to all handlers of current logger instance. Returns current instance of the
-logger 

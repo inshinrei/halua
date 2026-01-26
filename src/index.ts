@@ -1,12 +1,17 @@
-import { Halua } from "./main"
-import { NewWebConsoleHandler } from "./handlers/WebConsoleHandler"
+import { Halua } from "./main/halua"
+import { NewConsoleHandler } from "./main/handlers/ConsoleHandler"
 
-export const halua = new Halua(NewWebConsoleHandler())
+let logConsole: Console | null = null
+try {
+    logConsole = "self" in window ? self.console : console
+} catch (_) {}
 
-export type { Log, Handler } from "./handlers/types"
-export type { HaluaLogger } from "./types"
+export const halua = new Halua(logConsole ? NewConsoleHandler(logConsole) : [])
 
-export { Level } from "./handlers/types"
-export { NewWebConsoleHandler }
-export { NewJSONHandler } from "./handlers/JSONHandler"
-export { NewTextHandler } from "./handlers/TextHandler"
+export type { Handler } from "./main/handlers/types"
+export type { HaluaLogger } from "./main/types"
+
+export { Level } from "./types/log"
+export { NewConsoleHandler }
+export { NewJSONHandler } from "./main/handlers/JSONHandler"
+export { NewTextHandler } from "./main/handlers/TextHandler"
