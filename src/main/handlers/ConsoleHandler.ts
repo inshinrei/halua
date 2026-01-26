@@ -45,7 +45,8 @@ export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandl
                 }
 
                 if (this.printLevel) {
-                    args.push(` ${meta.level}`)
+                    let margin = this.printTimestamp ? " " : ""
+                    args.push(`${margin}${meta.level}`)
                 }
 
                 while (true) {

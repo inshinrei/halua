@@ -27,7 +27,7 @@ export class HandlerBase implements Handler {
         }
 
         if (this.printLevel) {
-            arg += ` ${meta.level} `
+            arg += `  ${meta.level}`
         }
 
         while (true) {
