@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { format } from "./format"
-import { HaluaParseError } from "../util/errors"
+import { HaluaParseError } from "./errors"
 
 describe("format", () => {
     describe("formatting as is", () => {

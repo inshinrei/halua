@@ -1,6 +1,6 @@
 import type { Argument, ArgumentType } from "./types"
 import { EmptySpacing, Spacing } from "../util/spacing"
-import { HaluaParseError } from "../util/errors"
+import { HaluaParseError } from "./errors"
 import { getType } from "./getType"
 import { printTimes } from "../util/string"
 

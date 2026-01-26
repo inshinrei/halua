@@ -2,7 +2,7 @@ import { Level, LogLevel } from "../../types/log"
 import { Handler, HandlerExecuteMeta } from "./types"
 import { getType } from "../getType"
 import { extractLevels } from "../util/string"
-import { HaluaFailedToCallHandler } from "../errors"
+import { HaluaFailedToCallHandler, HaluaParseError } from "../errors"
 import { tryReportAnError } from "../util/errors"
 import { Argument } from "../types"
 
@@ -77,11 +77,15 @@ export class HandlersBalancer implements Balancer {
         let state = Array.from<string | undefined>({ length: generators.length }).fill(undefined)
         for (let arg of args) {
             generators.forEach((e, i) => {
-                let result = e.next({ type: "arg", value: arg, prev: state[i] })
-                state[i] = undefined
+                try {
+                    let result = e.next({ type: "arg", value: arg, prev: state[i] })
+                    state[i] = undefined
 
-                if (result.value?.type === "pass") {
-                    state[i] = this.format({ type: getType(arg), value: arg })
+                    if (result.value?.type === "pass") {
+                        state[i] = this.format({ type: getType(arg), value: arg })
+                    }
+                } catch (e) {
+                    tryReportAnError(new HaluaParseError(`Failed to parse an argument`, { cause: e }))
                 }
             })
         }
