@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { format } from "./format"
-import { HaluaParseError } from "./errors"
+import { HaluaParse } from "./errors"
 
 describe("format", () => {
     describe("formatting as is", () => {
@@ -155,7 +155,7 @@ describe("format", () => {
             expect(
                 format({
                     type: "error",
-                    value: new HaluaParseError("test"),
+                    value: new HaluaParse("test"),
                 }),
             ).toContain(`Error: HaluaParseError: test`)
         })

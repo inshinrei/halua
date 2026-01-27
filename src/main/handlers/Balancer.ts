@@ -2,7 +2,7 @@ import { Level, LogLevel } from "../../types/log"
 import { Handler, HandlerExecuteMeta } from "./types"
 import { getType } from "../getType"
 import { extractLevels } from "../util/string"
-import { HaluaFailedToCallHandler, HaluaParseError } from "../errors"
+import { HaluaFailedToCallHandler, HaluaParse } from "../errors"
 import { tryReportAnError } from "../util/errors"
 import { Argument } from "../types"
 
@@ -85,7 +85,7 @@ export class HandlersBalancer implements Balancer {
                         state[i] = this.format({ type: getType(arg), value: arg })
                     }
                 } catch (e) {
-                    tryReportAnError(new HaluaParseError(`Failed to parse an argument`, { cause: e }))
+                    tryReportAnError(new HaluaParse(`Failed to parse an argument`, { cause: e }))
                 }
             })
         }

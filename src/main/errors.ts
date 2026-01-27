@@ -1,5 +1,17 @@
-export class HaluaFailedToCallHandler extends Error {}
+export class HaluaFailedToCallHandler extends Error {
+    constructor(message: string, options: ErrorOptions = {}) {
+        super(`HaluaFailedToCallHandlerError: ${message}`, options)
+    }
+}
 
-export class HaluaUnableToDetermineHandler extends Error {}
+export class HaluaUnableToDetermineHandler extends Error {
+    constructor(message: string, options: ErrorOptions = {}) {
+        super(`HaluaUnableToDetermineHandlerError: ${message}`, options)
+    }
+}
 
-export class HaluaParseError extends Error {}
+export class HaluaParse extends Error {
+    constructor(message: string, options: ErrorOptions = {}) {
+        super(`HaluaParseError: ${message}`, options)
+    }
+}
