@@ -1,49 +1,49 @@
 {
-  "name": "halua",
-  "version": "1.1.0",
-  "description": "Package that takes control of logging, metrics and other stuff",
-  "type": "module",
-  "main": "lib/index.js",
-  "module": "lib/index.mjs",
-  "types": "lib/index.d.ts",
-  "files": [
-    "lib"
-  ],
-  "scripts": {
-    "test": "vitest",
-    "bench": "node benchmarks/main_bench.js",
-    "build": "tsup",
-    "prepare": "pnpm run test run && pnpm run build",
-    "postversion": "git push && git push --tags"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/inshinrei/halua.git"
-  },
-  "keywords": [
-    "logger",
-    "logging",
-    "node",
-    "console",
-    "web",
-    "json logs"
-  ],
-  "author": "inshinrei",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/inshinrei/halua/issues"
-  },
-  "homepage": "https://github.com/inshinrei/halua#readme",
-  "devDependencies": {
-    "@types/node": "^24.9.1",
-    "prettier": "^3.6.1",
-    "tinybench": "^5.0.0",
-    "ts-node": "^10.9.2",
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "halua",
+    "version": "2.0.0",
+    "description": "Package that takes control of logging, metrics and other stuff",
+    "type": "module",
+    "main": "lib/index.js",
+    "module": "lib/index.mjs",
+    "types": "lib/index.d.ts",
+    "files": [
+        "lib"
+    ],
+    "scripts": {
+        "test": "vitest",
+        "bench": "node benchmarks/main_bench.js",
+        "build": "tsup",
+        "prepare": "pnpm run test run && pnpm run build",
+        "postversion": "git push && git push --tags"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/inshinrei/halua.git"
+    },
+    "keywords": [
+        "logger",
+        "logging",
+        "node",
+        "console",
+        "web",
+        "json logs"
+    ],
+    "author": "inshinrei",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/inshinrei/halua/issues"
+    },
+    "homepage": "https://github.com/inshinrei/halua#readme",
+    "devDependencies": {
+        "@types/node": "^24.9.1",
+        "prettier": "^3.6.1",
+        "tinybench": "^5.0.0",
+        "ts-node": "^10.9.2",
+        "tsup": "^8.5.0",
+        "typescript": "^5.8.3",
+        "vitest": "^3.2.4"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }
