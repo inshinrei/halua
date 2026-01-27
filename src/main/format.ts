@@ -1,6 +1,6 @@
 import type { Argument, ArgumentType } from "./types"
 import { EmptySpacing, Spacing } from "../util/spacing"
-import { HaluaParseError } from "./errors"
+import { HaluaParse } from "./errors"
 import { getType } from "./getType"
 import { printTimes } from "../util/string"
 
@@ -39,7 +39,7 @@ export function format(arg: Argument, spacing: boolean = true): string {
             return formatComplex(arg.value, arg.type, SpacingEnum)
         }
     } catch (err) {
-        return new HaluaParseError((err as Error)?.message || "").message
+        return new HaluaParse((err as Error)?.message || "").message
     }
     return arg.value
 }
