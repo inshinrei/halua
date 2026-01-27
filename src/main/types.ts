@@ -32,7 +32,7 @@ export interface HaluaLogger {
     New: {
         (handler: PassedHandler): HaluaLogger
         (options: HaluaOptions): HaluaLogger
-        (arg1: PassedHandler | HaluaOptions, options?: HaluaOptions): HaluaLogger
+        (arg1?: PassedHandler | HaluaOptions, options?: HaluaOptions): HaluaLogger
     }
     With: (...args: any[]) => HaluaLogger
 
