@@ -3,7 +3,7 @@ import { NewConsoleHandler } from "./main/handlers/ConsoleHandler"
 
 let logConsole: Console | null = null
 try {
-    logConsole = "self" in window ? self.console : console
+    logConsole = typeof self !== "undefined" ? self.console : console
 } catch (_) {}
 
 export const halua = new Halua(logConsole ? NewConsoleHandler(logConsole) : [])
