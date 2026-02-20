@@ -4,7 +4,7 @@
     "description": "Package that takes control of logging, metrics and other stuff",
     "type": "module",
     "main": "lib/index.js",
-    "module": "lib/index.mjs",
+    "module": "lib/index.cjs",
     "types": "lib/index.d.ts",
     "files": [
         "lib"
