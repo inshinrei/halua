@@ -23,7 +23,7 @@ export class Halua implements HaluaLogger {
         this.bindMethods()
     }
 
-    New(
+    create(
         arg1: PassedHandler | HaluaOptions = this.passedHandlers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
@@ -39,7 +39,7 @@ export class Halua implements HaluaLogger {
         return new Halua(arg1 as PassedHandler, { ...arg2 })
     }
 
-    With(...args: any[]): HaluaLogger {
+    child(...args: any[]): HaluaLogger {
         return new Halua(this.passedHandlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
     }
 
@@ -118,8 +118,8 @@ export class Halua implements HaluaLogger {
     }
 
     private bindMethods(): void {
-        this.New = this.New.bind(this)
-        this.With = this.With.bind(this)
+        this.create = this.create.bind(this)
+        this.child = this.child.bind(this)
 
         this.setHandlers = this.setHandlers.bind(this)
         this.appendHandlers = this.appendHandlers.bind(this)

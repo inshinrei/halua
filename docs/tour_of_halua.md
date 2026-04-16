@@ -5,29 +5,43 @@ Last updated for version: 2
 ### The example of production app setup
 
 ```ts
-import {Level, halua, NewTextHandler, NewJSONHandler, NewWebConsoleHandler} from 'halua'
+import {Level, halua,
+
+.
+createTextHandler,
+.
+createJSONHandler,
+.
+createWebConsoleHandler
+}
+from
+'halua'
 
 // an array of handlers that would accept logs
 let handlers = [
-  // JSON handler accepts a func to output to, and options: "level" in this case
-  NewJSONHandler(writeToZipArchive, {level: Level.Info}), // writes to client-side archive, only logs that are Info-Level or higher
-  // Text handler accepts a func to output to, and options: "level" in this case
-  NewTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs that are Notice-level or higher
-  NewTextHandler(sendUserAction, {level: Level.Info + 1}), // we will log user actions on a different level, so that it will be easy to filter
-  NewTextHandler(sendToErrorMonitoringSystem, {level: Level.Fatal}) // writes to monitoring system
+        // JSON handler accepts a func to output to, and options: "level" in this case
+        .createJSONHandler(writeToZipArchive, {level: Level.Info}), // writes to client-side archive, only logs that are Info-Level or higher
+    // Text handler accepts a func to output to, and options: "level" in this case
+    .
+createTextHandler(sendToServer, {level: Level.Notice}), // writes to server, only logs that are Notice-level or higher
+.
+createTextHandler(sendUserAction, {level: Level.Info + 1}), // we will log user actions on a different level, so that it will be easy to filter
+.
+createTextHandler(sendToErrorMonitoringSystem, {level: Level.Fatal}) // writes to monitoring system
 ]
 
 if (debug) {
-  // the handler accept a console to call methods on, so it may be: console, window.console, self.console or your console implementation
-  handlers.push(NewWebConsoleHandler(self.console)) // writes to web / nodejs console
+    // the handler accept a console to call methods on, so it may be: console, window.console, self.console or your console implementation
+    handlers.push.createWebConsoleHandler(self.console)
+) // writes to web / nodejs console
 }
 
 // now we have to apply the handlers we created
-let logger = halua.New(handlers)
+let logger = halua.create(handlers)
 // or 
 halua.setHandler(handlers)
 
-// later, you may call .New on any logger instance to get a new instance
+// later, you may call .create on any logger instance to get a new instance
 ```
 
 For the basic logging you can use method straightforward
@@ -49,15 +63,25 @@ By default, Halua will use console as an output source. There is three logger ha
 package:
 
 ```ts
-import {NewWebConsoleHandler, NewTextHandler, NewJSONHandler} from "halua"
+import .createWebConsoleHandler,
+.
+createTextHandler,
+.
+createJSONHandler
+}
+from
+"halua"
 
-let webLogger = halua.New(NewWebConsoleHandler(self.console))
+let webLogger = halua.create.createWebConsoleHandler(self.console)
+)
 webLogger.info("some message") // 13/08/2025 23:06:58  INFO some message []
 
-let textLogger = halua.New(NewTextHandler(self.console))
+let textLogger = halua.create.createTextHandler(self.console)
+)
 logger.info("some message") // 13/08/2025 23:06:58  INFO some message []
 
-let jsonLogger = halua.New(NewJSONHandler(self.console.info))
+let jsonLogger = halua.create.createJSONHandler(self.console.info)
+)
 jsonLogger.info("some message") // {"timestamp":"2025-08-13T20:06:58.857Z","args":["some message",[]],"level":"INFO"}
 ```
 
@@ -66,40 +90,47 @@ jsonLogger.info("some message") // {"timestamp":"2025-08-13T20:06:58.857Z","args
 - `JSONHandler` outputs JSON'ed string to the given func `has second argument of options`
 
 You also could make a logger that will use multiple handlers by providing an array as
-`halua.New( [ NewTextHandler(), NewJSONHandler() ] )`
+`halua.create( [.createTextHandler(),.createJSONHandler() ] )`
 
-`.New` and `.With` methods both returns new instance of `HaluaLogger` interface, so all the methods could be called
+`.create` and `.child` methods both returns new instance of `HaluaLogger` interface, so all the methods could be called
 again:
 
 ```ts
 import {Level} from "halua"
 
-let logger = halua.New(NewTextHandler(self.console.log), {level: Level.Info})
-let jsonLogger = logger.New(NewJSONHandler(self.console.log)) // this will use previously passed options (level) as its' options
+let logger = halua.create.createTextHandler(self.console.log), {level: Level.Info}
+)
+let jsonLogger = logger.create.createJSONHandler(self.console.log)
+) // this will use previously passed options (level) as its' options
 
-let debugLogger = logger.New({level: Level.Debug}) // this will use previously passed TextHandler, but with "Debug" level as default 
+let debugLogger = logger.create({level: Level.Debug}) // this will use previously passed TextHandler, but with "Debug" level as default 
 ```
 
-Now for the `.With` method:
+Now for the `.child` method:
 
 ```ts
-let logger = halua.New(NewTexthandler(self.console.log))
-let loggerWithOp = logger.With("domain", 17)
+let logger = halua.create.createTexthandler(self.console.log)
+)
+let logge
+.
+childOp = logger.child("domain", 17)
 
-loggerWithOp.info("logs") // 13/08/2025 23:06:58 INFO logs | domain=17
+logge.childOp.info("logs") // 13/08/2025 23:06:58 INFO logs | domain=17
 
-let loggerWithAnotherInfo = loggerWithOp.With('count', [1, 2, 3])
-loggerWithAnotherInfo.fatal("ops") // 13/08/2025 23:06:58 FATAL ops | domain=17 count=[1,2,3] 
+let logge
+.
+childAnotherInfo = logge.childOp.child('count', [1, 2, 3])
+logge.childAnotherInfo.fatal("ops") // 13/08/2025 23:06:58 FATAL ops | domain=17 count=[1,2,3] 
 ```
 
-Signatures for `.New` and `.With`:
+Signatures for `.create` and `.child`:
 
-- `.New(Handler())` accepts handler as first arguments, uses previous' instance options
-- `.New({ ...options })` accepts options as first arguments, uses previous' instance handlers
-- `.New(Handler(), { ...options })` accepts handler and options as it's arguments
-- `.With(...args: any[])` accepts any arguments, appends them to every log of the instance
+- `.create(Handler())` accepts handler as first arguments, uses previous' instance options
+- `.create({ ...options })` accepts options as first arguments, uses previous' instance handlers
+- `.create(Handler(), { ...options })` accepts handler and options as it's arguments
+- `.child(...args: any[])` accepts any arguments, appends them to every log of the instance
 
-To reset all args of the `.With` you can just call `.New({ withArgs: [] })` with `withArgs` empty option
+To reset all args of the `.child` you can just call `.create({ withArgs: [] })` with `withArgs` empty option
 
 ## Level controls
 
@@ -114,7 +145,7 @@ The min level to log can be change by options:
 ```ts
 import {Level} from "halua"
 
-let logger = halua.New({level: Level.Error})
+let logger = halua.create({level: Level.Error})
 
 logger.info() // won't log
 logger.notice() // won't log
@@ -126,10 +157,14 @@ logger.fatal() // will log
 The order of levels in ascendance: `trace`, `debug`, `info`, `warn`, `notice`, `error`, `fatal`
 
 ```ts
-let logger = halua.New([
-  NewTextHandler(self.console.log, {level: Level.Info}),
-  NewWebConsoleHandler(self.console)
-], {level: Level.Error})
+let logger = halua.create([
+    .createTextHandler(self.console.log, {level: Level.Info}),
+    .createWebConsoleHandler(self.console)
+],
+{
+    level: Level.Error
+}
+)
 logger.notice() // will be logged to TextHandler, won't be logged to WebConsoleHandler
 ```
 
@@ -140,7 +175,7 @@ There is one more thing about levels to cover, you can extend level controls wit
 `LEVEL + {digit}` as:
 
 ```ts
-let logger = halua.New({level: Level.Info + 5}) // or { level: "INFO+5" }
+let logger = halua.create({level: Level.Info + 5}) // or { level: "INFO+5" }
 
 logger.logTo("INFO+3", "data") // won't log, since logger level is set to +5
 // or .logTo(Level.Info+3, ...)

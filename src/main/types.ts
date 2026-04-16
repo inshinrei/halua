@@ -29,12 +29,12 @@ export interface Argument {
 }
 
 export interface HaluaLogger {
-    New: {
+    create: {
         (handler: PassedHandler): HaluaLogger
         (options: HaluaOptions): HaluaLogger
         (arg1?: PassedHandler | HaluaOptions, options?: HaluaOptions): HaluaLogger
     }
-    With: (...args: any[]) => HaluaLogger
+    child: (...args: any[]) => HaluaLogger
 
     setHandlers: (handler: PassedHandler) => void
     appendHandlers: (handler: PassedHandler) => void
