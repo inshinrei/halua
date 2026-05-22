@@ -1,8 +1,7 @@
 import type { LogLevel } from "../../types/log"
 import { HandlerBase, SendMethod } from "./HandlerBase"
-import { formatJSON } from "../format"
+import { toJSONValue } from "../format"
 import type { BaseHandlerOptions, HandlerExecuteMeta, NextMessage, YieldMessage } from "./types"
-import { getType } from "../getType"
 import { toarray } from "../util/cast"
 
 interface JSONLogHandlerOptions extends BaseHandlerOptions {}
@@ -21,35 +20,15 @@ export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHa
                 this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
-            readonly formatArg = (arg: any) => {
-                let type = getType(arg)
-                let formatted = formatJSON({ type, value: arg })
-                if (type !== "object" && type !== "map") {
-                    return `"${formatted}"`
-                }
-                return formatted
-            }
+            readonly formatArg = (arg: any) => arg
 
             public *execute(meta: HandlerExecuteMeta): Generator<YieldMessage, void, NextMessage> {
-                let arg = "\{"
+                let args: any[] = []
                 let current: NextMessage = { value: null, type: "init" }
 
-                if (this.printTimestamp) {
-                    arg += `\"timestamp\":\"${this.formatTimestamp(meta.timestamp)}\",`
-                }
-
-                if (this.printLevel) {
-                    arg += `\"level\":\"${meta.level}\",`
-                }
-
-                arg += `\"args\":\[`
                 while (true) {
                     if (current.type === "init") {
                         current = yield { type: "init" }
-                    }
-
-                    if (current.prev) {
-                        arg += `\"${current.prev}\",`
                     }
 
                     if (current.type === "done") {
@@ -58,7 +37,7 @@ export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHa
 
                     if (current.type === "arg") {
                         if (typeof this.formatArg === "function") {
-                            arg += `${this.formatArg(current.value)},`
+                            args.push(current.value)
                             current = yield { type: "done" }
                             continue
                         }
@@ -66,12 +45,17 @@ export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHa
 
                     current = yield { type: "pass" }
                 }
-                if (arg.at(-1) === ",") {
-                    arg = arg.slice(0, arg.length - 1)
-                }
-                arg += `\]\}`
 
-                this.sendMethod(arg)
+                let obj: any = {}
+                if (this.printTimestamp) {
+                    obj.timestamp = this.formatTimestamp(meta.timestamp)
+                }
+                if (this.printLevel) {
+                    obj.level = meta.level
+                }
+                obj.args = args.map((a: any) => toJSONValue(a))
+
+                this.sendMethod(JSON.stringify(obj))
             }
 
             public formatTimestamp(t: number) {

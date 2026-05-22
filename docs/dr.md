@@ -1,4 +1,9 @@
-Next release: minor
+Next release: major
+
+### JSON handler correctness and structured output (fixes 1.1)
+- `NewJSONHandler` now always emits *valid* JSON via `JSON.stringify` on a normalized value tree (no more manual escaping, no unescaped quotes/newlines, no `=>` in maps).
+- New `toJSONValue` (used by JSON path) converts every `ArgumentType` to a legal JSON value: Errors become `{name,message,stack: string[]}`, Maps/Sets/arrays are real structures (not pre-formatted text), dates ISO, circulars marked, etc.
+- This changes the shape of `args[]` items for complex types compared to the previous (broken) output — consumers of structured logs must adapt (hence major).
 
 ### Docs refresh (post-3.0.0)
 

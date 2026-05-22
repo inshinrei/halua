@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { format } from "./format"
+import { format, toJSONValue } from "./format"
 import { HaluaParse } from "./errors"
 
 describe("format", () => {
@@ -159,5 +159,81 @@ describe("format", () => {
                 }),
             ).toContain(`Error: HaluaParseError: test`)
         })
+    })
+})
+
+describe("toJSONValue", () => {
+    it("primitives", () => {
+        expect(toJSONValue(undefined)).toBe(null)
+        expect(toJSONValue(null)).toBe(null)
+        expect(toJSONValue("hello")).toBe("hello")
+        expect(toJSONValue(42)).toBe(42)
+        expect(toJSONValue(true)).toBe(true)
+        expect(toJSONValue(false)).toBe(false)
+    })
+
+    it("string with special chars for JSON", () => {
+        let s = 'with"quote\nand\\backslash'
+        let out = toJSONValue(s)
+        expect(out).toBe(s)
+        // will be properly escaped when stringified by caller
+        expect(JSON.stringify({ args: [out] })).toBe('{"args":["with\\"quote\\nand\\\\backslash"]}')
+    })
+
+    it("error becomes structured object", () => {
+        let e = new Error("boom")
+        let j = toJSONValue(e)
+        expect(j).toHaveProperty("name", "Error")
+        expect(j).toHaveProperty("message", "boom")
+        expect(Array.isArray(j.stack)).toBe(true)
+        expect(j.stack.length).toBeGreaterThan(0)
+    })
+
+    it("array becomes real array", () => {
+        let j = toJSONValue(["a", 1, { x: 2 }])
+        expect(j).toEqual(["a", 1, { x: 2 }])
+    })
+
+    it("object becomes plain object", () => {
+        let j = toJSONValue({ a: 1, b: "s" })
+        expect(j).toEqual({ a: 1, b: "s" })
+    })
+
+    it("map becomes object with : not =>", () => {
+        let m = new Map<any, any>([
+            ["k", "v"],
+            [1, 2],
+        ])
+        let j = toJSONValue(m)
+        expect(j).toEqual({ k: "v", "1": 2 })
+    })
+
+    it("set becomes array", () => {
+        let j = toJSONValue(new Set([1, "x"]))
+        expect(j).toEqual([1, "x"])
+    })
+
+    it("date becomes iso string", () => {
+        let d = new Date("2020-01-01T00:00:00Z")
+        expect(toJSONValue(d)).toBe("2020-01-01T00:00:00.000Z")
+    })
+
+    it("handles circular reference without crash", () => {
+        let o: any = { a: 1 }
+        o.self = o
+        let j = toJSONValue(o)
+        expect(j.self).toHaveProperty("__circular", true)
+        expect(j.a).toBe(1)
+    })
+
+    it("function and symbol to string", () => {
+        let fstr = toJSONValue(function foo() {})
+        expect(typeof fstr).toBe("string")
+        expect(fstr).toContain("foo")
+        expect(toJSONValue(Symbol("sym"))).toMatch(/Symbol\(sym\)/)
+    })
+
+    it("bigint to string", () => {
+        expect(toJSONValue(BigInt(123))).toBe("123")
     })
 })

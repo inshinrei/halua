@@ -44,13 +44,6 @@ export function format(arg: Argument, spacing: boolean = true): string {
     return arg.value
 }
 
-export function formatJSON(arg: Argument) {
-    if (arg.type === "error") {
-        return `${arg.value.toString()} stack: ${arg.value.stack?.replace("\n", "")}`
-    }
-    return format(arg, false)
-}
-
 function formatAsIs(arg: any, type: ArgumentType): string {
     if (type === "number") {
         return arg
@@ -160,4 +153,67 @@ function convertSetToArray(value: Set<any>): Array<any> {
         arr.push(entry)
     }
     return arr
+}
+
+export function toJSONValue(value: any): any {
+    return convertToJSONValue(value, new WeakSet<object>())
+}
+
+function convertToJSONValue(value: any, seen: WeakSet<object>): any {
+    if (value == null) {
+        return null
+    }
+    let type = getType(value)
+    if (type === "boolean" || type === "number" || type === "string") {
+        return value
+    }
+    if (type === "symbol" || type === "function" || type === "bigint") {
+        return value.toString()
+    }
+    if (type === "date") {
+        return value.toISOString()
+    }
+    if (type === "nan" || type === "infinity") {
+        return String(value)
+    }
+    if (type === "error") {
+        let stack = value.stack ? value.stack.split(/\r?\n/) : []
+        return { name: value.name || "Error", message: value.message || "", stack }
+    }
+    if (type === "weakmap" || type === "weakset") {
+        return `[${type} inaccessible]`
+    }
+    if (type === "arraybuffer") {
+        return { __type: "ArrayBuffer", byteLength: value.byteLength }
+    }
+    if (type === "typedarray") {
+        return Array.from(value)
+    }
+    if (type === "array" || type === "object" || type === "map" || type === "set") {
+        if (seen.has(value)) {
+            return { __circular: true }
+        }
+        seen.add(value)
+        let result: any
+        if (type === "array") {
+            result = value.map((item: any) => convertToJSONValue(item, seen))
+        } else if (type === "object") {
+            result = {}
+            for (let key of Object.keys(value)) {
+                result[key] = convertToJSONValue(value[key], seen)
+            }
+        } else if (type === "map") {
+            result = {}
+            for (let [k, v] of value as Map<any, any>) {
+                let jk = convertToJSONValue(k, seen)
+                let keyStr = typeof jk === "string" ? jk : String(jk ?? "")
+                result[keyStr] = convertToJSONValue(v, seen)
+            }
+        } else if (type === "set") {
+            result = Array.from(value as Set<any>, (item: any) => convertToJSONValue(item, seen))
+        }
+        seen.delete(value)
+        return result
+    }
+    return String(value)
 }
