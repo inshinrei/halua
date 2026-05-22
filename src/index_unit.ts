@@ -6,9 +6,11 @@ describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
         let captured: string[] = []
 
-        let logger = halua.create(NewTextHandler((line) => {
-            captured.push(line)
-        }))
+        let logger = halua.create(
+            NewTextHandler((line) => {
+                captured.push(line)
+            }),
+        )
 
         logger.info("hello world", { foo: 42 })
         logger.warn("just a warning")
@@ -23,13 +25,19 @@ describe("Halua logger e2e usage", () => {
         let logs1: string[] = []
         let logs2: string[] = []
 
-        let l1 = halua.create(NewTextHandler((line) => {
-            logs1.push(line)
-        }), { level: Level.Warn })
+        let l1 = halua.create(
+            NewTextHandler((line) => {
+                logs1.push(line)
+            }),
+            { level: Level.Warn },
+        )
 
-        let l2 = halua.create(NewTextHandler((line) => {
-            logs2.push(line)
-        }), { level: Level.Debug })
+        let l2 = halua.create(
+            NewTextHandler((line) => {
+                logs2.push(line)
+            }),
+            { level: Level.Debug },
+        )
 
         l1.debug("should not appear in l1")
         l1.info("should not appear in l1")
@@ -48,9 +56,11 @@ describe("Halua logger e2e usage", () => {
     test("append args with With method", () => {
         let captured: string[] = []
 
-        let logger = halua.create(NewTextHandler((line) => {
-            captured.push(line)
-        }))
+        let logger = halua.create(
+            NewTextHandler((line) => {
+                captured.push(line)
+            }),
+        )
 
         let reqLogger = logger.child("requestId", "abc-123", "user", 42)
         reqLogger.info("processing started")
@@ -79,9 +89,14 @@ describe("Halua logger e2e usage", () => {
         let captured: string[] = []
 
         // use template to avoid string concat footgun
-        let logger = halua.create(NewTextHandler((line) => { captured.push(line) }), {
-            level: `${Level.Info}+2`
-        })
+        let logger = halua.create(
+            NewTextHandler((line) => {
+                captured.push(line)
+            }),
+            {
+                level: `${Level.Info}+2`,
+            },
+        )
 
         logger.logTo("INFO+1", "filtered low minor")
         logger.logTo("INFO+2", "borderline")
@@ -91,7 +106,10 @@ describe("Halua logger e2e usage", () => {
         logger.logTo("CUSTOM+1", "diff major custom")
 
         let customCap: string[] = []
-        let cLogger = halua.create(NewTextHandler((l) => customCap.push(l)), { level: "AUDIT+5" })
+        let cLogger = halua.create(
+            NewTextHandler((l) => customCap.push(l)),
+            { level: "AUDIT+5" },
+        )
         cLogger.logTo("AUDIT+3", "audit low")
         cLogger.logTo("AUDIT+5", "audit ok")
         cLogger.logTo("AUDIT+10", "audit high")
@@ -117,9 +135,11 @@ describe("Halua logger e2e usage", () => {
     test("NewJSONHandler produces valid structured JSON output", () => {
         let captured: string[] = []
 
-        let logger = halua.create(NewJSONHandler((line) => {
-            captured.push(line)
-        }))
+        let logger = halua.create(
+            NewJSONHandler((line) => {
+                captured.push(line)
+            }),
+        )
 
         logger.info("json test", { foo: 42 }, [1, 2])
 
@@ -133,10 +153,12 @@ describe("Halua logger e2e usage", () => {
     test("NewJSONHandler respects printTimestamp and printLevel options", () => {
         let captured: string[] = []
 
-        let logger = halua.create(NewJSONHandler((line) => captured.push(line), {
-            printTimestamp: false,
-            printLevel: false,
-        }))
+        let logger = halua.create(
+            NewJSONHandler((line) => captured.push(line), {
+                printTimestamp: false,
+                printLevel: false,
+            }),
+        )
 
         logger.warn("no meta")
 
@@ -150,10 +172,18 @@ describe("Halua logger e2e usage", () => {
         let calls: Array<{ method: string; args: any[] }> = []
 
         let mock = {
-            debug: (...a: any[]) => { calls.push({ method: "debug", args: a }) },
-            info: (...a: any[]) => { calls.push({ method: "info", args: a }) },
-            warn: (...a: any[]) => { calls.push({ method: "warn", args: a }) },
-            error: (...a: any[]) => { calls.push({ method: "error", args: a }) },
+            debug: (...a: any[]) => {
+                calls.push({ method: "debug", args: a })
+            },
+            info: (...a: any[]) => {
+                calls.push({ method: "info", args: a })
+            },
+            warn: (...a: any[]) => {
+                calls.push({ method: "warn", args: a })
+            },
+            error: (...a: any[]) => {
+                calls.push({ method: "error", args: a })
+            },
         }
 
         let logger = halua.create(NewConsoleHandler(mock))
@@ -161,7 +191,7 @@ describe("Halua logger e2e usage", () => {
         logger.debug("d", { x: 1 })
         logger.info("i", 123)
         logger.warn("w")
-        logger.error("e", new Error("boom"))
+        logger.error(new Error("boom"))
 
         expect(calls.length).toBe(4)
         expect(calls[0].method).toBe("debug")
@@ -247,7 +277,9 @@ describe("Halua logger e2e usage", () => {
 
         let badFactory = () => {
             let h: any = {
-                dispatch: () => { throw new Error("intentional bad handler") },
+                dispatch: () => {
+                    throw new Error("intentional bad handler")
+                },
                 exact: null,
                 level: undefined,
             }

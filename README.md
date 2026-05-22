@@ -34,7 +34,7 @@ import { halua } from "halua"
 
 halua.info("Application started")
 halua.warn("Disk space low", { available: "12%" })
-halua.error("Request failed", new Error("timeout"))
+halua.error(new Error("timeout"))
 ```
 
 **Default output (console):**
@@ -42,7 +42,7 @@ halua.error("Request failed", new Error("timeout"))
 ```
 22/05/2026 21:55:50  INFO Application started
 22/05/2026 21:55:50  WARN Disk space low { available: '12%' }
-22/05/2026 21:55:50  ERROR Request failed Error: timeout
+22/05/2026 21:55:50  ERROR Error: timeout
     at ...
 ```
 
@@ -72,10 +72,7 @@ jsonLogger.info("structured", { success: true })
 You can pass an array to use **multiple handlers at once**:
 
 ```ts
-let prodLogger = halua.create([
-    NewTextHandler(sendToFile),
-    NewJSONHandler(sendToElastic),
-], { level: Level.Info })
+let prodLogger = halua.create([NewTextHandler(sendToFile), NewJSONHandler(sendToElastic)], { level: Level.Info })
 ```
 
 ## Child Loggers (Context)
@@ -111,8 +108,8 @@ logger.error("visible")
 
 ```ts
 let logger = halua.create([
-    NewTextHandler(sendToFile,     { level: Level.Info }),
-    NewJSONHandler(sendToMetrics,  { level: Level.Error }),
+    NewTextHandler(sendToFile, { level: Level.Info }),
+    NewJSONHandler(sendToMetrics, { level: Level.Error }),
 ])
 ```
 
@@ -124,8 +121,8 @@ Use the `LEVEL+N` syntax for fine-grained control (e.g. sampling, feature flags)
 let logger = halua.create(NewTextHandler(out), { level: `${Level.Info}+2` })
 
 logger.logTo("INFO+1", "sampled out")
-logger.logTo("INFO+2", "important info")   // logged
-logger.logTo("INFO+3", "very important")   // logged
+logger.logTo("INFO+2", "important info") // logged
+logger.logTo("INFO+3", "very important") // logged
 logger.logTo("WARN", "always higher major level") // logged
 ```
 
@@ -135,13 +132,13 @@ You can also pass string levels directly: `{ level: "ERROR+7" }` or `logTo("DEBU
 
 All `New*Handler` factories accept a second `options` argument:
 
-| Option            | Type                        | Default | Description |
-|-------------------|-----------------------------|---------|-------------|
-| `level`           | `LogLevel`                  | `undefined` | Minimum level this handler accepts |
-| `exact`           | `LogLevel \| LogLevel[]`    | `null`  | Only log these exact levels (ignores normal hierarchy) |
-| `printTimestamp`  | `boolean`                   | `true`  | Include timestamp in output |
-| `printLevel`      | `boolean`                   | `true`  | Include level name in output |
-| `spacing`         | `boolean`                   | `true`  | Pretty-print objects/arrays with tabs & newlines (Text & JSON only) |
+| Option           | Type                     | Default     | Description                                                         |
+| ---------------- | ------------------------ | ----------- | ------------------------------------------------------------------- |
+| `level`          | `LogLevel`               | `undefined` | Minimum level this handler accepts                                  |
+| `exact`          | `LogLevel \| LogLevel[]` | `null`      | Only log these exact levels (ignores normal hierarchy)              |
+| `printTimestamp` | `boolean`                | `true`      | Include timestamp in output                                         |
+| `printLevel`     | `boolean`                | `true`      | Include level name in output                                        |
+| `spacing`        | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only) |
 
 `NewConsoleHandler` does not support `spacing` (it passes values directly to console methods).
 
@@ -159,17 +156,30 @@ import { halua, Level, NewTextHandler, NewJSONHandler, NewConsoleHandler } from 
 - `NewJSONHandler(send: (json: string) => void, options?)` → factory
 - `NewConsoleHandler(console: {debug,info,warn,error}, options?)` → factory
 
+### Advanced Exports (for custom handler authors)
+
+```ts
+import { HandlerBase, format, getType, toJSONValue, Handler, HaluaLogger } from "halua"
+```
+
+- `HandlerBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via `formatArg`
+- `format(spec: {type, value, ...})` — the text pretty-printer (handles circulars, Errors, Maps, etc.)
+- `getType(value)` — returns `ArgumentType` discriminant for any JS value
+- `toJSONValue(value)` — converts any value to a JSON-legal tree (Errors → {name,message,stack[]}, etc.)
+- `Handler` — interface for raw custom handlers (`dispatch(meta, args): void`)
+- `HaluaLogger` — the logger instance interface
+
 ### Logger Instance Methods
 
-| Method | Description |
-|--------|-------------|
-| `.create(handler?, options?)` | Create a new independent logger (inherits handlers/options when partial) |
-| `.child(...args)` | Create child logger that appends context to every message |
-| `.setHandlers(handler \| handlers[])` | Replace all handlers |
-| `.appendHandlers(...)` | Add more handlers to existing set |
-| `.logTo(level, ...args)` | Log at a custom / minor level |
-| `.trace / .debug / .info / .warn / .notice / .error / .fatal(...args)` | Standard levels |
-| `.assert(condition, ...args)` | Log at ERROR level only when `condition` is falsy |
+| Method                                                                 | Description                                                              |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `.create(handler?, options?)`                                          | Create a new independent logger (inherits handlers/options when partial) |
+| `.child(...args)`                                                      | Create child logger that appends context to every message                |
+| `.setHandlers(handler \| handlers[])`                                  | Replace all handlers                                                     |
+| `.appendHandlers(...)`                                                 | Add more handlers to existing set                                        |
+| `.logTo(level, ...args)`                                               | Log at a custom / minor level                                            |
+| `.trace / .debug / .info / .warn / .notice / .error / .fatal(...args)` | Standard levels                                                          |
+| `.assert(condition, ...args)`                                          | Log at ERROR level only when `condition` is falsy                        |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 
@@ -179,7 +189,27 @@ Halua never throws from logging calls. If a handler fails, the error is reported
 
 ## Advanced / Custom Handlers
 
-You can implement the `Handler` interface for completely custom destinations (files, remote services, pretty printers, etc.). See source of `HandlerBase` and existing handlers for the generator protocol.
+Extend `HandlerBase` (and set `formatArg` using the exported `format` + `getType`, or `toJSONValue` for structured) to write custom handlers for files, remote services, pretty printers, etc.
+
+```ts
+import { halua, HandlerBase, format, getType, toJSONValue, NewTextHandler } from "halua"
+
+function NewFileHandler(sendLine) {
+    return () =>
+        new (class FileHandler extends HandlerBase {
+            constructor(send) {
+                super(send)
+                this.formatArg = (v) => format({ type: getType(v), value: v }, /*spacing*/ true)
+            }
+        })(sendLine)
+}
+
+let fileLogger = halua.create(NewFileHandler(appendToFile))
+```
+
+The `Handler` interface (`dispatch(meta, args)`) + `HandlerBase` + `format`/`getType`/`toJSONValue` are the public extension surface. See `src/main/handlers/TextHandler.ts`, `JSONHandler.ts` for reference implementations.
+
+**Semver note for custom handlers**: `Handler`, `dispatch`, `HandlerBase`, and the formatter trio are stable within a major version. Changes that would break existing custom `Handler` implementations are released only as majors and recorded in `docs/dr.md`.
 
 For most use cases the three built-in handlers are sufficient.
 

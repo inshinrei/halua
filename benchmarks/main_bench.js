@@ -1,11 +1,15 @@
 import { Bench } from "tinybench"
 import { halua, NewConsoleHandler, NewJSONHandler, NewTextHandler } from "../lib/index.js"
 
-const bench = new Bench({ name: "base benchmark", time: 100 })
+const bench = new Bench({ name: "halua v3 benchmark (dispatch + HandlerBase)", time: 100 })
 
-let textLogger = halua.New(NewTextHandler(console.info))
-let jsonLogger = halua.New(NewJSONHandler(console.info))
-let consoleLogger = halua.New(NewConsoleHandler(console))
+// Use no-op sinks so we measure pure logging + formatting path (not console I/O noise)
+const noopSend = () => {}
+const noopConsole = { debug: noopSend, info: noopSend, warn: noopSend, error: noopSend }
+
+let textLogger = halua.create(NewTextHandler(noopSend))
+let jsonLogger = halua.create(NewJSONHandler(noopSend))
+let consoleLogger = halua.create(NewConsoleHandler(noopConsole))
 
 bench
     .add("text handler", () => {
@@ -31,8 +35,8 @@ await bench.run()
 
 console.log(bench.name)
 console.table(bench.table())
-// base benchmark v1 (10 runs avg)
-// ┌─────────┬───────────────────────┬──────────────────┬───────────────────┬────────────────────────┬────────────────────────┬─────────┐
+// (Historical v2-era benchmark output removed for brevity; see git history.)
+// v3: generator protocol gone, dispatch + HandlerBase path is the current reality.
 // │ (index) │ Task name             │ Latency avg (ns) │ Latency med (ns)  │ Throughput avg (ops/s) │ Throughput med (ops/s) │ Samples │
 // ├─────────┼───────────────────────┼──────────────────┼───────────────────┼────────────────────────┼────────────────────────┼─────────┤
 // │ 0       │ 'text handler'        │ '6767.3 ± 4.23%' │ '5916.0 ± 208.00' │ '162874 ± 0.19%'       │ '169033 ± 6129'        │ 14815   │

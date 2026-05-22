@@ -167,7 +167,11 @@ function formatObject(
     return `\{${spacing.Line}${kvParts.length ? body + spacing.Line : ""}${closeIndent}\}`
 }
 
-function convertMapToObj(value: Map<any, any>, spacing: typeof Spacing | typeof EmptySpacing, seen: WeakSet<object>): Record<any, any> {
+function convertMapToObj(
+    value: Map<any, any>,
+    spacing: typeof Spacing | typeof EmptySpacing,
+    seen: WeakSet<object>,
+): Record<any, any> {
     let obj: Record<string, any> = {}
     for (let [key, v] of value) {
         let keyType = getType(key)

@@ -57,7 +57,7 @@ export class HandlersBalancer implements Balancer {
         try {
             this.sendToHandlers(meta, args)
         } catch (e) {
-            tryReportAnError(new HaluaFailedToCallHandler(`Unable to call execution method of a handler`, { cause: e }))
+            tryReportAnError(new HaluaFailedToCallHandler(`Unable to call dispatch method of a handler`, { cause: e }))
         }
     }
 
@@ -67,7 +67,9 @@ export class HandlersBalancer implements Balancer {
             try {
                 h.dispatch(meta, args)
             } catch (e) {
-                tryReportAnError(new HaluaFailedToCallHandler(`Unable to call execution method of a handler`, { cause: e }))
+                tryReportAnError(
+                    new HaluaFailedToCallHandler(`Unable to call dispatch method of a handler`, { cause: e }),
+                )
             }
         }
     }

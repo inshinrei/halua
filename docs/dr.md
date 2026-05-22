@@ -1,13 +1,26 @@
 Next release: minor
 
+### Documentation & DX hygiene (addresses IMPROVEMENT.md clause 6)
+
+- Fixed README quick-start `.error("msg", new Error(...))` example (violated AGENTS.md mandatory policy that `.error` receives an `Error` instance as first argument; strings use other levels or `.error(err)` for pure errors). Updated default output sample and added compliant patterns.
+- Rewrote "Advanced / Custom Handlers" section in README; added full documentation + usage example for the v3 public exports: `HandlerBase`, `format`, `getType`, `toJSONValue` (plus `Handler`, `HaluaLogger`).
+- Added explicit semver policy note for custom `Handler` authors (stability of `dispatch` / extension surface within major; breaking changes only in majors, recorded in dr.md).
+- Modernized `playground/node.ts` and `benchmarks/main_bench.js` to current v3 `dispatch` + `New*Handler` + `halua.create(...)` API so `pnpm bench` and the playground execute cleanly and demonstrate real usage (no more v2 ghosts confusing readers).
+- Updated `AGENTS.md` (shipped in package) Architecture Notes + Custom Handlers sections to remove all references to deleted generator protocol / "execute" / yields; now accurately describes `dispatch` + `HandlerBase` + formatter exports.
+- Minor polish in `docs/dr.md` historical entries (corrected `handle` → `dispatch` descriptions in protocol simplification record) and this new entry.
+- Also fixed one internal test usage of the old mixed `.error("str", err)` pattern for consistency.
+- No runtime or public API changes; pure documentation + DX repair. Ties off the last "still valid" items from IMPROVEMENT clause 6.
+
 ### Handler method renamed from `handle` to `dispatch`
+
 - The primary method on the `Handler` interface (and `HandlerBase`) has been renamed from `handle(meta, args)` to `dispatch(meta, args)`.
 - This affects anyone directly implementing `Handler` or overriding the method in a subclass of `HandlerBase`.
 - Call sites inside `HandlersBalancer` and all built-in handlers (`NewTextHandler` via inheritance, `NewJSONHandler`, `NewConsoleHandler`) were updated.
 - This is a breaking change for custom handler authors, hence part of the major release.
 
 ### JSON handler correctness and structured output
-- `NewJSONHandler` now always emits *valid* JSON via `JSON.stringify` on a normalized value tree (no more manual escaping, no unescaped quotes/newlines, no `=>` in maps).
+
+- `NewJSONHandler` now always emits _valid_ JSON via `JSON.stringify` on a normalized value tree (no more manual escaping, no unescaped quotes/newlines, no `=>` in maps).
 - New `toJSONValue` (used by JSON path) converts every `ArgumentType` to a legal JSON value: Errors become `{name,message,stack: string[]}`, Maps/Sets/arrays are real structures (not pre-formatted text), dates ISO, circulars marked, etc.
 - This changes the shape of `args[]` items for complex types compared to the previous (broken) output — consumers of structured logs must adapt (hence major).
 
@@ -28,17 +41,20 @@ Next release: minor
 - All documented examples were executed against the real built `lib/` output to guarantee correctness
 
 ### Simplified core handler protocol (addresses IMPROVEMENT.md clause 2)
-- Removed the generator-based streaming protocol (`execute` returning `Generator<YieldMessage, void, NextMessage>`, init/arg/done messages, "pass"/"done" yields, `prev`/`state[]` hand-off in Balancer).
-- `Handler` interface now requires a simple synchronous `handle(meta: HandlerExecuteMeta, args: any[]): void`.
-- `HandlerBase` supplies a default `handle` implementation (timestamp/level prefix + per-arg delegation via optional `formatArg`).
+
+- Removed the generator-based streaming protocol (`execute` returning `Generator<...>`, init/arg/done messages, "pass"/"done" yields, `prev`/`state[]` hand-off in Balancer).
+- `Handler` interface now requires a simple synchronous `dispatch(meta: HandlerExecuteMeta, args: any[]): void`.
+- `HandlerBase` supplies a default `dispatch` implementation (timestamp/level prefix + per-arg delegation via optional `formatArg`).
 - `NewTextHandler` inherits it; `NewJSONHandler` and `NewConsoleHandler` provide short, obvious overrides.
-- `HandlersBalancer` is now a thin level-discover + direct `h.handle(...)` loop (no more per-log generator arrays or central format injection).
-- `supposeIsHandler` duck-typing and error messages updated from "execute" to "handle".
+- `HandlersBalancer` is now a thin level-discover + direct `h.dispatch(...)` loop.
+- `supposeIsHandler` duck-typing and error messages updated from "execute" to "dispatch".
 - As DX win: `HandlerBase`, `format`, `getType`, and `toJSONValue` are now re-exported so custom handlers can `extend HandlerBase` and replicate TextHandler formatting exactly (per AGENTS.md guidance).
+- Follow-up rename `handle` → `dispatch` (separate DR entry) for clarity with "execute" legacy.
 - This was a high-impact but pure-internal restructuring. Public factory APIs, `halua` usage, `create`/`child`, level/minor/exact semantics, and all output are unchanged. Custom `Handler` implementors must migrate (documented as part of the existing "next major").
 - Directly resolves the "clever" complexity, duplication (~80 lines of state machine), dead paths, and poor custom-handler ergonomics called out in IMPROVEMENT.md clause 2. The "streaming decision" benefit was never used by built-ins and is not missed.
 
 ### Clause 2 design smell fixes (minor, post-protocol simplification)
+
 - `Halua.create(...)` brittle duck-typing (`Array.isArray` + `supposeIsHandler(..., false)` + `Object.keys(arg1).length` + dead branches) replaced by explicit `isHandlerSpec` (functions or arrays of functions); `create` logic is now clear, documented, and robust.
 - Text formatter (`format.ts`) now has full cycle detection via `WeakSet` (matching JSON path `toJSONValue`); deeply nested/circular objects in `.info(obj)` no longer stack-overflow (produce `[Circular]` marker instead of `HaluaParse` lossy string).
 - Eliminated decrement-to-last hacks (`len -= 1` in loops), `for..in` + `Object.keys().length` mismatch (prototype pollution risk) in favor of `Object.keys()` + `join` for arrays/objects; added internal `formatValue` + shared `seen` for recursion.
@@ -47,12 +63,13 @@ Next release: minor
 - Added text-path circular test coverage. All normal output unchanged; only error-path (circular) and untested empty-object formatting improved. No public API or semver impact.
 
 ### Testing surface expansion (addresses IMPROVEMENT.md clause 3)
+
 - Expanded `src/index_unit.ts` e2e suite from 4 to 12 tests, adding direct captured-output verification for:
-  - All three `New*Handler` factories (JSON structured shape + options, Console method routing + raw value passthrough, Text).
-  - Multi-handler arrays passed to `create` (Balancer dispatch to >1).
-  - `setHandlers` (replace) + `appendHandlers` (augment) at runtime.
-  - Per-handler `exact: [...]` (or single) bypassing level filters.
-  - `assert(boolean, ...)` only emitting on false at ERROR.
-  - Error isolation: a throwing custom handler does not propagate to caller and does not prevent sibling handlers from executing (the `tryReportAnError` contract).
+    - All three `New*Handler` factories (JSON structured shape + options, Console method routing + raw value passthrough, Text).
+    - Multi-handler arrays passed to `create` (Balancer dispatch to >1).
+    - `setHandlers` (replace) + `appendHandlers` (augment) at runtime.
+    - Per-handler `exact: [...]` (or single) bypassing level filters.
+    - `assert(boolean, ...)` only emitting on false at ERROR.
+    - Error isolation: a throwing custom handler does not propagate to caller and does not prevent sibling handlers from executing (the `tryReportAnError` contract).
 - Overall: 59 → 67 tests, all green. The "narrow coverage" items listed in clause 3 (handler output shapes, multi/Balancer, set/append, exact, assert, isolation) are now exercised via the public API. Chose expansion of `index_unit` over new `handlers/*_unit.ts` files for maximum integration confidence with least files.
 - Formatter/property-based gaps remain for future; playground + benchmarks still need v3 port. `prepare` gate is now substantially more valuable.

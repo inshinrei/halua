@@ -7,32 +7,26 @@ This document walks through real-world usage patterns beyond the quick start in 
 ## Production Application Setup Example
 
 ```ts
-import {
-  halua,
-  NewTextHandler,
-  NewJSONHandler,
-  NewConsoleHandler,
-  Level,
-} from "halua"
+import { halua, NewTextHandler, NewJSONHandler, NewConsoleHandler, Level } from "halua"
 
 // In a real app you would have your own transport functions
 let handlers = [
-  // High-volume structured logs -> compressed archive / object storage
-  NewJSONHandler(writeToZipArchive, { level: Level.Info }),
+    // High-volume structured logs -> compressed archive / object storage
+    NewJSONHandler(writeToZipArchive, { level: Level.Info }),
 
-  // Important events -> backend
-  NewTextHandler(sendToServer, { level: Level.Notice }),
+    // Important events -> backend
+    NewTextHandler(sendToServer, { level: Level.Notice }),
 
-  // User analytics on a dedicated minor level so you can filter easily
-  NewTextHandler(sendUserAction, { level: "INFO+1" }),
+    // User analytics on a dedicated minor level so you can filter easily
+    NewTextHandler(sendUserAction, { level: "INFO+1" }),
 
-  // Critical errors -> error tracking (Sentry, etc.)
-  NewTextHandler(sendToErrorMonitoring, { level: Level.Error }),
+    // Critical errors -> error tracking (Sentry, etc.)
+    NewTextHandler(sendToErrorMonitoring, { level: Level.Error }),
 ]
 
 // Add pretty console output only in development
 if (process.env.NODE_ENV !== "production") {
-  handlers.push(NewConsoleHandler(console))
+    handlers.push(NewConsoleHandler(console))
 }
 
 // Create the root logger for the whole application
@@ -65,11 +59,11 @@ halua.assert(user != null, "user must exist") // logs at ERROR if false
 import { halua, NewTextHandler, NewJSONHandler, Level } from "halua"
 
 let fileLogger = halua.create(NewTextHandler(appendToFile), {
-  level: Level.Warn,
+    level: Level.Warn,
 })
 
 let jsonMetrics = halua.create(NewJSONHandler(postToCollector), {
-  level: Level.Info,
+    level: Level.Info,
 })
 
 // Combine previous handlers with new options
@@ -116,9 +110,9 @@ A message is emitted when:
 ```ts
 let logger = halua.create({ level: `${Level.Info}+3` }) // or "INFO+3"
 
-logger.logTo("INFO+2", "filtered")   // hidden (minor too low)
+logger.logTo("INFO+2", "filtered") // hidden (minor too low)
 logger.logTo("INFO+3", "borderline") // emitted
-logger.logTo("NOTICE", "higher")     // emitted (major wins)
+logger.logTo("NOTICE", "higher") // emitted (major wins)
 ```
 
 You can also set `exact` on a handler to bypass the hierarchy completely (useful for dedicated channels):
@@ -141,7 +135,11 @@ JSON handler produces a single-line JSON-ish object (not strict `JSON.stringify`
 ## Error Safety
 
 ```ts
-let bad = halua.create(NewTextHandler(() => { throw new Error("boom") }))
+let bad = halua.create(
+    NewTextHandler(() => {
+        throw new Error("boom")
+    }),
+)
 
 bad.info("this will not crash the process")
 ```
@@ -150,20 +148,20 @@ The failure is reported to `console.error` (best effort) and other handlers cont
 
 ## When to Use What
 
-| Use Case                    | Recommended Approach                     |
-|-----------------------------|------------------------------------------|
-| Local dev / CLI             | Default `halua` or `NewConsoleHandler`   |
-| Server file logs            | `NewTextHandler` + rotation lib          |
-| Cloud / SIEM / ELK          | `NewJSONHandler`                         |
-| Multiple destinations       | Array of handlers + per-handler levels   |
-| Request tracing             | `.child(...)` everywhere                 |
-| Sampling / feature logs     | Minor levels (`INFO+10`, etc.)           |
-| Audit / security only       | Handler with `exact: [...]`              |
+| Use Case                | Recommended Approach                   |
+| ----------------------- | -------------------------------------- |
+| Local dev / CLI         | Default `halua` or `NewConsoleHandler` |
+| Server file logs        | `NewTextHandler` + rotation lib        |
+| Cloud / SIEM / ELK      | `NewJSONHandler`                       |
+| Multiple destinations   | Array of handlers + per-handler levels |
+| Request tracing         | `.child(...)` everywhere               |
+| Sampling / feature logs | Minor levels (`INFO+10`, etc.)         |
+| Audit / security only   | Handler with `exact: [...]`            |
 
 ## Further Reading
 
 - [README](../README.md) — installation, API table, quick reference
 - `docs/dr.md` — architectural decision records
-- Source in `src/main/handlers/` — see `HandlerBase` + its `dispatch(meta, args)` (and the New*Handler factories) if you need a custom transport
+- Source in `src/main/handlers/` — see `HandlerBase` + its `dispatch(meta, args)` (and the New\*Handler factories) if you need a custom transport
 
 Halua is intentionally small and explicit. Most applications only need a handful of logger instances created at startup.

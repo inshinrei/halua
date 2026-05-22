@@ -35,7 +35,7 @@ This project **is** the logger. When adding features or tools that need logging:
 - Example:
 
 ```ts
-import {halua} from "./src" // or "halua" in consuming packages
+import { halua } from "./src" // or "halua" in consuming packages
 
 try {
     riskyOperation()
@@ -70,23 +70,25 @@ benchmarks.
 
 ## Architecture Notes (Expert Mode)
 
-Halua's core is intentionally small and uses a generator-based streaming protocol between the `HandlersBalancer` and
-individual `Handler` implementations (`execute` method). This allows zero-allocation formatting decisions per argument
-and per handler.
+Halua's core is intentionally small and uses a simple synchronous `dispatch(meta: HandlerExecuteMeta, args: any[]): void`
+protocol between `HandlersBalancer` and `Handler` implementations (see `HandlerBase` default). The generator streaming
+protocol was removed in v3 (see `docs/dr.md`) in favor of readability and lower allocations.
 
 - Do **not** introduce heavy abstractions or middleware layers on top of the balancer/handler model without strong
   justification.
 - The level system (major + minor via `LEVEL+N` syntax) is powerful — keep the `extractLevels` + `MajorLevelMap` logic
   simple and well tested.
 - Error paths must never throw to user code; all handler failures are routed through `tryReportAnError`.
-- When considering new handler types (e.g. PrettyConsoleHandler, file handlers, remote), design them as
-  `NewXxxHandler(...)` factories returning `() => Handler`.
+- When considering new handler types (e.g. file handlers, remote), design them as `NewXxxHandler(...)` factories
+  returning `() => Handler` (see `NewTextHandler` etc. for the pattern).
 
 ## Custom Handlers
 
-Implementing a raw `Handler` is advanced and requires understanding the generator protocol (`"init" | "arg" | "done"`
-messages + `pass` / `done` yields). Prefer extending `HandlerBase` and using the existing `NewTextHandler` /
-`NewJSONHandler` patterns when possible.
+Implementing a raw `Handler` (providing `dispatch(meta, args)`) is advanced. Prefer extending `HandlerBase` and using
+the exported `format` + `getType` (for text) or `toJSONValue` (for structured) to replicate built-in behavior exactly.
+
+See `NewTextHandler` / `NewJSONHandler` source for the exact `class extends HandlerBase` + `this.formatArg = ...` pattern.
+The public re-exports (`HandlerBase`, `format`, `getType`, `toJSONValue`) make custom handlers practical.
 
 If you design a new public handler, export a `New*Handler` factory and update both README and the tour document.
 
