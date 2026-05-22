@@ -45,3 +45,14 @@ Next release: minor
 - Formatter-only utils (`spacing.ts`, `printTimes`) moved from `src/util/` into `src/main/util/` (with `extractLevels`) for consistent internal layout; old `src/util/` tree deleted.
 - Empty `src/main/modules/` directory removed; package.json description updated from stale "metrics and other stuff" to reflect "intentionally small" + actual scope.
 - Added text-path circular test coverage. All normal output unchanged; only error-path (circular) and untested empty-object formatting improved. No public API or semver impact.
+
+### Testing surface expansion (addresses IMPROVEMENT.md clause 3)
+- Expanded `src/index_unit.ts` e2e suite from 4 to 12 tests, adding direct captured-output verification for:
+  - All three `New*Handler` factories (JSON structured shape + options, Console method routing + raw value passthrough, Text).
+  - Multi-handler arrays passed to `create` (Balancer dispatch to >1).
+  - `setHandlers` (replace) + `appendHandlers` (augment) at runtime.
+  - Per-handler `exact: [...]` (or single) bypassing level filters.
+  - `assert(boolean, ...)` only emitting on false at ERROR.
+  - Error isolation: a throwing custom handler does not propagate to caller and does not prevent sibling handlers from executing (the `tryReportAnError` contract).
+- Overall: 59 → 67 tests, all green. The "narrow coverage" items listed in clause 3 (handler output shapes, multi/Balancer, set/append, exact, assert, isolation) are now exercised via the public API. Chose expansion of `index_unit` over new `handlers/*_unit.ts` files for maximum integration confidence with least files.
+- Formatter/property-based gaps remain for future; playground + benchmarks still need v3 port. `prepare` gate is now substantially more valuable.

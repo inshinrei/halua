@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { halua, NewTextHandler, Level } from "./index"
+import { halua, NewTextHandler, NewJSONHandler, NewConsoleHandler, Level } from "./index"
 
 describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
@@ -112,5 +112,159 @@ describe("Halua logger e2e usage", () => {
         expect(customCap.some((c) => c.includes("audit high"))).toBe(true)
         expect(customCap.some((c) => c.includes("info not"))).toBe(false)
         expect(customCap.length).toBe(2)
+    })
+
+    test("NewJSONHandler produces valid structured JSON output", () => {
+        let captured: string[] = []
+
+        let logger = halua.create(NewJSONHandler((line) => {
+            captured.push(line)
+        }))
+
+        logger.info("json test", { foo: 42 }, [1, 2])
+
+        expect(captured.length).toBe(1)
+        let parsed = JSON.parse(captured[0])
+        expect(parsed).toHaveProperty("timestamp")
+        expect(parsed.level).toBe("INFO")
+        expect(parsed.args).toEqual(["json test", { foo: 42 }, [1, 2]])
+    })
+
+    test("NewJSONHandler respects printTimestamp and printLevel options", () => {
+        let captured: string[] = []
+
+        let logger = halua.create(NewJSONHandler((line) => captured.push(line), {
+            printTimestamp: false,
+            printLevel: false,
+        }))
+
+        logger.warn("no meta")
+
+        let parsed = JSON.parse(captured[0])
+        expect(parsed).not.toHaveProperty("timestamp")
+        expect(parsed).not.toHaveProperty("level")
+        expect(parsed.args).toEqual(["no meta"])
+    })
+
+    test("NewConsoleHandler routes levels to correct methods and passes raw values", () => {
+        let calls: Array<{ method: string; args: any[] }> = []
+
+        let mock = {
+            debug: (...a: any[]) => { calls.push({ method: "debug", args: a }) },
+            info: (...a: any[]) => { calls.push({ method: "info", args: a }) },
+            warn: (...a: any[]) => { calls.push({ method: "warn", args: a }) },
+            error: (...a: any[]) => { calls.push({ method: "error", args: a }) },
+        }
+
+        let logger = halua.create(NewConsoleHandler(mock))
+
+        logger.debug("d", { x: 1 })
+        logger.info("i", 123)
+        logger.warn("w")
+        logger.error("e", new Error("boom"))
+
+        expect(calls.length).toBe(4)
+        expect(calls[0].method).toBe("debug")
+        expect(calls[0].args.some((a: any) => typeof a === "string" && a.includes("DEBUG"))).toBe(true)
+        expect(calls[0].args.some((a: any) => a && a.x === 1)).toBe(true)
+        expect(calls[1].method).toBe("info")
+        expect(calls[2].method).toBe("warn")
+        expect(calls[3].method).toBe("error")
+    })
+
+    test("create accepts array of handlers for multi-handler dispatch via Balancer", () => {
+        let text: string[] = []
+        let json: string[] = []
+
+        let tH = NewTextHandler((l) => text.push(l))
+        let jH = NewJSONHandler((l) => json.push(l))
+
+        let logger = halua.create([tH, jH])
+
+        logger.notice("multi dispatch")
+
+        expect(text.length).toBe(1)
+        expect(json.length).toBe(1)
+        expect(text[0]).toMatch(/NOTICE multi dispatch/)
+        expect(JSON.parse(json[0]).args).toContain("multi dispatch")
+    })
+
+    test("setHandlers replaces and appendHandlers augments the active handler set", () => {
+        let c1: string[] = []
+        let c2: string[] = []
+        let c3: string[] = []
+
+        let logger = halua.create(NewTextHandler((l) => c1.push(l)))
+        logger.info("first")
+        expect(c1.length).toBe(1)
+
+        logger.setHandlers(NewTextHandler((l) => c2.push(l)))
+        logger.info("second")
+        expect(c1.length).toBe(1)
+        expect(c2.length).toBe(1)
+
+        logger.appendHandlers(NewTextHandler((l) => c3.push(l)))
+        logger.warn("third")
+        expect(c2.length).toBe(2)
+        expect(c3.length).toBe(1)
+    })
+
+    test("exact option on individual handler bypasses parent level filter", () => {
+        let exactCap: string[] = []
+        let normalCap: string[] = []
+
+        let exactH = NewTextHandler((l) => exactCap.push(l), { exact: Level.Error })
+        let normalH = NewTextHandler((l) => normalCap.push(l))
+
+        let logger = halua.create([exactH, normalH], { level: Level.Info })
+
+        logger.debug("filtered for normal")
+        logger.info("visible to normal")
+        logger.error("visible to both")
+
+        expect(normalCap.length).toBe(2)
+        expect(exactCap.length).toBe(1)
+        expect(exactCap[0]).toMatch(/ERROR visible to both/)
+    })
+
+    test("assert only emits on false condition at ERROR level", () => {
+        let cap: string[] = []
+
+        let logger = halua.create(NewTextHandler((l) => cap.push(l)))
+
+        logger.assert(true, "should not appear")
+        logger.assert(false, "assert failed", 99)
+        logger.assert(1 === 1, "also skipped")
+
+        expect(cap.length).toBe(1)
+        expect(cap[0]).toMatch(/ERROR assert failed/)
+        expect(cap[0]).toContain("99")
+    })
+
+    test("throwing handler is isolated; does not throw to caller and siblings still execute", () => {
+        let good: string[] = []
+        let goodH = NewTextHandler((l) => good.push(l))
+
+        let badFactory = () => {
+            let h: any = {
+                dispatch: () => { throw new Error("intentional bad handler") },
+                exact: null,
+                level: undefined,
+            }
+            return h
+        }
+
+        let logger = halua.create([goodH, badFactory])
+
+        let didThrow = false
+        try {
+            logger.info("reaches good handler")
+        } catch (e) {
+            didThrow = true
+        }
+
+        expect(didThrow).toBe(false)
+        expect(good.length).toBe(1)
+        expect(good[0]).toMatch(/INFO reaches good handler/)
     })
 })
