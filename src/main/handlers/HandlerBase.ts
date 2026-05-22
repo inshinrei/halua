@@ -1,4 +1,4 @@
-import type { Handler, NextMessage, YieldMessage } from "./types"
+import type { Handler, HandlerExecuteMeta } from "./types"
 import { LogLevel } from "../../types/log"
 
 export type SendMethod = (data: string) => void
@@ -14,13 +14,12 @@ export class HandlerBase implements Handler {
     public printLevel: boolean = true
 
     constructor(send?: SendMethod) {
-        this.execute = this.execute.bind(this)
+        this.dispatch = this.dispatch.bind(this)
         this.sendMethod = send ?? (() => {})
     }
 
-    public *execute(meta: { timestamp: number; level: string }): Generator<YieldMessage, void, NextMessage> {
+    public dispatch(meta: HandlerExecuteMeta, args: any[]): void {
         let arg = ""
-        let current: NextMessage = { value: null, type: "init" }
 
         if (this.printTimestamp) {
             arg += `${this.formatTimestamp(meta.timestamp)}`
@@ -30,28 +29,14 @@ export class HandlerBase implements Handler {
             arg += `  ${meta.level}`
         }
 
-        while (true) {
-            if (current.type === "init") {
-                current = yield { type: "init" }
+        for (let value of args) {
+            let formatted: any
+            if (typeof this.formatArg === "function") {
+                formatted = this.formatArg(value)
+            } else {
+                formatted = value
             }
-
-            if (current.prev) {
-                arg += " " + current.prev
-            }
-
-            if (current.type === "done") {
-                break
-            }
-
-            if (current.type === "arg") {
-                if (typeof this.formatArg === "function") {
-                    arg += " " + this.formatArg(current.value)
-                    current = yield { type: "done" }
-                    continue
-                }
-            }
-
-            current = yield { type: "pass" }
+            arg += ` ${formatted}`
         }
 
         this.sendMethod(arg.trimStart())

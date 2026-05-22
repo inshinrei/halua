@@ -164,6 +164,6 @@ The failure is reported to `console.error` (best effort) and other handlers cont
 
 - [README](../README.md) — installation, API table, quick reference
 - `docs/dr.md` — architectural decision records
-- Source in `src/main/handlers/` — see how `HandlerBase` + generator protocol works if you need a custom transport
+- Source in `src/main/handlers/` — see `HandlerBase` + its `dispatch(meta, args)` (and the New*Handler factories) if you need a custom transport
 
 Halua is intentionally small and explicit. Most applications only need a handful of logger instances created at startup.

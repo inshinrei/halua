@@ -31,7 +31,7 @@ const FormatNeeded: Array<ArgumentType> = [
 
 export function format(arg: Argument, spacing: boolean = true): string {
     try {
-        const SpacingEnum = spacing ? Spacing : EmptySpacing
+        let SpacingEnum = spacing ? Spacing : EmptySpacing
         if (FormatAsIs.some((f) => f === arg.type)) {
             return formatAsIs(arg.value, arg.type)
         }

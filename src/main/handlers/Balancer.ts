@@ -1,10 +1,8 @@
 import { Level, LogLevel } from "../../types/log"
 import { Handler, HandlerExecuteMeta } from "./types"
-import { getType } from "../getType"
 import { extractLevels } from "../util/string"
-import { HaluaFailedToCallHandler, HaluaParse } from "../errors"
+import { HaluaFailedToCallHandler } from "../errors"
 import { tryReportAnError } from "../util/errors"
-import { Argument } from "../types"
 
 const MajorLevelMap = new Map([
     [Level.Fatal, new Set([Level.Fatal])],
@@ -27,7 +25,6 @@ export class HandlersBalancer implements Balancer {
     constructor(
         private level: LogLevel,
         private handlers: Array<Handler>,
-        private format: (arg: Argument, spacing?: boolean) => string,
     ) {
         this.sendLog = this.sendLog.bind(this)
         this.reset = this.reset.bind(this)
@@ -71,29 +68,14 @@ export class HandlersBalancer implements Balancer {
     }
 
     private sendToHandlers(meta: HandlerExecuteMeta, args: Array<any>) {
-        let generators = (this.map.get(meta.level) ?? []).map((h) => h.execute(meta))
-        generators.forEach((e) => e.next({ type: "init", value: null }))
-
-        let state = Array.from<string | undefined>({ length: generators.length }).fill(undefined)
-        for (let arg of args) {
-            generators.forEach((e, i) => {
-                try {
-                    let result = e.next({ type: "arg", value: arg, prev: state[i] })
-                    state[i] = undefined
-
-                    if (result.value?.type === "pass") {
-                        state[i] = this.format({ type: getType(arg), value: arg })
-                    }
-                } catch (e) {
-                    tryReportAnError(new HaluaParse(`Failed to parse an argument`, { cause: e }))
-                }
-            })
+        let hs = this.map.get(meta.level) ?? []
+        for (let h of hs) {
+            try {
+                h.dispatch(meta, args)
+            } catch (e) {
+                tryReportAnError(new HaluaFailedToCallHandler(`Unable to call execution method of a handler`, { cause: e }))
+            }
         }
-
-        generators.forEach((e, i) => {
-            e.next({ type: "done", value: null, prev: state[i] })
-        })
-        state = []
     }
 
     private canSend(l: LogLevel, to: LogLevel = this.level || Level.Trace) {

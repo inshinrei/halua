@@ -2,7 +2,6 @@ import { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
 import { Handler } from "./handlers/types"
 import { Balancer, HandlersBalancer } from "./handlers/Balancer"
 import { Level, LogLevel } from "../types/log"
-import { format } from "./format"
 import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"
 import { HaluaUnableToDetermineHandler } from "./errors"
@@ -19,7 +18,7 @@ export class Halua implements HaluaLogger {
         this.passedHandlers = passed
         this.handlers = this.buildHandlers(passed)
 
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers, format)
+        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
         this.bindMethods()
     }
 
@@ -94,7 +93,7 @@ export class Halua implements HaluaLogger {
     }
 
     private updateBalancer() {
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers, format)
+        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
     }
 
     private sendToBalancer(level: LogLevel, args: Array<any>) {
@@ -103,11 +102,11 @@ export class Halua implements HaluaLogger {
 
     private supposeIsHandler(v: any, reportError = true): boolean {
         /** __proto__ checks for function declaration, ownProp checks for arrow func */
-        const isHandler =
-            Object.prototype.hasOwnProperty.call(v.__proto__, "execute") ||
-            Object.prototype.hasOwnProperty.call(v, "execute")
+        let isHandler =
+            Object.prototype.hasOwnProperty.call(v.__proto__, "dispatch") ||
+            Object.prototype.hasOwnProperty.call(v, "dispatch")
         if (!isHandler && reportError) {
-            tryReportAnError(new HaluaUnableToDetermineHandler(`Unable to find execute method of a handler`))
+            tryReportAnError(new HaluaUnableToDetermineHandler(`Unable to find dispatch method of a handler`))
         }
         return isHandler
     }

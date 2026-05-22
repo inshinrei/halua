@@ -15,3 +15,7 @@ export { Level } from "./types/log"
 export { NewConsoleHandler }
 export { NewJSONHandler } from "./main/handlers/JSONHandler"
 export { NewTextHandler } from "./main/handlers/TextHandler"
+
+export { HandlerBase } from "./main/handlers/HandlerBase"
+export { format, toJSONValue } from "./main/format"
+export { getType } from "./main/getType"

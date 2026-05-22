@@ -16,7 +16,8 @@ export interface Handler {
     printTimestamp?: boolean
     printLevel?: boolean
 
-    execute: (meta: HandlerExecuteMeta) => Generator<YieldMessage, void, NextMessage>
+    /** primary dispatch: receives raw args; handler decides formatting / structure / emission */
+    dispatch: (meta: HandlerExecuteMeta, args: any[]) => void
 
     formatArg?: (value: any) => any
     formatTimestamp?: (value: number) => string
@@ -29,17 +30,3 @@ export interface BaseHandlerOptions {
     printTimestamp?: boolean
     printLevel?: boolean
 }
-
-export interface NextMessage {
-    type: NextMessageType
-    value: any
-    prev?: string
-}
-
-export interface YieldMessage {
-    type: YieldMessageType
-}
-
-type YieldMessageType = "pass" | "done" | "init"
-
-type NextMessageType = "arg" | "done" | "init"

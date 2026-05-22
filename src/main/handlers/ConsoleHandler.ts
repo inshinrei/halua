@@ -1,4 +1,4 @@
-import { BaseHandlerOptions, type NextMessage, type YieldMessage } from "./types"
+import { BaseHandlerOptions, HandlerExecuteMeta } from "./types"
 import { HandlerBase } from "./HandlerBase"
 import { LogLevel } from "../../types/log"
 import { toarray } from "../util/cast"
@@ -29,16 +29,13 @@ export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandl
                 this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
-            readonly formatArg = (arg: any) => arg
-
             applyOptionalOptions(options: ConsoleHandlerOptions) {
                 this.printTimestamp = options.printTimestamp ?? true
                 this.printLevel = options.printLevel ?? true
             }
 
-            public *execute(meta: { timestamp: number; level: string }): Generator<YieldMessage, void, NextMessage> {
+            public dispatch(meta: HandlerExecuteMeta, rawArgs: any[]): void {
                 let args: Array<any> = []
-                let current: NextMessage = { value: null, type: "init" }
 
                 if (this.printTimestamp) {
                     args.push(`${this.formatTimestamp(meta.timestamp)}`)
@@ -49,28 +46,14 @@ export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandl
                     args.push(`${margin}${meta.level}`)
                 }
 
-                while (true) {
-                    if (current.type === "init") {
-                        current = yield { type: "init" }
+                for (let value of rawArgs) {
+                    let formatted: any
+                    if (typeof this.formatArg === "function") {
+                        formatted = this.formatArg(value)
+                    } else {
+                        formatted = value
                     }
-
-                    if (current.prev) {
-                        args.push(current.prev)
-                    }
-
-                    if (current.type === "done") {
-                        break
-                    }
-
-                    if (current.type === "arg") {
-                        if (typeof this.formatArg === "function") {
-                            args.push(current.value)
-                            current = yield { type: "done" }
-                            continue
-                        }
-                    }
-
-                    current = yield { type: "pass" }
+                    args.push(formatted)
                 }
 
                 if (meta.level.startsWith("DEBUG")) {

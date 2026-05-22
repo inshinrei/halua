@@ -13,8 +13,6 @@ export function NewTextHandler(send: (data: string) => void, options?: TextLogHa
             public level: LogLevel | undefined
             public exact: Array<LogLevel> | null = null
 
-            readonly formatArg
-
             constructor(send: SendMethod, options: TextLogHandlerOptions = {}) {
                 super(send)
 
