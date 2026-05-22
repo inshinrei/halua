@@ -16,7 +16,6 @@ const MajorLevelMap = new Map([
 
 export interface Balancer {
     sendLog: (meta: HandlerExecuteMeta, args: Array<any>) => void
-    reset: () => void
 }
 
 export class HandlersBalancer implements Balancer {
@@ -27,16 +26,11 @@ export class HandlersBalancer implements Balancer {
         private handlers: Array<Handler>,
     ) {
         this.sendLog = this.sendLog.bind(this)
-        this.reset = this.reset.bind(this)
     }
 
     sendLog(meta: HandlerExecuteMeta, args: Array<any>) {
         this.discover(meta.level)
         this.send(meta, args)
-    }
-
-    reset() {
-        this.map.clear()
     }
 
     private discover(level: LogLevel) {

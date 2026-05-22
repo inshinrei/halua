@@ -51,7 +51,7 @@ export class Halua implements HaluaLogger {
         this.sendToBalancer(level, args)
     }
 
-    trace(...args: any[]) {
+    trace(...args: any[]): void {
         this.sendToBalancer(Level.Trace, args)
     }
 
