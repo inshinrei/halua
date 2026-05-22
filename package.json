@@ -3,11 +3,25 @@
     "version": "3.0.0",
     "description": "Tiny zero-dependency logger with pluggable handlers, child contexts, minor levels (e.g. INFO+5) and safe formatting",
     "type": "module",
-    "main": "lib/index.js",
-    "module": "lib/index.cjs",
+    "main": "lib/index.cjs",
+    "module": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./lib/index.d.ts",
+                "default": "./lib/index.js"
+            },
+            "require": {
+                "types": "./lib/index.d.cts",
+                "default": "./lib/index.cjs"
+            }
+        }
+    },
     "files": [
         "lib",
+        "README.md",
+        "LICENSE",
         "AGENTS.md"
     ],
     "scripts": {
