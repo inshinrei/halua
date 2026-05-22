@@ -40,9 +40,9 @@ halua.error(new Error("timeout"))
 **Default output (console):**
 
 ```
-22/05/2026 21:55:50  INFO Application started
-22/05/2026 21:55:50  WARN Disk space low { available: '12%' }
-22/05/2026 21:55:50  ERROR Error: timeout
+22/05/2026 21:55:50 INFO Application started
+22/05/2026 21:55:50 WARN Disk space low { available: '12%' }
+22/05/2026 21:55:50 ERROR Error: timeout
     at ...
 ```
 
@@ -63,7 +63,7 @@ let jsonLogger = halua.create(NewJSONHandler((json) => writeToArchive(json)))
 let consoleLogger = halua.create(NewConsoleHandler(console))
 
 textLogger.info("user action", { id: 123, type: "click" })
-// -> 22/05/2026 21:55:50  INFO user action { id: 123, type: "click" }
+// -> 22/05/2026 21:55:50 INFO user action { id: 123, type: "click" }
 
 jsonLogger.info("structured", { success: true })
 // -> {"timestamp":"2026-05-22T18:55:50.430Z","level":"INFO","args":["structured",{"success": true}]}

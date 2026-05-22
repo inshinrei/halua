@@ -1,5 +1,15 @@
 Next release: minor
 
+### Performance reality check & hot-path improvements (addresses IMPROVEMENT.md clause 7)
+
+- Performed the "zero allocation" audit called out in clause 7 after generator removal: remaining costs were `new Date` + locale formatting on every log line per Text/Console handler (3x with multi-handler) and repeated `+=` string assembly in dispatch + printTimes.
+- **Timestamp caching**: Added second-granularity memoization (`lastTimestampSec`/`lastTimestampStr`) inside `HandlerBase.formatTimestamp`. For the common case of burst logging within the same wall-clock second, Text and Console handlers now skip `new Date` + `toLocale*` entirely after the first log of that second. JSON handler (which emits full ISO ms precision) always computes fresh (by design). This directly mitigates the "three times" per-line allocation highlighted in the critique.
+- **String assembly**: Replaced all remaining hot-path `+=` loops (`HandlerBase.dispatch` prefix+args, `printTimes` indent generator) with array `join(" ")` and native `String.repeat`. This is more GC-friendly for logs with many arguments and eliminates the last style violation of the "repeated +=" complaint.
+- **Bonus consistency win**: TextHandler output now uses single space between timestamp and level (`...50 INFO ...`) matching `NewConsoleHandler` (previously double-space only in Text path). Updated README samples; no test impact (loose matches).
+- No public API, type, or semver surface change. The dispatch contract and handler factories are untouched. These are pure internal hot-path hygiene + one visual unification in human text output.
+- Benchmarks (`pnpm bench`) and playground already v3-clean from clause 6; the improvements keep the "tiny" ethos while measurably lowering per-log work for the 90% case.
+- Ties off IMPROVEMENT.md clause 7. The honest positioning remains: Halua is not competing on raw ns/op with pino; its strengths are features + size + DX + self-documenting AGENTS.md.
+
 ### Documentation & DX hygiene (addresses IMPROVEMENT.md clause 6)
 
 - Fixed README quick-start `.error("msg", new Error(...))` example (violated AGENTS.md mandatory policy that `.error` receives an `Error` instance as first argument; strings use other levels or `.error(err)` for pure errors). Updated default output sample and added compliant patterns.
