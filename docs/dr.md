@@ -1,4 +1,4 @@
-Next release: major
+Next release: minor
 
 ### Handler method renamed from `handle` to `dispatch`
 - The primary method on the `Handler` interface (and `HandlerBase`) has been renamed from `handle(meta, args)` to `dispatch(meta, args)`.
@@ -37,3 +37,11 @@ Next release: major
 - As DX win: `HandlerBase`, `format`, `getType`, and `toJSONValue` are now re-exported so custom handlers can `extend HandlerBase` and replicate TextHandler formatting exactly (per AGENTS.md guidance).
 - This was a high-impact but pure-internal restructuring. Public factory APIs, `halua` usage, `create`/`child`, level/minor/exact semantics, and all output are unchanged. Custom `Handler` implementors must migrate (documented as part of the existing "next major").
 - Directly resolves the "clever" complexity, duplication (~80 lines of state machine), dead paths, and poor custom-handler ergonomics called out in IMPROVEMENT.md clause 2. The "streaming decision" benefit was never used by built-ins and is not missed.
+
+### Clause 2 design smell fixes (minor, post-protocol simplification)
+- `Halua.create(...)` brittle duck-typing (`Array.isArray` + `supposeIsHandler(..., false)` + `Object.keys(arg1).length` + dead branches) replaced by explicit `isHandlerSpec` (functions or arrays of functions); `create` logic is now clear, documented, and robust.
+- Text formatter (`format.ts`) now has full cycle detection via `WeakSet` (matching JSON path `toJSONValue`); deeply nested/circular objects in `.info(obj)` no longer stack-overflow (produce `[Circular]` marker instead of `HaluaParse` lossy string).
+- Eliminated decrement-to-last hacks (`len -= 1` in loops), `for..in` + `Object.keys().length` mismatch (prototype pollution risk) in favor of `Object.keys()` + `join` for arrays/objects; added internal `formatValue` + shared `seen` for recursion.
+- Formatter-only utils (`spacing.ts`, `printTimes`) moved from `src/util/` into `src/main/util/` (with `extractLevels`) for consistent internal layout; old `src/util/` tree deleted.
+- Empty `src/main/modules/` directory removed; package.json description updated from stale "metrics and other stuff" to reflect "intentionally small" + actual scope.
+- Added text-path circular test coverage. All normal output unchanged; only error-path (circular) and untested empty-object formatting improved. No public API or semver impact.

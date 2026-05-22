@@ -1,8 +1,8 @@
 import type { Argument, ArgumentType } from "./types"
-import { EmptySpacing, Spacing } from "../util/spacing"
+import { EmptySpacing, Spacing } from "./util/spacing"
 import { HaluaParse } from "./errors"
 import { getType } from "./getType"
-import { printTimes } from "../util/string"
+import { printTimes } from "./util/string"
 
 const FormatAsIs: Array<ArgumentType> = [
     "undefined",
@@ -32,11 +32,12 @@ const FormatNeeded: Array<ArgumentType> = [
 export function format(arg: Argument, spacing: boolean = true): string {
     try {
         let SpacingEnum = spacing ? Spacing : EmptySpacing
+        let seen = new WeakSet<object>()
         if (FormatAsIs.some((f) => f === arg.type)) {
             return formatAsIs(arg.value, arg.type)
         }
         if (FormatNeeded.some((f) => f === arg.type)) {
-            return formatComplex(arg.value, arg.type, SpacingEnum)
+            return formatComplex(arg.value, arg.type, SpacingEnum, 1, seen)
         }
     } catch (err) {
         return new HaluaParse((err as Error)?.message || "").message
@@ -54,14 +55,32 @@ function formatAsIs(arg: any, type: ArgumentType): string {
     return String(arg)
 }
 
+function formatValue(value: any, spacing: typeof Spacing | typeof EmptySpacing, seen: WeakSet<object>): any {
+    let type = getType(value)
+    if (FormatAsIs.some((f) => f === type)) {
+        return formatAsIs(value, type)
+    }
+    if (FormatNeeded.some((f) => f === type)) {
+        return formatComplex(value, type, spacing, 1, seen)
+    }
+    return value
+}
+
 function formatComplex(
     arg: any,
     type: ArgumentType,
     spacing: typeof Spacing | typeof EmptySpacing,
     nestingLevel = 1,
+    seen: WeakSet<object>,
 ): string {
     if (type === "set") {
-        return `Set${formatArray(convertSetToArray(arg), spacing)}`
+        if (seen.has(arg)) {
+            return "[Circular]"
+        }
+        seen.add(arg)
+        let r = `Set${formatArray(convertSetToArray(arg), spacing, seen)}`
+        seen.delete(arg)
+        return r
     }
     if (type === "weakset") {
         return `WeakSet \[inaccessible\]`
@@ -74,37 +93,52 @@ function formatComplex(
         return `Function ${name === "value" ? "anonymous" : name}`
     }
     if (type === "array") {
-        return formatArray(arg, spacing)
+        if (seen.has(arg)) {
+            return "[Circular]"
+        }
+        seen.add(arg)
+        let r = formatArray(arg, spacing, seen)
+        seen.delete(arg)
+        return r
     }
     if (type === "arraybuffer") {
         return `ArrayBuffer \[\]`
     }
     if (type === "map") {
-        return formatObject(convertMapToObj(arg), spacing, nestingLevel, ` => `)
+        if (seen.has(arg)) {
+            return "[Circular]"
+        }
+        seen.add(arg)
+        let r = formatObject(convertMapToObj(arg, spacing, seen), spacing, nestingLevel, ` => `, seen)
+        seen.delete(arg)
+        return r
     }
     if (type === "error") {
         return `${arg.toString()} stack: ${arg.stack}`
     }
     if (type === "object") {
-        return formatObject(arg, spacing, nestingLevel)
+        if (seen.has(arg)) {
+            return "[Circular]"
+        }
+        seen.add(arg)
+        let r = formatObject(arg, spacing, nestingLevel, `: `, seen)
+        seen.delete(arg)
+        return r
     }
 
     return arg
 }
 
-function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpacing): string {
-    let stringify = "\["
-    let len = arg.length
+function formatArray(arg: Array<any>, spacing: typeof Spacing | typeof EmptySpacing, seen: WeakSet<object>): string {
+    let items: any[] = []
     for (let entry of arg) {
-        len -= 1
-
         let entryType = getType(entry)
-        let formatted = format({ type: entryType, value: entry })
+        let formatted = formatValue(entry, spacing, seen)
         let entryValue = entryType === "string" ? `\"${formatted}\"` : formatted
-        stringify += `${entryValue}${len ? `,${spacing.Space}` : spacing.Empty}`
+        items.push(entryValue)
     }
-    stringify += "\]"
-    return stringify
+    let sep = `,${spacing.Space}`
+    return `[${items.join(sep)}]`
 }
 
 function formatObject(
@@ -112,37 +146,33 @@ function formatObject(
     spacing: typeof Spacing | typeof EmptySpacing,
     nestingLevel = 1,
     delimiter = `: `,
+    seen: WeakSet<object>,
 ): string {
-    let stringify = `\{${spacing.Line}`
-    let len = Object.keys(arg).length
-    for (let key in arg) {
-        len -= 1
-
-        let entryType = getType(arg[key])
+    let keys = Object.keys(arg)
+    let kvParts: any[] = []
+    for (let key of keys) {
+        let val = arg[key]
+        let entryType = getType(val)
         let formatted =
             entryType === "object"
-                ? formatComplex(arg[key], entryType, spacing, nestingLevel + 1)
-                : format({
-                      type: entryType,
-                      value: arg[key],
-                  })
+                ? formatComplex(val, entryType, spacing, nestingLevel + 1, seen)
+                : formatValue(val, spacing, seen)
         let entryValue = entryType === "string" ? `\"${formatted}\"` : formatted
-        stringify += `${printTimes(nestingLevel, spacing.Tab)}\"${key}\"${delimiter}${entryValue}${len ? `,${spacing.Line}` : spacing.Empty}`
+        kvParts.push(`${printTimes(nestingLevel, spacing.Tab)}\"${key}\"${delimiter}${entryValue}`)
     }
 
+    let body = kvParts.join(`,${spacing.Line}`)
     let level = nestingLevel - 1
-    stringify += `${spacing.Line}${printTimes(level, spacing.Tab)}\}`
-    return stringify
+    let closeIndent = printTimes(level, spacing.Tab)
+    return `\{${spacing.Line}${kvParts.length ? body + spacing.Line : ""}${closeIndent}\}`
 }
 
-function convertMapToObj(value: Map<any, any>): Record<any, any> {
+function convertMapToObj(value: Map<any, any>, spacing: typeof Spacing | typeof EmptySpacing, seen: WeakSet<object>): Record<any, any> {
     let obj: Record<string, any> = {}
     for (let [key, v] of value) {
         let keyType = getType(key)
-        let objKey: string = keyType === "string" ? key : format({ type: keyType, value: key })
-
-        let valueType = getType(v)
-        obj[objKey] = format({ type: valueType, value: v })
+        let objKey: any = keyType === "string" ? key : formatValue(key, spacing, seen)
+        obj[objKey] = formatValue(v, spacing, seen)
     }
     return obj
 }

@@ -26,16 +26,10 @@ export class Halua implements HaluaLogger {
         arg1: PassedHandler | HaluaOptions = this.passedHandlers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
-        if (Array.isArray(arg1)) {
-            return new Halua(arg1 as PassedHandler, { ...arg2 })
+        if (this.isHandlerSpec(arg1)) {
+            return new Halua(arg1 as PassedHandler, { ...(arg2 ?? this.options) })
         }
-        if (this.supposeIsHandler(arg1, false)) {
-            return new Halua(arg1 as PassedHandler, { ...arg2 })
-        }
-        if (Object.keys(arg1).length) {
-            return new Halua(this.passedHandlers, { ...(arg1 as HaluaOptions) })
-        }
-        return new Halua(arg1 as PassedHandler, { ...arg2 })
+        return new Halua(this.passedHandlers, { ...(arg1 as HaluaOptions) })
     }
 
     child(...args: any[]): HaluaLogger {
@@ -109,6 +103,13 @@ export class Halua implements HaluaLogger {
             tryReportAnError(new HaluaUnableToDetermineHandler(`Unable to find dispatch method of a handler`))
         }
         return isHandler
+    }
+
+    private isHandlerSpec(v: any): boolean {
+        if (Array.isArray(v)) {
+            return v.every((x: any) => typeof x === "function")
+        }
+        return typeof v === "function"
     }
 
     private buildHandlers(passed: PassedHandler): Array<Handler> {

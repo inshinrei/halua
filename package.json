@@ -1,7 +1,7 @@
 {
     "name": "halua",
     "version": "3.0.0",
-    "description": "Package that takes control of logging, metrics and other stuff",
+    "description": "Tiny zero-dependency logger with pluggable handlers, child contexts, minor levels (e.g. INFO+5) and safe formatting",
     "type": "module",
     "main": "lib/index.js",
     "module": "lib/index.cjs",

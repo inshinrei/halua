@@ -159,6 +159,20 @@ describe("format", () => {
                 }),
             ).toContain(`Error: HaluaParseError: test`)
         })
+
+        it("handles circular reference without crash on text path", () => {
+            let o: any = { a: 1 }
+            o.self = o
+            let f = format({ type: "object", value: o })
+            expect(f).toContain("a")
+            expect(f).toContain("[Circular]")
+            expect(f).not.toContain("HaluaParse")
+
+            let a: any[] = [1]
+            a.push(a)
+            let fa = format({ type: "array", value: a })
+            expect(fa).toBe("[1, [Circular]]")
+        })
     })
 })
 
