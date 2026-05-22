@@ -11,6 +11,7 @@
     ],
     "scripts": {
         "test": "vitest",
+        "dev": "vitest",
         "bench": "node benchmarks/main_bench.js",
         "build": "tsup",
         "prepare": "pnpm run test run && pnpm run build",
