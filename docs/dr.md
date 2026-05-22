@@ -1,9 +1,15 @@
 Next release: major
 
-### JSON handler correctness and structured output (fixes 1.1)
+### JSON handler correctness and structured output
 - `NewJSONHandler` now always emits *valid* JSON via `JSON.stringify` on a normalized value tree (no more manual escaping, no unescaped quotes/newlines, no `=>` in maps).
 - New `toJSONValue` (used by JSON path) converts every `ArgumentType` to a legal JSON value: Errors become `{name,message,stack: string[]}`, Maps/Sets/arrays are real structures (not pre-formatted text), dates ISO, circulars marked, etc.
 - This changes the shape of `args[]` items for complex types compared to the previous (broken) output — consumers of structured logs must adapt (hence major).
+
+### Level system robustness (post-3.0.0)
+
+- `extractLevels` + `majorLevelCheck` now handle minor arithmetic safely (no more silent `"INFO2"` coercion footguns or crashes on custom/unknown majors like "FOO+5"; malformed forms are distinct majors)
+- Updated README and tour docs to use `${Level.Info}+N` syntax instead of `Level.Info + N`
+- Legacy "MAJOR2" strings still parse for backward compat; comparison is now case-insensitive and crash-proof
 
 ### Docs refresh (post-3.0.0)
 

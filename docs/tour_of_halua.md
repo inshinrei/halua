@@ -114,7 +114,7 @@ A message is emitted when:
 2. Majors are equal and its **minor** part is >= configured minor
 
 ```ts
-let logger = halua.create({ level: Level.Info + 3 }) // or "INFO+3"
+let logger = halua.create({ level: `${Level.Info}+3` }) // or "INFO+3"
 
 logger.logTo("INFO+2", "filtered")   // hidden (minor too low)
 logger.logTo("INFO+3", "borderline") // emitted

@@ -102,11 +102,15 @@ export class HandlersBalancer implements Balancer {
         return this.majorLevelCheck(lvl[0], toLvl[0]) + this.minorLevelCheck(lvl[1], toLvl[1]) > 0
     }
 
-    private majorLevelCheck(l: Level, to: Level): number {
-        if (!MajorLevelMap.get(to)!.has(l)) {
+    private majorLevelCheck(l: string, to: string): number {
+        if (l === to) {
+            return 0
+        }
+        let toSet = MajorLevelMap.get(to as Level)
+        if (!toSet || !toSet.has(l as Level)) {
             return -1
         }
-        return l === to ? 0 : 1
+        return 1
     }
 
     private minorLevelCheck(l: number, to: number): number {

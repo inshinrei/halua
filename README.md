@@ -121,7 +121,7 @@ let logger = halua.create([
 Use the `LEVEL+N` syntax for fine-grained control (e.g. sampling, feature flags):
 
 ```ts
-let logger = halua.create(NewTextHandler(out), { level: Level.Info + 2 })
+let logger = halua.create(NewTextHandler(out), { level: `${Level.Info}+2` })
 
 logger.logTo("INFO+1", "sampled out")
 logger.logTo("INFO+2", "important info")   // logged
