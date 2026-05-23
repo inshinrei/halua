@@ -1,4 +1,10 @@
-Next release: minor
+Next release: patch
+
+### Update contributor `AGENTS.md` (documentation & style hygiene)
+
+- Removed the "Utility Functions" section recommending the external `yorozu` package for general helpers. The project now prefers keeping logging-specific utilities local in `src/util/` / `src/main/util/` when needed.
+- Minor formatting, line-wrapping, and example cleanup in `AGENTS.md` (import spacing, long paragraphs in Architecture Notes, factory guidance) for improved readability when viewed in the published package and on GitHub.
+- These are purely documentation / contributor-experience changes with no impact on the published library, runtime behavior, or public API (patch).
 
 ### Fix empty `lib/index.d.ts` after v4.0.0 source rename (build / publishing fix)
 
