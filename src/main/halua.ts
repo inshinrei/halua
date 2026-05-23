@@ -1,56 +1,53 @@
-import { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
-import { Handler } from "./handlers/types"
-import { Balancer, HandlersBalancer } from "./handlers/Balancer"
+import { HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
+import { Dispatcher, DispatcherExecuteMeta } from "./dispatchers/dispatcher-types"
+import { Balancer, DispatchersBalancer } from "./dispatchers/dispatchers-balancer"
 import { Level, LogLevel } from "../types/log"
-import { format } from "./format"
 import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"
-import { HaluaUnableToDetermineHandler } from "./errors"
+import { HaluaUnableToDetermineDispatcher, unknownToError } from "./errors"
 
-export class Halua implements HaluaLogger {
-    private readonly passedHandlers: PassedHandler = []
-    private handlers: Array<Handler> = []
+export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<ErrorMeta> {
+    private readonly passedDispatchers: PassedDispatcher = []
+    private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
+    private stamps: Map<any, { label: string; start: number }> = new Map()
 
     constructor(
-        passed: PassedHandler,
+        passed: PassedDispatcher,
         private options: HaluaOptions = {},
     ) {
-        this.passedHandlers = passed
-        this.handlers = this.buildHandlers(passed)
+        this.passedDispatchers = passed
+        this.dispatchers = this.buildDispatchers(passed)
 
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers, format)
+        this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
         this.bindMethods()
     }
 
-    create(
-        arg1: PassedHandler | HaluaOptions = this.passedHandlers,
+    create<EM = ErrorMeta>(
+        arg1: PassedDispatcher | HaluaOptions = this.passedDispatchers,
         arg2: HaluaOptions | undefined = this.options,
-    ): HaluaLogger {
-        if (Array.isArray(arg1)) {
-            return new Halua(arg1 as PassedHandler, { ...arg2 })
+    ): HaluaLogger<EM> {
+        if (this.isDispatcherSpec(arg1)) {
+            return new Halua<EM>(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) })
         }
-        if (this.supposeIsHandler(arg1, false)) {
-            return new Halua(arg1 as PassedHandler, { ...arg2 })
-        }
-        if (Object.keys(arg1).length) {
-            return new Halua(this.passedHandlers, { ...(arg1 as HaluaOptions) })
-        }
-        return new Halua(arg1 as PassedHandler, { ...arg2 })
+        return new Halua<EM>(this.passedDispatchers, { ...(arg1 as HaluaOptions) })
     }
 
-    child(...args: any[]): HaluaLogger {
-        return new Halua(this.passedHandlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
+    child(...args: any[]): HaluaLogger<ErrorMeta> {
+        return new Halua<ErrorMeta>(this.passedDispatchers, {
+            ...this.options,
+            withArgs: (this.options.withArgs || []).concat(args),
+        })
     }
 
-    setHandlers(handler: PassedHandler): void {
-        this.handlers = this.buildHandlers(handler)
+    setDispatchers(dispatcher: PassedDispatcher): void {
+        this.dispatchers = this.buildDispatchers(dispatcher)
         this.updateBalancer()
     }
 
-    appendHandlers(handler: PassedHandler): void {
-        let handlers = this.buildHandlers(handler)
-        this.handlers.push(...handlers)
+    appendDispatchers(dispatcher: PassedDispatcher): void {
+        let dispatchers = this.buildDispatchers(dispatcher)
+        this.dispatchers.push(...dispatchers)
         this.updateBalancer()
     }
 
@@ -58,7 +55,7 @@ export class Halua implements HaluaLogger {
         this.sendToBalancer(level, args)
     }
 
-    trace(...args: any[]) {
+    trace(...args: any[]): void {
         this.sendToBalancer(Level.Trace, args)
     }
 
@@ -78,51 +75,104 @@ export class Halua implements HaluaLogger {
         this.sendToBalancer(Level.Notice, args)
     }
 
-    error(...args: any[]): void {
-        this.sendToBalancer(Level.Error, args)
+    error(error: unknown, meta?: ErrorMeta): void {
+        let e = unknownToError(error)
+        let payload: any[] = [e]
+        let finalMeta = meta != null ? { ...(meta as any), error: e } : undefined
+        this.sendToBalancer(Level.Error, payload, finalMeta)
     }
 
     fatal(...args: any[]): void {
         this.sendToBalancer(Level.Fatal, args)
     }
 
-    assert(assertion: boolean, ...args: any[]): void {
+    assert(assertion: boolean, error: unknown, meta?: ErrorMeta): void {
         if (assertion) {
             return
         }
-        this.sendToBalancer(Level.Error, args)
+        let e = unknownToError(error)
+        let payload: any[] = [e]
+        let finalMeta = meta != null ? { ...(meta as any), error: e } : undefined
+        this.sendToBalancer(Level.Error, payload, finalMeta)
+    }
+
+    stamp(label: string, id?: any): () => void {
+        let start = performance.now()
+        if (id != null) {
+            this.stamps.set(id, { label, start })
+        }
+        let ended = false
+        const ender = () => {
+            if (ended) {
+                return
+            }
+            ended = true
+            if (id != null) {
+                let current = this.stamps.get(id)
+                if (current && current.start === start) {
+                    this.stamps.delete(id)
+                }
+            }
+            this.endStamp(label, start)
+        }
+        return ender
+    }
+
+    stampEnd(id: any): void {
+        let entry = this.stamps.get(id)
+        if (!entry) {
+            return
+        }
+        this.stamps.delete(id)
+        this.endStamp(entry.label, entry.start)
+    }
+
+    private endStamp(label: string, start: number): void {
+        let duration = performance.now() - start
+        let ms = duration.toFixed(2)
+        this.info(label, `took ${ms}ms`)
     }
 
     private updateBalancer() {
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers, format)
+        this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
     }
 
-    private sendToBalancer(level: LogLevel, args: Array<any>) {
-        this.balancer.sendLog({ level, timestamp: Date.now() }, args.concat(this.options.withArgs ?? []))
-    }
-
-    private supposeIsHandler(v: any, reportError = true): boolean {
-        /** __proto__ checks for function declaration, ownProp checks for arrow func */
-        const isHandler =
-            Object.prototype.hasOwnProperty.call(v.__proto__, "execute") ||
-            Object.prototype.hasOwnProperty.call(v, "execute")
-        if (!isHandler && reportError) {
-            tryReportAnError(new HaluaUnableToDetermineHandler(`Unable to find execute method of a handler`))
+    private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: any) {
+        let finalArgs = args.concat(this.options.withArgs ?? [])
+        let dispatchMeta: DispatcherExecuteMeta = { level, timestamp: Date.now() }
+        if (this.options.redactDataRegExp) {
+            dispatchMeta.redactDataRegExp = this.options.redactDataRegExp
         }
-        return isHandler
+        this.balancer.sendLog(dispatchMeta, finalArgs, errorMeta)
     }
 
-    private buildHandlers(passed: PassedHandler): Array<Handler> {
+    private supposeIsDispatcher(v: any, reportError = true): boolean {
+        // duck-type on the public dispatch method (sufficient for all built-in and custom Dispatcher shapes)
+        let isDispatcher = typeof v?.dispatch === "function"
+        if (!isDispatcher && reportError) {
+            tryReportAnError(new HaluaUnableToDetermineDispatcher(`Unable to find dispatch method of a dispatcher`))
+        }
+        return isDispatcher
+    }
+
+    private isDispatcherSpec(v: any): boolean {
+        if (Array.isArray(v)) {
+            return v.every((x: any) => typeof x === "function")
+        }
+        return typeof v === "function"
+    }
+
+    private buildDispatchers(passed: PassedDispatcher): Array<Dispatcher> {
         let entries = toarray(passed)
-        return entries.map((b) => b()).filter((h) => this.supposeIsHandler(h))
+        return entries.map((b) => b()).filter((h) => this.supposeIsDispatcher(h))
     }
 
     private bindMethods(): void {
         this.create = this.create.bind(this)
         this.child = this.child.bind(this)
 
-        this.setHandlers = this.setHandlers.bind(this)
-        this.appendHandlers = this.appendHandlers.bind(this)
+        this.setDispatchers = this.setDispatchers.bind(this)
+        this.appendDispatchers = this.appendDispatchers.bind(this)
 
         this.logTo = this.logTo.bind(this)
         this.trace = this.trace.bind(this)
@@ -134,6 +184,9 @@ export class Halua implements HaluaLogger {
         this.fatal = this.fatal.bind(this)
         this.assert = this.assert.bind(this)
 
-        this.supposeIsHandler = this.supposeIsHandler.bind(this)
+        this.stamp = this.stamp.bind(this)
+        this.stampEnd = this.stampEnd.bind(this)
+
+        this.supposeIsDispatcher = this.supposeIsDispatcher.bind(this)
     }
 }

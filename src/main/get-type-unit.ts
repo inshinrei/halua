@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getType } from "./getType"
+import { getType } from "./get-type"
 
 describe("getType", () => {
     it("gets undefined type", () => {

@@ -1,10 +1,3 @@
-export interface Log {
-    timestamp: number
-    // argsgen: Generator
-    level: string
-    assertion?: boolean
-}
-
 export enum Level {
     Trace = "TRACE",
     Debug = "DEBUG",

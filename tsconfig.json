@@ -1,20 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["esnext", "dom"],
-    "moduleResolution": "node",
-    "declaration": true,
-    "outDir": "./lib",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "strict": true,
-    "strictNullChecks": true
-  },
-  "include": [
-    "src/index.ts",
-    "src/loggerCore.ts",
-    "src/legacy/types.ts"
-  ],
-  "exclude": ["node_modules", "src/**/*.test.ts"]
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "lib": ["esnext", "dom"],
+        "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
+        "declaration": true,
+        "outDir": "./lib",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "strict": true,
+        "strictNullChecks": true
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "src/**/*-unit.ts"]
 }

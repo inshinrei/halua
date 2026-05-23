@@ -1,19 +1,37 @@
 {
     "name": "halua",
     "version": "3.0.0",
-    "description": "Package that takes control of logging, metrics and other stuff",
+    "description": "Tiny zero-dependency logger with pluggable dispatchers, child contexts, minor levels (e.g. INFO+5) and safe formatting",
     "type": "module",
-    "main": "lib/index.js",
-    "module": "lib/index.cjs",
+    "main": "lib/index.cjs",
+    "module": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./lib/index.d.ts",
+                "default": "./lib/index.js"
+            },
+            "require": {
+                "types": "./lib/index.d.ts",
+                "default": "./lib/index.cjs"
+            }
+        }
+    },
     "files": [
-        "lib"
+        "lib",
+        "README.md",
+        "LICENSE"
     ],
     "scripts": {
         "test": "vitest",
-        "bench": "node benchmarks/main_bench.js",
-        "build": "tsup",
-        "prepare": "pnpm run test run && pnpm run build",
+        "dev": "vitest",
+        "bench": "node benchmarks/main-bench.js",
+        "build": "vite build",
+        "prepare": "pnpm run lint && pnpm run test run && pnpm run build",
+        "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\"",
+        "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"",
+        "lint": "pnpm run format:check",
         "postversion": "git push && git push --tags"
     },
     "repository": {
@@ -35,13 +53,14 @@
     },
     "homepage": "https://github.com/inshinrei/halua#readme",
     "devDependencies": {
-        "@types/node": "^24.9.1",
-        "prettier": "^3.6.1",
-        "tinybench": "^5.0.0",
-        "ts-node": "^10.9.2",
-        "tsup": "^8.5.0",
-        "typescript": "^5.8.3",
-        "vitest": "^3.2.4"
+        "@types/node": "25.9.1",
+        "prettier": "3.8.3",
+        "tinybench": "6.0.2",
+        "ts-node": "10.9.2",
+        "typescript": "6.0.3",
+        "vite": "6.4.2",
+        "vite-plugin-dts": "4.5.4",
+        "vitest": "4.1.7"
     },
     "publishConfig": {
         "access": "public"

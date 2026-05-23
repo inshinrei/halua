@@ -1,17 +1,25 @@
 import { Halua } from "./main/halua"
-import { NewConsoleHandler } from "./main/handlers/ConsoleHandler"
+import { NewConsoleDispatcher } from "./main/dispatchers/console-dispatcher"
+import { NewConsoleColoredDispatcher } from "./main/dispatchers/console-colored-dispatcher"
 
-let logConsole: Console | null = null
-try {
-    logConsole = typeof self !== "undefined" ? self.console : console
-} catch (_) {}
+const logConsole: Console | null = (() => {
+    try {
+        return typeof self !== "undefined" ? self.console : console
+    } catch (_) {
+        return null
+    }
+})()
 
-export const halua = new Halua(logConsole ? NewConsoleHandler(logConsole) : [])
+export const halua = new Halua(logConsole ? NewConsoleDispatcher(logConsole) : [])
 
-export type { Handler } from "./main/handlers/types"
+export type { Dispatcher, ConsoleLike } from "./main/dispatchers/dispatcher-types"
 export type { HaluaLogger } from "./main/types"
 
 export { Level } from "./types/log"
-export { NewConsoleHandler }
-export { NewJSONHandler } from "./main/handlers/JSONHandler"
-export { NewTextHandler } from "./main/handlers/TextHandler"
+export { NewConsoleDispatcher, NewConsoleColoredDispatcher }
+export { NewJSONDispatcher } from "./main/dispatchers/json-dispatcher"
+export { NewTextDispatcher } from "./main/dispatchers/text-dispatcher"
+
+export { DispatcherBase } from "./main/dispatchers/dispatcher-base"
+export { format, toJSONValue, redact, DefaultRedactRegExp } from "./main/format"
+export { getType } from "./main/get-type"
