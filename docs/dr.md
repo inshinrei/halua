@@ -1,4 +1,4 @@
-Next release: patch
+Next release: minor
 
 ### Fix empty `lib/index.d.ts` after v4.0.0 source rename (build / publishing fix)
 
