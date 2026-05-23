@@ -10,6 +10,7 @@ export class Halua implements HaluaLogger {
     private readonly passedDispatchers: PassedDispatcher = []
     private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
+    private stamps: Map<any, { label: string; start: number }> = new Map()
 
     constructor(
         passed: PassedDispatcher,
@@ -86,6 +87,43 @@ export class Halua implements HaluaLogger {
         this.sendToBalancer(Level.Error, args)
     }
 
+    stamp(label: string, id?: any): () => void {
+        let start = performance.now()
+        if (id != null) {
+            this.stamps.set(id, { label, start })
+        }
+        let ended = false
+        const ender = () => {
+            if (ended) {
+                return
+            }
+            ended = true
+            if (id != null) {
+                let current = this.stamps.get(id)
+                if (current && current.start === start) {
+                    this.stamps.delete(id)
+                }
+            }
+            this.endStamp(label, start)
+        }
+        return ender
+    }
+
+    stampEnd(id: any): void {
+        let entry = this.stamps.get(id)
+        if (!entry) {
+            return
+        }
+        this.stamps.delete(id)
+        this.endStamp(entry.label, entry.start)
+    }
+
+    private endStamp(label: string, start: number): void {
+        let duration = performance.now() - start
+        let ms = duration.toFixed(2)
+        this.info(label, `took ${ms}ms`)
+    }
+
     private updateBalancer() {
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
     }
@@ -133,6 +171,9 @@ export class Halua implements HaluaLogger {
         this.error = this.error.bind(this)
         this.fatal = this.fatal.bind(this)
         this.assert = this.assert.bind(this)
+
+        this.stamp = this.stamp.bind(this)
+        this.stampEnd = this.stampEnd.bind(this)
 
         this.supposeIsDispatcher = this.supposeIsDispatcher.bind(this)
     }

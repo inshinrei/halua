@@ -48,6 +48,9 @@ export interface HaluaLogger {
     error: (...args: any[]) => void
     fatal: (...args: any[]) => void
     assert: (assertion: boolean, ...args: any[]) => void
+
+    stamp: (label: string, id?: any) => () => void
+    stampEnd: (id: any) => void
 }
 
 export interface HaluaOptions {

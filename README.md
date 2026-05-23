@@ -17,6 +17,7 @@ Halua gives you full control over log output through pluggable dispatchers (text
 - Per-dispatcher level overrides and exact-match mode
 - Beautiful structured formatting for objects, arrays, Maps, Sets, Errors, etc.
 - Safe by design — dispatcher errors never crash your application
+- `.stamp(label, id?)` + `.stampEnd(id)` (or returned ender) for `performance.now`-based timing with automatic pretty `took X.XXms` logging
 - Tiny, fast, tree-shakeable ESM + CJS + TypeScript
 
 ## Installation
@@ -180,6 +181,8 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger }
 | `.logTo(level, ...args)`                                               | Log at a custom / minor level                                            |
 | `.trace / .debug / .info / .warn / .notice / .error / .fatal(...args)` | Standard levels                                                          |
 | `.assert(condition, ...args)`                                          | Log at ERROR level only when `condition` is falsy                        |
+| `.stamp(label, id?)`                                                   | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd` |
+| `.stampEnd(id)`                                                        | End named stamp started with same id on this logger; logs pretty `label took X.XXms` |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 

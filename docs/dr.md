@@ -1,4 +1,14 @@
-Next release: major
+Next release: minor
+
+### Performance stamping API (`.stamp` / `.stampEnd`)
+
+- Added `.stamp(label: string, id?: any)` and `.stampEnd(id: any)` to the `HaluaLogger` interface (and thus to `halua` and all created/child loggers).
+- `.stamp` records a `performance.now()` start (optionally under a caller-chosen id key) and returns a zero-arg ender function.
+- Calling the returned ender or `.stampEnd(id)` computes the delta, deletes the entry (for named), and emits via `.info(label, `took ${ms}ms`)` so it flows through normal level filtering, child context (`withArgs`), and all dispatchers.
+- Named ids are per-logger-instance (child loggers have isolated stamp maps); the returned ender closes over its originating logger and start time for correct context and one-shot semantics.
+- Idempotent enders / repeated `stampEnd` are safe (subsequent calls are no-ops).
+- Added e2e test coverage in `index_unit.ts`; no changes to dispatch protocol, levels, or formatting.
+- This is a pure additive, non-breaking feature (minor release). Overwrites of in-flight same-id stamps are last-writer-wins for the map (ender still uses its captured start).
 
 ### Dispatcher terminology rename (breaking public API change)
 

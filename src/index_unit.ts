@@ -299,4 +299,44 @@ describe("Halua logger e2e usage", () => {
         expect(good.length).toBe(1)
         expect(good[0]).toMatch(/INFO reaches good dispatcher/)
     })
+
+    test("stamp and stampEnd log pretty duration diffs using performance.now", () => {
+        let captured: string[] = []
+
+        let logger = halua.create(
+            NewTextDispatcher((line) => {
+                captured.push(line)
+            }),
+        )
+
+        // returned ender fn
+        let end1 = logger.stamp("sync work")
+        end1()
+
+        expect(captured.length).toBe(1)
+        expect(captured[0]).toMatch(/INFO sync work took \d+\.\d{2}ms/)
+
+        // named id + stampEnd
+        let end2 = logger.stamp("db query", "q1")
+        logger.stampEnd("q1")
+
+        expect(captured.length).toBe(2)
+        expect(captured[1]).toMatch(/INFO db query took \d+\.\d{2}ms/)
+
+        // unknown id does nothing
+        logger.stampEnd("nope")
+        expect(captured.length).toBe(2)
+
+        // child context is carried in stamp log
+        let req = logger.child("reqId", "abc-9")
+        let endReq = req.stamp("child op", "c1")
+        endReq()
+        expect(captured.length).toBe(3)
+        expect(captured[2]).toMatch(/INFO child op took \d+\.\d{2}ms/)
+        expect(captured[2]).toContain("reqId abc-9")
+
+        // ender is idempotent
+        end1()
+        expect(captured.length).toBe(3)
+    })
 })
