@@ -23,7 +23,9 @@ export default defineConfig({
     plugins: [
         dts({
             outDir: "lib",
-            rollupTypes: true,
+            bundleTypes: true,
+            entryRoot: "src",
+            tsconfigPath: "./tsconfig.json",
         }),
         copyModuleAgentsPlugin,
     ],

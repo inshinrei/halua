@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import type { ConsoleDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./dispatcher-types"
 import { DispatcherBase } from "./dispatcher-base"
 import { prepareDispatchArgs, routeConsoleCall } from "./dispatcher-types"
