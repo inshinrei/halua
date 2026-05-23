@@ -1,4 +1,4 @@
-Next release: patch
+Next release: minor
 
 ### Update contributor `AGENTS.md` (documentation & style hygiene)
 
