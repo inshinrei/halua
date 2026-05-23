@@ -7,33 +7,33 @@ This document walks through real-world usage patterns beyond the quick start in 
 ## Production Application Setup Example
 
 ```ts
-import { halua, NewTextHandler, NewJSONHandler, NewConsoleHandler, Level } from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "halua"
 
 // In a real app you would have your own transport functions
-let handlers = [
+let dispatchers = [
     // High-volume structured logs -> compressed archive / object storage
-    NewJSONHandler(writeToZipArchive, { level: Level.Info }),
+    NewJSONDispatcher(writeToZipArchive, { level: Level.Info }),
 
     // Important events -> backend
-    NewTextHandler(sendToServer, { level: Level.Notice }),
+    NewTextDispatcher(sendToServer, { level: Level.Notice }),
 
     // User analytics on a dedicated minor level so you can filter easily
-    NewTextHandler(sendUserAction, { level: "INFO+1" }),
+    NewTextDispatcher(sendUserAction, { level: "INFO+1" }),
 
     // Critical errors -> error tracking (Sentry, etc.)
-    NewTextHandler(sendToErrorMonitoring, { level: Level.Error }),
+    NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }),
 ]
 
 // Add pretty console output only in development
 if (process.env.NODE_ENV !== "production") {
-    handlers.push(NewConsoleHandler(console))
+    dispatchers.push(NewConsoleDispatcher(console))
 }
 
 // Create the root logger for the whole application
-let appLogger = halua.create(handlers, { level: Level.Info })
+let appLogger = halua.create(dispatchers, { level: Level.Info })
 
-// Later you can still mutate handlers if needed
-// appLogger.appendHandlers(NewJSONHandler(anotherDestination))
+// Later you can still mutate dispatchers if needed
+// appLogger.appendDispatchers(NewJSONDispatcher(anotherDestination))
 ```
 
 ## Basic Logging Methods
@@ -56,25 +56,25 @@ halua.assert(user != null, "user must exist") // logs at ERROR if false
 `.create(...)` is the main way to obtain new logger instances.
 
 ```ts
-import { halua, NewTextHandler, NewJSONHandler, Level } from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
 
-let fileLogger = halua.create(NewTextHandler(appendToFile), {
+let fileLogger = halua.create(NewTextDispatcher(appendToFile), {
     level: Level.Warn,
 })
 
-let jsonMetrics = halua.create(NewJSONHandler(postToCollector), {
+let jsonMetrics = halua.create(NewJSONDispatcher(postToCollector), {
     level: Level.Info,
 })
 
-// Combine previous handlers with new options
+// Combine previous dispatchers with new options
 let debugFileLogger = fileLogger.create({ level: Level.Debug })
 ```
 
-You can also create a logger from another handler while keeping previous options:
+You can also create a logger from another dispatcher while keeping previous options:
 
 ```ts
-let base = halua.create(NewTextHandler(send))
-let jsonVersion = base.create(NewJSONHandler(send))
+let base = halua.create(NewTextDispatcher(send))
+let jsonVersion = base.create(NewJSONDispatcher(send))
 ```
 
 ## Child Loggers & Structured Context
@@ -115,10 +115,10 @@ logger.logTo("INFO+3", "borderline") // emitted
 logger.logTo("NOTICE", "higher") // emitted (major wins)
 ```
 
-You can also set `exact` on a handler to bypass the hierarchy completely (useful for dedicated channels):
+You can also set `exact` on a dispatcher to bypass the hierarchy completely (useful for dedicated channels):
 
 ```ts
-NewTextHandler(sendAudit, { exact: ["AUDIT", "SECURITY"] })
+NewTextDispatcher(sendAudit, { exact: ["AUDIT", "SECURITY"] })
 ```
 
 ## Formatting Behavior
@@ -130,13 +130,13 @@ Halua produces rich, readable output for complex values:
 - `Map` / `Set` / `Date` / typed arrays / functions are described intelligently
 - `WeakMap` / `WeakSet` / `ArrayBuffer` show as inaccessible (they can't be serialized safely)
 
-JSON handler produces a single-line JSON-ish object (not strict `JSON.stringify`) optimized for log shippers.
+JSON dispatcher produces a single-line JSON-ish object (not strict `JSON.stringify`) optimized for log shippers.
 
 ## Error Safety
 
 ```ts
 let bad = halua.create(
-    NewTextHandler(() => {
+    NewTextDispatcher(() => {
         throw new Error("boom")
     }),
 )
@@ -144,24 +144,24 @@ let bad = halua.create(
 bad.info("this will not crash the process")
 ```
 
-The failure is reported to `console.error` (best effort) and other handlers continue working.
+The failure is reported to `console.error` (best effort) and other dispatchers continue working.
 
 ## When to Use What
 
 | Use Case                | Recommended Approach                   |
 | ----------------------- | -------------------------------------- |
-| Local dev / CLI         | Default `halua` or `NewConsoleHandler` |
-| Server file logs        | `NewTextHandler` + rotation lib        |
-| Cloud / SIEM / ELK      | `NewJSONHandler`                       |
-| Multiple destinations   | Array of handlers + per-handler levels |
+| Local dev / CLI         | Default `halua` or `NewConsoleDispatcher` |
+| Server file logs        | `NewTextDispatcher` + rotation lib        |
+| Cloud / SIEM / ELK      | `NewJSONDispatcher`                       |
+| Multiple destinations   | Array of dispatchers + per-dispatcher levels |
 | Request tracing         | `.child(...)` everywhere               |
 | Sampling / feature logs | Minor levels (`INFO+10`, etc.)         |
-| Audit / security only   | Handler with `exact: [...]`            |
+| Audit / security only   | Dispatcher with `exact: [...]`            |
 
 ## Further Reading
 
 - [README](../README.md) — installation, API table, quick reference
 - `docs/dr.md` — architectural decision records
-- Source in `src/main/handlers/` — see `HandlerBase` + its `dispatch(meta, args)` (and the New\*Handler factories) if you need a custom transport
+- Source in `src/main/dispatchers/` — see `DispatcherBase` + its `dispatch(meta, args)` (and the New\*Dispatcher factories) if you need a custom transport
 
 Halua is intentionally small and explicit. Most applications only need a handful of logger instances created at startup.

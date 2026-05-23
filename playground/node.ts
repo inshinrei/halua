@@ -1,9 +1,9 @@
-import { halua, NewTextHandler, NewJSONHandler, NewConsoleHandler, Level } from "../src"
+import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "../src"
 
 console.log("=== Halua v3 Playground ===\n")
 
-// Default logger (preconfigured with NewConsoleHandler)
-halua.info("Application started with default console handler")
+// Default logger (preconfigured with NewConsoleDispatcher)
+halua.info("Application started with default console dispatcher")
 halua.warn("Disk space low", { available: "12%" })
 
 // Per AGENTS.md policy: use .error only with Error instance as first (and usually only) arg
@@ -12,7 +12,7 @@ halua.error(new Error("timeout"))
 // Dedicated Text logger (human readable, captures via send fn)
 let textLines: string[] = []
 let textLogger = halua.create(
-    NewTextHandler((line) => {
+    NewTextDispatcher((line) => {
         textLines.push(line)
         console.log("[TEXT]", line)
     }),
@@ -21,7 +21,7 @@ textLogger.info("user action", { id: 123, type: "click" })
 
 // JSON logger for structured
 let jsonLogger = halua.create(
-    NewJSONHandler((json) => {
+    NewJSONDispatcher((json) => {
         console.log("[JSON]", json)
     }),
 )
@@ -34,14 +34,14 @@ reqLogger.info("processing started")
 let stepLogger = reqLogger.child("step", "validate")
 stepLogger.warn("slow validation")
 
-// Level filtering + per-handler options
-let levelLogger = halua.create(NewConsoleHandler(console), { level: Level.Warn })
+// Level filtering + per-dispatcher options
+let levelLogger = halua.create(NewConsoleDispatcher(console), { level: Level.Warn })
 levelLogger.debug("hidden (below level)")
 levelLogger.warn("visible at WARN")
 
 // Minor / custom levels (INFO+ N)
 let minorLogger = halua.create(
-    NewTextHandler((l) => console.log("[MINOR]", l)),
+    NewTextDispatcher((l) => console.log("[MINOR]", l)),
     {
         level: `${Level.Info}+2`,
     },
@@ -53,11 +53,11 @@ minorLogger.logTo("INFO+3", "important")
 // assert only logs on failure at ERROR
 halua.assert(2 + 2 === 5, "math still works?") // will log
 
-// Multi-handler example
+// Multi-dispatcher example
 let multi = halua.create([
-    NewTextHandler((l) => console.log("[MULTI-TEXT]", l)),
-    NewJSONHandler((j) => console.log("[MULTI-JSON]", j)),
+    NewTextDispatcher((l) => console.log("[MULTI-TEXT]", l)),
+    NewJSONDispatcher((j) => console.log("[MULTI-JSON]", j)),
 ])
-multi.notice("both handlers fired")
+multi.notice("both dispatchers fired")
 
 console.log("\n=== Playground complete (textLines captured:", textLines.length, ") ===")

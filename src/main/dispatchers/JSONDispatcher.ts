@@ -1,18 +1,18 @@
 import type { LogLevel } from "../../types/log"
-import { HandlerBase, SendMethod } from "./HandlerBase"
+import { DispatcherBase, SendMethod } from "./DispatcherBase"
 import { toJSONValue } from "../format"
-import type { BaseHandlerOptions, HandlerExecuteMeta } from "./types"
+import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { toarray } from "../util/cast"
 
-interface JSONLogHandlerOptions extends BaseHandlerOptions {}
+interface JSONLogDispatcherOptions extends BaseDispatcherOptions {}
 
-export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHandlerOptions) {
+export function NewJSONDispatcher(send: (data: string) => void, options?: JSONLogDispatcherOptions) {
     return () =>
-        new (class JSONHandler extends HandlerBase {
+        new (class JSONDispatcher extends DispatcherBase {
             public level: LogLevel | undefined
             public exact: Array<LogLevel> | null = null
 
-            constructor(send: SendMethod, options: JSONLogHandlerOptions = {}) {
+            constructor(send: SendMethod, options: JSONLogDispatcherOptions = {}) {
                 super(send)
 
                 this.applyOptionalOptions(options)
@@ -20,7 +20,7 @@ export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHa
                 this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
-            public dispatch(meta: HandlerExecuteMeta, args: any[]): void {
+            public dispatch(meta: DispatcherExecuteMeta, args: any[]): void {
                 let obj: any = {}
                 if (this.printTimestamp) {
                     obj.timestamp = this.formatTimestamp(meta.timestamp)
@@ -37,7 +37,7 @@ export function NewJSONHandler(send: (data: string) => void, options?: JSONLogHa
                 return new Date(t).toISOString()
             }
 
-            applyOptionalOptions(options: JSONLogHandlerOptions) {
+            applyOptionalOptions(options: JSONLogDispatcherOptions) {
                 this.printTimestamp = options.printTimestamp ?? true
                 this.printLevel = options.printLevel ?? true
             }

@@ -70,32 +70,32 @@ benchmarks.
 
 ## Architecture Notes (Expert Mode)
 
-Halua's core is intentionally small and uses a simple synchronous `dispatch(meta: HandlerExecuteMeta, args: any[]): void`
-protocol between `HandlersBalancer` and `Handler` implementations (see `HandlerBase` default). The generator streaming
+Halua's core is intentionally small and uses a simple synchronous `dispatch(meta: DispatcherExecuteMeta, args: any[]): void`
+protocol between `DispatchersBalancer` and `Dispatcher` implementations (see `DispatcherBase` default). The generator streaming
 protocol was removed in v3 (see `docs/dr.md`) in favor of readability and lower allocations.
 
-- Do **not** introduce heavy abstractions or middleware layers on top of the balancer/handler model without strong
+- Do **not** introduce heavy abstractions or middleware layers on top of the balancer/dispatcher model without strong
   justification.
 - The level system (major + minor via `LEVEL+N` syntax) is powerful — keep the `extractLevels` + `MajorLevelMap` logic
   simple and well tested.
-- Error paths must never throw to user code; all handler failures are routed through `tryReportAnError`.
-- When considering new handler types (e.g. file handlers, remote), design them as `NewXxxHandler(...)` factories
-  returning `() => Handler` (see `NewTextHandler` etc. for the pattern).
+- Error paths must never throw to user code; all dispatcher failures are routed through `tryReportAnError`.
+- When considering new dispatcher types (e.g. file dispatchers, remote), design them as `NewXxxDispatcher(...)` factories
+  returning `() => Dispatcher` (see `NewTextDispatcher` etc. for the pattern).
 
-## Custom Handlers
+## Custom Dispatchers
 
-Implementing a raw `Handler` (providing `dispatch(meta, args)`) is advanced. Prefer extending `HandlerBase` and using
+Implementing a raw `Dispatcher` (providing `dispatch(meta, args)`) is advanced. Prefer extending `DispatcherBase` and using
 the exported `format` + `getType` (for text) or `toJSONValue` (for structured) to replicate built-in behavior exactly.
 
-See `NewTextHandler` / `NewJSONHandler` source for the exact `class extends HandlerBase` + `this.formatArg = ...` pattern.
-The public re-exports (`HandlerBase`, `format`, `getType`, `toJSONValue`) make custom handlers practical.
+See `NewTextDispatcher` / `NewJSONDispatcher` source for the exact `class extends DispatcherBase` + `this.formatArg = ...` pattern.
+The public re-exports (`DispatcherBase`, `format`, `getType`, `toJSONValue`) make custom dispatchers practical.
 
-If you design a new public handler, export a `New*Handler` factory and update both README and the tour document.
+If you design a new public dispatcher, export a `New*Dispatcher` factory and update both README and the tour document.
 
 ## Testing
 
 - Unit tests live next to source as `*_unit.ts` (Vitest).
-- Add tests for any new formatting, level, or handler behavior.
+- Add tests for any new formatting, level, or dispatcher behavior.
 - The `format` and `getType` functions are the most critical pieces — they must handle every `ArgumentType` correctly
   for both text and JSON paths.
 

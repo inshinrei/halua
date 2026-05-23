@@ -1,5 +1,5 @@
 import { LogLevel } from "../types/log"
-import { Handler } from "./handlers/types"
+import { Dispatcher } from "./dispatchers/DispatcherTypes"
 
 export type ArgumentType =
     | "undefined"
@@ -30,14 +30,14 @@ export interface Argument {
 
 export interface HaluaLogger {
     create: {
-        (handler: PassedHandler): HaluaLogger
+        (dispatcher: PassedDispatcher): HaluaLogger
         (options: HaluaOptions): HaluaLogger
-        (arg1?: PassedHandler | HaluaOptions, options?: HaluaOptions): HaluaLogger
+        (arg1?: PassedDispatcher | HaluaOptions, options?: HaluaOptions): HaluaLogger
     }
     child: (...args: any[]) => HaluaLogger
 
-    setHandlers: (handler: PassedHandler) => void
-    appendHandlers: (handler: PassedHandler) => void
+    setDispatchers: (dispatcher: PassedDispatcher) => void
+    appendDispatchers: (dispatcher: PassedDispatcher) => void
 
     logTo: (level: LogLevel, ...args: any[]) => void
     trace: (...args: any[]) => void
@@ -55,4 +55,4 @@ export interface HaluaOptions {
     withArgs?: Array<any>
 }
 
-export type PassedHandler = (() => Handler) | Array<() => Handler>
+export type PassedDispatcher = (() => Dispatcher) | Array<() => Dispatcher>

@@ -1,5 +1,5 @@
-import { BaseHandlerOptions, HandlerExecuteMeta } from "./types"
-import { HandlerBase } from "./HandlerBase"
+import { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
+import { DispatcherBase } from "./DispatcherBase"
 import { LogLevel } from "../../types/log"
 import { toarray } from "../util/cast"
 
@@ -10,17 +10,17 @@ interface OutputConsole {
     error: (...args: any[]) => void
 }
 
-interface ConsoleHandlerOptions extends Omit<BaseHandlerOptions, "spacing"> {}
+interface ConsoleDispatcherOptions extends Omit<BaseDispatcherOptions, "spacing"> {}
 
-export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandlerOptions) {
+export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDispatcherOptions) {
     return () =>
-        new (class ConsoleHandler extends HandlerBase {
+        new (class ConsoleDispatcher extends DispatcherBase {
             public level: LogLevel | undefined
             public exact: Array<LogLevel> | null = null
 
             constructor(
                 readonly console: OutputConsole,
-                options: ConsoleHandlerOptions = {},
+                options: ConsoleDispatcherOptions = {},
             ) {
                 super()
 
@@ -29,12 +29,12 @@ export function NewConsoleHandler(console: OutputConsole, options?: ConsoleHandl
                 this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
-            applyOptionalOptions(options: ConsoleHandlerOptions) {
+            applyOptionalOptions(options: ConsoleDispatcherOptions) {
                 this.printTimestamp = options.printTimestamp ?? true
                 this.printLevel = options.printLevel ?? true
             }
 
-            public dispatch(meta: HandlerExecuteMeta, rawArgs: any[]): void {
+            public dispatch(meta: DispatcherExecuteMeta, rawArgs: any[]): void {
                 let args: Array<any> = []
 
                 if (this.printTimestamp) {

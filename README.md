@@ -2,7 +2,7 @@
 
 **A powerful, extensible logging library for Node.js, browsers, and edge runtimes.**
 
-Halua gives you full control over log output through pluggable handlers (text, JSON, console), hierarchical child loggers, fine-grained level filtering (including minor levels like `INFO+3`), and zero-config defaults that just work.
+Halua gives you full control over log output through pluggable dispatchers (text, JSON, console), hierarchical child loggers, fine-grained level filtering (including minor levels like `INFO+3`), and zero-config defaults that just work.
 
 [![npm version](https://img.shields.io/npm/v/halua.svg)](https://www.npmjs.com/package/halua)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,13 +10,13 @@ Halua gives you full control over log output through pluggable handlers (text, J
 ## Features
 
 - Zero-config default logger (writes to `console` using appropriate methods)
-- Three built-in handlers: `NewTextHandler`, `NewJSONHandler`, `NewConsoleHandler`
-- Compose any number of handlers per logger instance
+- Three built-in dispatchers: `NewTextDispatcher`, `NewJSONDispatcher`, `NewConsoleDispatcher`
+- Compose any number of dispatchers per logger instance
 - Child loggers that automatically append context (`logger.child("user", 42)`)
 - Powerful level system: `TRACE` < `DEBUG` < `INFO` < `NOTICE` < `WARN` < `ERROR` < `FATAL` + minor levels (`INFO+5`)
-- Per-handler level overrides and exact-match mode
+- Per-dispatcher level overrides and exact-match mode
 - Beautiful structured formatting for objects, arrays, Maps, Sets, Errors, etc.
-- Safe by design — handler errors never crash your application
+- Safe by design — dispatcher errors never crash your application
 - Tiny, fast, tree-shakeable ESM + CJS + TypeScript
 
 ## Installation
@@ -46,21 +46,21 @@ halua.error(new Error("timeout"))
     at ...
 ```
 
-## Dedicated Loggers & Handlers
+## Dedicated Loggers & Dispatchers
 
-Use the built-in handler factories to create purpose-specific loggers:
+Use the built-in dispatcher factories to create purpose-specific loggers:
 
 ```ts
-import { halua, NewTextHandler, NewJSONHandler, Level } from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
 
 // Text logger (human readable)
-let textLogger = halua.create(NewTextHandler((line) => sendToLogServer(line)))
+let textLogger = halua.create(NewTextDispatcher((line) => sendToLogServer(line)))
 
 // JSON logger (for structured ingestion)
-let jsonLogger = halua.create(NewJSONHandler((json) => writeToArchive(json)))
+let jsonLogger = halua.create(NewJSONDispatcher((json) => writeToArchive(json)))
 
 // Console logger (explicit)
-let consoleLogger = halua.create(NewConsoleHandler(console))
+let consoleLogger = halua.create(NewConsoleDispatcher(console))
 
 textLogger.info("user action", { id: 123, type: "click" })
 // -> 22/05/2026 21:55:50 INFO user action { id: 123, type: "click" }
@@ -69,10 +69,10 @@ jsonLogger.info("structured", { success: true })
 // -> {"timestamp":"2026-05-22T18:55:50.430Z","level":"INFO","args":["structured",{"success": true}]}
 ```
 
-You can pass an array to use **multiple handlers at once**:
+You can pass an array to use **multiple dispatchers at once**:
 
 ```ts
-let prodLogger = halua.create([NewTextHandler(sendToFile), NewJSONHandler(sendToElastic)], { level: Level.Info })
+let prodLogger = halua.create([NewTextDispatcher(sendToFile), NewJSONDispatcher(sendToElastic)], { level: Level.Info })
 ```
 
 ## Child Loggers (Context)
@@ -95,7 +95,7 @@ Call `.create({ withArgs: [] })` to clear context on a child.
 ```ts
 import { Level } from "halua"
 
-// Instance level (affects all handlers that don't override)
+// Instance level (affects all dispatchers that don't override)
 let logger = halua.create({ level: Level.Warn })
 
 logger.debug("hidden")
@@ -104,12 +104,12 @@ logger.warn("visible")
 logger.error("visible")
 ```
 
-### Per-Handler Levels
+### Per-Dispatcher Levels
 
 ```ts
 let logger = halua.create([
-    NewTextHandler(sendToFile, { level: Level.Info }),
-    NewJSONHandler(sendToMetrics, { level: Level.Error }),
+    NewTextDispatcher(sendToFile, { level: Level.Info }),
+    NewJSONDispatcher(sendToMetrics, { level: Level.Error }),
 ])
 ```
 
@@ -118,7 +118,7 @@ let logger = halua.create([
 Use the `LEVEL+N` syntax for fine-grained control (e.g. sampling, feature flags):
 
 ```ts
-let logger = halua.create(NewTextHandler(out), { level: `${Level.Info}+2` })
+let logger = halua.create(NewTextDispatcher(out), { level: `${Level.Info}+2` })
 
 logger.logTo("INFO+1", "sampled out")
 logger.logTo("INFO+2", "important info") // logged
@@ -128,55 +128,55 @@ logger.logTo("WARN", "always higher major level") // logged
 
 You can also pass string levels directly: `{ level: "ERROR+7" }` or `logTo("DEBUG+10", ...)`.
 
-## Handler Options
+## Dispatcher Options
 
-All `New*Handler` factories accept a second `options` argument:
+All `New*Dispatcher` factories accept a second `options` argument:
 
 | Option           | Type                     | Default     | Description                                                         |
 | ---------------- | ------------------------ | ----------- | ------------------------------------------------------------------- |
-| `level`          | `LogLevel`               | `undefined` | Minimum level this handler accepts                                  |
+| `level`          | `LogLevel`               | `undefined` | Minimum level this dispatcher accepts                                  |
 | `exact`          | `LogLevel \| LogLevel[]` | `null`      | Only log these exact levels (ignores normal hierarchy)              |
 | `printTimestamp` | `boolean`                | `true`      | Include timestamp in output                                         |
 | `printLevel`     | `boolean`                | `true`      | Include level name in output                                        |
 | `spacing`        | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only) |
 
-`NewConsoleHandler` does not support `spacing` (it passes values directly to console methods).
+`NewConsoleDispatcher` does not support `spacing` (it passes values directly to console methods).
 
 ## API Reference
 
 ### Main Export
 
 ```ts
-import { halua, Level, NewTextHandler, NewJSONHandler, NewConsoleHandler } from "halua"
+import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher } from "halua"
 ```
 
-- `halua` — default logger instance (preconfigured with `NewConsoleHandler`)
+- `halua` — default logger instance (preconfigured with `NewConsoleDispatcher`)
 - `Level` — enum: `Trace | Debug | Info | Notice | Warn | Error | Fatal`
-- `NewTextHandler(send: (line: string) => void, options?)` → factory
-- `NewJSONHandler(send: (json: string) => void, options?)` → factory
-- `NewConsoleHandler(console: {debug,info,warn,error}, options?)` → factory
+- `NewTextDispatcher(send: (line: string) => void, options?)` → factory
+- `NewJSONDispatcher(send: (json: string) => void, options?)` → factory
+- `NewConsoleDispatcher(console: {debug,info,warn,error}, options?)` → factory
 
-### Advanced Exports (for custom handler authors)
+### Advanced Exports (for custom dispatcher authors)
 
 ```ts
-import { HandlerBase, format, getType, toJSONValue, Handler, HaluaLogger } from "halua"
+import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger } from "halua"
 ```
 
-- `HandlerBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via `formatArg`
+- `DispatcherBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via `formatArg`
 - `format(spec: {type, value, ...})` — the text pretty-printer (handles circulars, Errors, Maps, etc.)
 - `getType(value)` — returns `ArgumentType` discriminant for any JS value
 - `toJSONValue(value)` — converts any value to a JSON-legal tree (Errors → {name,message,stack[]}, etc.)
-- `Handler` — interface for raw custom handlers (`dispatch(meta, args): void`)
+- `Dispatcher` — interface for raw custom dispatchers (`dispatch(meta, args): void`)
 - `HaluaLogger` — the logger instance interface
 
 ### Logger Instance Methods
 
 | Method                                                                 | Description                                                              |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `.create(handler?, options?)`                                          | Create a new independent logger (inherits handlers/options when partial) |
+| `.create(dispatcher?, options?)`                                          | Create a new independent logger (inherits dispatchers/options when partial) |
 | `.child(...args)`                                                      | Create child logger that appends context to every message                |
-| `.setHandlers(handler \| handlers[])`                                  | Replace all handlers                                                     |
-| `.appendHandlers(...)`                                                 | Add more handlers to existing set                                        |
+| `.setDispatchers(dispatcher \| dispatchers[])`                                  | Replace all dispatchers                                                     |
+| `.appendDispatchers(...)`                                                 | Add more dispatchers to existing set                                        |
 | `.logTo(level, ...args)`                                               | Log at a custom / minor level                                            |
 | `.trace / .debug / .info / .warn / .notice / .error / .fatal(...args)` | Standard levels                                                          |
 | `.assert(condition, ...args)`                                          | Log at ERROR level only when `condition` is falsy                        |
@@ -185,18 +185,18 @@ Every method returns a new `HaluaLogger` when using `.create` / `.child`, so the
 
 ## Error Handling
 
-Halua never throws from logging calls. If a handler fails, the error is reported via `console.error` (best-effort) and logging continues for other handlers.
+Halua never throws from logging calls. If a dispatcher fails, the error is reported via `console.error` (best-effort) and logging continues for other dispatchers.
 
-## Advanced / Custom Handlers
+## Advanced / Custom Dispatchers
 
-Extend `HandlerBase` (and set `formatArg` using the exported `format` + `getType`, or `toJSONValue` for structured) to write custom handlers for files, remote services, pretty printers, etc.
+Extend `DispatcherBase` (and set `formatArg` using the exported `format` + `getType`, or `toJSONValue` for structured) to write custom dispatchers for files, remote services, pretty printers, etc.
 
 ```ts
-import { halua, HandlerBase, format, getType, toJSONValue, NewTextHandler } from "halua"
+import { halua, DispatcherBase, format, getType, toJSONValue, NewTextDispatcher } from "halua"
 
-function NewFileHandler(sendLine) {
+function NewFileDispatcher(sendLine) {
     return () =>
-        new (class FileHandler extends HandlerBase {
+        new (class FileDispatcher extends DispatcherBase {
             constructor(send) {
                 super(send)
                 this.formatArg = (v) => format({ type: getType(v), value: v }, /*spacing*/ true)
@@ -204,14 +204,14 @@ function NewFileHandler(sendLine) {
         })(sendLine)
 }
 
-let fileLogger = halua.create(NewFileHandler(appendToFile))
+let fileLogger = halua.create(NewFileDispatcher(appendToFile))
 ```
 
-The `Handler` interface (`dispatch(meta, args)`) + `HandlerBase` + `format`/`getType`/`toJSONValue` are the public extension surface. See `src/main/handlers/TextHandler.ts`, `JSONHandler.ts` for reference implementations.
+The `Dispatcher` interface (`dispatch(meta, args)`) + `DispatcherBase` + `format`/`getType`/`toJSONValue` are the public extension surface. See `src/main/dispatchers/TextDispatcher.ts`, `JSONDispatcher.ts` for reference implementations.
 
-**Semver note for custom handlers**: `Handler`, `dispatch`, `HandlerBase`, and the formatter trio are stable within a major version. Changes that would break existing custom `Handler` implementations are released only as majors and recorded in `docs/dr.md`.
+**Semver note for custom dispatchers**: `Dispatcher`, `dispatch`, `DispatcherBase`, and the formatter trio are stable within a major version. Changes that would break existing custom `Dispatcher` implementations are released only as majors and recorded in `docs/dr.md`.
 
-For most use cases the three built-in handlers are sufficient.
+For most use cases the three built-in dispatchers are sufficient.
 
 ## TypeScript
 

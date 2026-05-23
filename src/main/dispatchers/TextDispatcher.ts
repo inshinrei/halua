@@ -1,19 +1,19 @@
-import { HandlerBase, SendMethod } from "./HandlerBase"
+import { DispatcherBase, SendMethod } from "./DispatcherBase"
 import { LogLevel } from "../../types/log"
 import { format } from "../format"
 import { getType } from "../getType"
 import { toarray } from "../util/cast"
-import { BaseHandlerOptions } from "./types"
+import { BaseDispatcherOptions } from "./DispatcherTypes"
 
-interface TextLogHandlerOptions extends BaseHandlerOptions {}
+interface TextLogDispatcherOptions extends BaseDispatcherOptions {}
 
-export function NewTextHandler(send: (data: string) => void, options?: TextLogHandlerOptions) {
+export function NewTextDispatcher(send: (data: string) => void, options?: TextLogDispatcherOptions) {
     return () =>
-        new (class TextHandler extends HandlerBase {
+        new (class TextDispatcher extends DispatcherBase {
             public level: LogLevel | undefined
             public exact: Array<LogLevel> | null = null
 
-            constructor(send: SendMethod, options: TextLogHandlerOptions = {}) {
+            constructor(send: SendMethod, options: TextLogDispatcherOptions = {}) {
                 super(send)
 
                 this.applyOptionalOptions(options)
@@ -23,7 +23,7 @@ export function NewTextHandler(send: (data: string) => void, options?: TextLogHa
                 this.formatArg = (value: any) => format({ type: getType(value), value }, options.spacing)
             }
 
-            applyOptionalOptions(options: TextLogHandlerOptions) {
+            applyOptionalOptions(options: TextLogDispatcherOptions) {
                 this.printTimestamp = options.printTimestamp ?? true
                 this.printLevel = options.printLevel ?? true
             }

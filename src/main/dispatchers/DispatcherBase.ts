@@ -1,9 +1,9 @@
-import type { Handler, HandlerExecuteMeta } from "./types"
+import type { Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { LogLevel } from "../../types/log"
 
 export type SendMethod = (data: string) => void
 
-export class HandlerBase implements Handler {
+export class DispatcherBase implements Dispatcher {
     public sendMethod: SendMethod
     public formatArg: ((value: any) => any) | undefined = undefined
 
@@ -21,7 +21,7 @@ export class HandlerBase implements Handler {
         this.sendMethod = send ?? (() => {})
     }
 
-    public dispatch(meta: HandlerExecuteMeta, args: any[]): void {
+    public dispatch(meta: DispatcherExecuteMeta, args: any[]): void {
         let parts: any[] = []
 
         if (this.printTimestamp) {

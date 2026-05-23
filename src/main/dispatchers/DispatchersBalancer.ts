@@ -1,7 +1,7 @@
 import { Level, LogLevel } from "../../types/log"
-import { Handler, HandlerExecuteMeta } from "./types"
+import { Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { extractLevels } from "../util/string"
-import { HaluaFailedToCallHandler } from "../errors"
+import { HaluaFailedToCallDispatcher } from "../errors"
 import { tryReportAnError } from "../util/errors"
 
 const MajorLevelMap = new Map([
@@ -15,20 +15,20 @@ const MajorLevelMap = new Map([
 ])
 
 export interface Balancer {
-    sendLog: (meta: HandlerExecuteMeta, args: Array<any>) => void
+    sendLog: (meta: DispatcherExecuteMeta, args: Array<any>) => void
 }
 
-export class HandlersBalancer implements Balancer {
-    private readonly map = new Map<LogLevel, Array<Handler>>()
+export class DispatchersBalancer implements Balancer {
+    private readonly map = new Map<LogLevel, Array<Dispatcher>>()
 
     constructor(
         private level: LogLevel,
-        private handlers: Array<Handler>,
+        private dispatchers: Array<Dispatcher>,
     ) {
         this.sendLog = this.sendLog.bind(this)
     }
 
-    sendLog(meta: HandlerExecuteMeta, args: Array<any>) {
+    sendLog(meta: DispatcherExecuteMeta, args: Array<any>) {
         this.discover(meta.level)
         this.send(meta, args)
     }
@@ -38,9 +38,9 @@ export class HandlersBalancer implements Balancer {
             return
         }
 
-        let discovered: Array<Handler> = []
+        let discovered: Array<Dispatcher> = []
         this.map.set(level, discovered)
-        for (let h of this.handlers) {
+        for (let h of this.dispatchers) {
             if (h.exact) {
                 if (h.exact.some((l) => l === level)) {
                     discovered.push(h)
@@ -53,22 +53,22 @@ export class HandlersBalancer implements Balancer {
         }
     }
 
-    private send(meta: HandlerExecuteMeta, args: Array<any>) {
+    private send(meta: DispatcherExecuteMeta, args: Array<any>) {
         try {
-            this.sendToHandlers(meta, args)
+            this.sendToDispatchers(meta, args)
         } catch (e) {
-            tryReportAnError(new HaluaFailedToCallHandler(`Unable to call dispatch method of a handler`, { cause: e }))
+            tryReportAnError(new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }))
         }
     }
 
-    private sendToHandlers(meta: HandlerExecuteMeta, args: Array<any>) {
+    private sendToDispatchers(meta: DispatcherExecuteMeta, args: Array<any>) {
         let hs = this.map.get(meta.level) ?? []
         for (let h of hs) {
             try {
                 h.dispatch(meta, args)
             } catch (e) {
                 tryReportAnError(
-                    new HaluaFailedToCallHandler(`Unable to call dispatch method of a handler`, { cause: e }),
+                    new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }),
                 )
             }
         }

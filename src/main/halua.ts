@@ -1,49 +1,49 @@
-import { HaluaLogger, HaluaOptions, PassedHandler } from "./types"
-import { Handler } from "./handlers/types"
-import { Balancer, HandlersBalancer } from "./handlers/Balancer"
+import { HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
+import { Dispatcher } from "./dispatchers/DispatcherTypes"
+import { Balancer, DispatchersBalancer } from "./dispatchers/DispatchersBalancer"
 import { Level, LogLevel } from "../types/log"
 import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"
-import { HaluaUnableToDetermineHandler } from "./errors"
+import { HaluaUnableToDetermineDispatcher } from "./errors"
 
 export class Halua implements HaluaLogger {
-    private readonly passedHandlers: PassedHandler = []
-    private handlers: Array<Handler> = []
+    private readonly passedDispatchers: PassedDispatcher = []
+    private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
 
     constructor(
-        passed: PassedHandler,
+        passed: PassedDispatcher,
         private options: HaluaOptions = {},
     ) {
-        this.passedHandlers = passed
-        this.handlers = this.buildHandlers(passed)
+        this.passedDispatchers = passed
+        this.dispatchers = this.buildDispatchers(passed)
 
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
+        this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
         this.bindMethods()
     }
 
     create(
-        arg1: PassedHandler | HaluaOptions = this.passedHandlers,
+        arg1: PassedDispatcher | HaluaOptions = this.passedDispatchers,
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger {
-        if (this.isHandlerSpec(arg1)) {
-            return new Halua(arg1 as PassedHandler, { ...(arg2 ?? this.options) })
+        if (this.isDispatcherSpec(arg1)) {
+            return new Halua(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) })
         }
-        return new Halua(this.passedHandlers, { ...(arg1 as HaluaOptions) })
+        return new Halua(this.passedDispatchers, { ...(arg1 as HaluaOptions) })
     }
 
     child(...args: any[]): HaluaLogger {
-        return new Halua(this.passedHandlers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
+        return new Halua(this.passedDispatchers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
     }
 
-    setHandlers(handler: PassedHandler): void {
-        this.handlers = this.buildHandlers(handler)
+    setDispatchers(dispatcher: PassedDispatcher): void {
+        this.dispatchers = this.buildDispatchers(dispatcher)
         this.updateBalancer()
     }
 
-    appendHandlers(handler: PassedHandler): void {
-        let handlers = this.buildHandlers(handler)
-        this.handlers.push(...handlers)
+    appendDispatchers(dispatcher: PassedDispatcher): void {
+        let dispatchers = this.buildDispatchers(dispatcher)
+        this.dispatchers.push(...dispatchers)
         this.updateBalancer()
     }
 
@@ -87,42 +87,42 @@ export class Halua implements HaluaLogger {
     }
 
     private updateBalancer() {
-        this.balancer = new HandlersBalancer(this.options.level || Level.Trace, this.handlers)
+        this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
     }
 
     private sendToBalancer(level: LogLevel, args: Array<any>) {
         this.balancer.sendLog({ level, timestamp: Date.now() }, args.concat(this.options.withArgs ?? []))
     }
 
-    private supposeIsHandler(v: any, reportError = true): boolean {
+    private supposeIsDispatcher(v: any, reportError = true): boolean {
         /** __proto__ checks for function declaration, ownProp checks for arrow func */
-        let isHandler =
+        let isDispatcher =
             Object.prototype.hasOwnProperty.call(v.__proto__, "dispatch") ||
             Object.prototype.hasOwnProperty.call(v, "dispatch")
-        if (!isHandler && reportError) {
-            tryReportAnError(new HaluaUnableToDetermineHandler(`Unable to find dispatch method of a handler`))
+        if (!isDispatcher && reportError) {
+            tryReportAnError(new HaluaUnableToDetermineDispatcher(`Unable to find dispatch method of a dispatcher`))
         }
-        return isHandler
+        return isDispatcher
     }
 
-    private isHandlerSpec(v: any): boolean {
+    private isDispatcherSpec(v: any): boolean {
         if (Array.isArray(v)) {
             return v.every((x: any) => typeof x === "function")
         }
         return typeof v === "function"
     }
 
-    private buildHandlers(passed: PassedHandler): Array<Handler> {
+    private buildDispatchers(passed: PassedDispatcher): Array<Dispatcher> {
         let entries = toarray(passed)
-        return entries.map((b) => b()).filter((h) => this.supposeIsHandler(h))
+        return entries.map((b) => b()).filter((h) => this.supposeIsDispatcher(h))
     }
 
     private bindMethods(): void {
         this.create = this.create.bind(this)
         this.child = this.child.bind(this)
 
-        this.setHandlers = this.setHandlers.bind(this)
-        this.appendHandlers = this.appendHandlers.bind(this)
+        this.setDispatchers = this.setDispatchers.bind(this)
+        this.appendDispatchers = this.appendDispatchers.bind(this)
 
         this.logTo = this.logTo.bind(this)
         this.trace = this.trace.bind(this)
@@ -134,6 +134,6 @@ export class Halua implements HaluaLogger {
         this.fatal = this.fatal.bind(this)
         this.assert = this.assert.bind(this)
 
-        this.supposeIsHandler = this.supposeIsHandler.bind(this)
+        this.supposeIsDispatcher = this.supposeIsDispatcher.bind(this)
     }
 }

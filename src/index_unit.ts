@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
 
-import { halua, NewTextHandler, NewJSONHandler, NewConsoleHandler, Level } from "./index"
+import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "./index"
 
 describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
         let captured: string[] = []
 
         let logger = halua.create(
-            NewTextHandler((line) => {
+            NewTextDispatcher((line) => {
                 captured.push(line)
             }),
         )
@@ -26,14 +26,14 @@ describe("Halua logger e2e usage", () => {
         let logs2: string[] = []
 
         let l1 = halua.create(
-            NewTextHandler((line) => {
+            NewTextDispatcher((line) => {
                 logs1.push(line)
             }),
             { level: Level.Warn },
         )
 
         let l2 = halua.create(
-            NewTextHandler((line) => {
+            NewTextDispatcher((line) => {
                 logs2.push(line)
             }),
             { level: Level.Debug },
@@ -57,7 +57,7 @@ describe("Halua logger e2e usage", () => {
         let captured: string[] = []
 
         let logger = halua.create(
-            NewTextHandler((line) => {
+            NewTextDispatcher((line) => {
                 captured.push(line)
             }),
         )
@@ -90,7 +90,7 @@ describe("Halua logger e2e usage", () => {
 
         // use template to avoid string concat footgun
         let logger = halua.create(
-            NewTextHandler((line) => {
+            NewTextDispatcher((line) => {
                 captured.push(line)
             }),
             {
@@ -107,7 +107,7 @@ describe("Halua logger e2e usage", () => {
 
         let customCap: string[] = []
         let cLogger = halua.create(
-            NewTextHandler((l) => customCap.push(l)),
+            NewTextDispatcher((l) => customCap.push(l)),
             { level: "AUDIT+5" },
         )
         cLogger.logTo("AUDIT+3", "audit low")
@@ -124,7 +124,7 @@ describe("Halua logger e2e usage", () => {
         expect(captured.some((c) => c.includes("diff major custom"))).toBe(false)
         expect(captured.length).toBe(3)
 
-        // custom AUDIT+5 handler: only same major with minor >=5
+        // custom AUDIT+5 dispatcher: only same major with minor >=5
         expect(customCap.some((c) => c.includes("audit low"))).toBe(false)
         expect(customCap.some((c) => c.includes("audit ok"))).toBe(true)
         expect(customCap.some((c) => c.includes("audit high"))).toBe(true)
@@ -132,11 +132,11 @@ describe("Halua logger e2e usage", () => {
         expect(customCap.length).toBe(2)
     })
 
-    test("NewJSONHandler produces valid structured JSON output", () => {
+    test("NewJSONDispatcher produces valid structured JSON output", () => {
         let captured: string[] = []
 
         let logger = halua.create(
-            NewJSONHandler((line) => {
+            NewJSONDispatcher((line) => {
                 captured.push(line)
             }),
         )
@@ -150,11 +150,11 @@ describe("Halua logger e2e usage", () => {
         expect(parsed.args).toEqual(["json test", { foo: 42 }, [1, 2]])
     })
 
-    test("NewJSONHandler respects printTimestamp and printLevel options", () => {
+    test("NewJSONDispatcher respects printTimestamp and printLevel options", () => {
         let captured: string[] = []
 
         let logger = halua.create(
-            NewJSONHandler((line) => captured.push(line), {
+            NewJSONDispatcher((line) => captured.push(line), {
                 printTimestamp: false,
                 printLevel: false,
             }),
@@ -168,7 +168,7 @@ describe("Halua logger e2e usage", () => {
         expect(parsed.args).toEqual(["no meta"])
     })
 
-    test("NewConsoleHandler routes levels to correct methods and passes raw values", () => {
+    test("NewConsoleDispatcher routes levels to correct methods and passes raw values", () => {
         let calls: Array<{ method: string; args: any[] }> = []
 
         let mock = {
@@ -186,7 +186,7 @@ describe("Halua logger e2e usage", () => {
             },
         }
 
-        let logger = halua.create(NewConsoleHandler(mock))
+        let logger = halua.create(NewConsoleDispatcher(mock))
 
         logger.debug("d", { x: 1 })
         logger.info("i", 123)
@@ -202,12 +202,12 @@ describe("Halua logger e2e usage", () => {
         expect(calls[3].method).toBe("error")
     })
 
-    test("create accepts array of handlers for multi-handler dispatch via Balancer", () => {
+    test("create accepts array of dispatchers for multi-dispatcher dispatch via Balancer", () => {
         let text: string[] = []
         let json: string[] = []
 
-        let tH = NewTextHandler((l) => text.push(l))
-        let jH = NewJSONHandler((l) => json.push(l))
+        let tH = NewTextDispatcher((l) => text.push(l))
+        let jH = NewJSONDispatcher((l) => json.push(l))
 
         let logger = halua.create([tH, jH])
 
@@ -219,32 +219,32 @@ describe("Halua logger e2e usage", () => {
         expect(JSON.parse(json[0]).args).toContain("multi dispatch")
     })
 
-    test("setHandlers replaces and appendHandlers augments the active handler set", () => {
+    test("setDispatchers replaces and appendDispatchers augments the active dispatcher set", () => {
         let c1: string[] = []
         let c2: string[] = []
         let c3: string[] = []
 
-        let logger = halua.create(NewTextHandler((l) => c1.push(l)))
+        let logger = halua.create(NewTextDispatcher((l) => c1.push(l)))
         logger.info("first")
         expect(c1.length).toBe(1)
 
-        logger.setHandlers(NewTextHandler((l) => c2.push(l)))
+        logger.setDispatchers(NewTextDispatcher((l) => c2.push(l)))
         logger.info("second")
         expect(c1.length).toBe(1)
         expect(c2.length).toBe(1)
 
-        logger.appendHandlers(NewTextHandler((l) => c3.push(l)))
+        logger.appendDispatchers(NewTextDispatcher((l) => c3.push(l)))
         logger.warn("third")
         expect(c2.length).toBe(2)
         expect(c3.length).toBe(1)
     })
 
-    test("exact option on individual handler bypasses parent level filter", () => {
+    test("exact option on individual dispatcher bypasses parent level filter", () => {
         let exactCap: string[] = []
         let normalCap: string[] = []
 
-        let exactH = NewTextHandler((l) => exactCap.push(l), { exact: Level.Error })
-        let normalH = NewTextHandler((l) => normalCap.push(l))
+        let exactH = NewTextDispatcher((l) => exactCap.push(l), { exact: Level.Error })
+        let normalH = NewTextDispatcher((l) => normalCap.push(l))
 
         let logger = halua.create([exactH, normalH], { level: Level.Info })
 
@@ -260,7 +260,7 @@ describe("Halua logger e2e usage", () => {
     test("assert only emits on false condition at ERROR level", () => {
         let cap: string[] = []
 
-        let logger = halua.create(NewTextHandler((l) => cap.push(l)))
+        let logger = halua.create(NewTextDispatcher((l) => cap.push(l)))
 
         logger.assert(true, "should not appear")
         logger.assert(false, "assert failed", 99)
@@ -271,14 +271,14 @@ describe("Halua logger e2e usage", () => {
         expect(cap[0]).toContain("99")
     })
 
-    test("throwing handler is isolated; does not throw to caller and siblings still execute", () => {
+    test("throwing dispatcher is isolated; does not throw to caller and siblings still execute", () => {
         let good: string[] = []
-        let goodH = NewTextHandler((l) => good.push(l))
+        let goodH = NewTextDispatcher((l) => good.push(l))
 
         let badFactory = () => {
             let h: any = {
                 dispatch: () => {
-                    throw new Error("intentional bad handler")
+                    throw new Error("intentional bad dispatcher")
                 },
                 exact: null,
                 level: undefined,
@@ -290,13 +290,13 @@ describe("Halua logger e2e usage", () => {
 
         let didThrow = false
         try {
-            logger.info("reaches good handler")
+            logger.info("reaches good dispatcher")
         } catch (e) {
             didThrow = true
         }
 
         expect(didThrow).toBe(false)
         expect(good.length).toBe(1)
-        expect(good[0]).toMatch(/INFO reaches good handler/)
+        expect(good[0]).toMatch(/INFO reaches good dispatcher/)
     })
 })
