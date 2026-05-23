@@ -28,13 +28,13 @@ export interface Argument {
     value: any
 }
 
-export interface HaluaLogger {
+export interface HaluaLogger<ErrorMeta = Record<string, any>> {
     create: {
-        (dispatcher: PassedDispatcher): HaluaLogger
-        (options: HaluaOptions): HaluaLogger
-        (arg1?: PassedDispatcher | HaluaOptions, options?: HaluaOptions): HaluaLogger
+        <EM = ErrorMeta>(dispatcher: PassedDispatcher): HaluaLogger<EM>
+        <EM = ErrorMeta>(options: HaluaOptions): HaluaLogger<EM>
+        <EM = ErrorMeta>(arg1?: PassedDispatcher | HaluaOptions, options?: HaluaOptions): HaluaLogger<EM>
     }
-    child: (...args: any[]) => HaluaLogger
+    child: (...args: any[]) => HaluaLogger<ErrorMeta>
 
     setDispatchers: (dispatcher: PassedDispatcher) => void
     appendDispatchers: (dispatcher: PassedDispatcher) => void
@@ -45,9 +45,9 @@ export interface HaluaLogger {
     info: (...args: any[]) => void
     warn: (...args: any[]) => void
     notice: (...args: any[]) => void
-    error: (error: unknown, meta?: Record<string, any>) => void
+    error: (error: unknown, meta?: ErrorMeta) => void
     fatal: (...args: any[]) => void
-    assert: (assertion: boolean, error: unknown, meta?: Record<string, any>) => void
+    assert: (assertion: boolean, error: unknown, meta?: ErrorMeta) => void
 
     stamp: (label: string, id?: any) => () => void
     stampEnd: (id: any) => void

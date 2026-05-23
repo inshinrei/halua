@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "./index"
+import { halua, Level, NewConsoleDispatcher, NewJSONDispatcher, NewTextDispatcher } from "./index"
 
 describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
@@ -346,5 +346,41 @@ describe("Halua logger e2e usage", () => {
         // ender is idempotent
         end1()
         expect(captured.length).toBe(3)
+    })
+
+    test("ErrorMeta generic on logger instance provides typed meta for .error and .assert", () => {
+        type MyErrorMeta = { issueKey: string; userId?: number; component?: string }
+
+        let captured: string[] = []
+        let metaLog: any[] = []
+
+        // Create a logger that declares a specific ErrorMeta shape
+        let logger = halua.create<MyErrorMeta>(
+            NewTextDispatcher((line, errorMeta) => {
+                captured.push(line)
+                if (errorMeta) metaLog.push(errorMeta)
+            }),
+        )
+
+        // Happy path — correct shape is accepted
+        logger.error(new Error("payment failed"), { issueKey: "PAY-42", userId: 1001 })
+        logger.assert(false, "db timeout", { issueKey: "DB-7", component: "repo" })
+
+        expect(captured.length).toBe(2)
+        expect(metaLog.length).toBe(2)
+        expect(metaLog[0]).toEqual({ issueKey: "PAY-42", userId: 1001 })
+        expect(metaLog[1]).toEqual({ issueKey: "DB-7", component: "repo" })
+
+        // Child inherits the parent's ErrorMeta type (no way to pass wrong shape)
+        let child = logger.child("traceId", "t-123")
+        child.error(new Error("child error"), { issueKey: "CHILD-1" })
+
+        expect(captured.length).toBe(3)
+
+        // @ts-expect-error — wrong meta shape must be rejected by the generic
+        logger.error(new Error("bad"), { foo: "bar" })
+
+        // @ts-expect-error on assert too
+        logger.assert(false, new Error("bad2"), { notAnIssueKey: 1 })
     })
 })

@@ -48,7 +48,7 @@ halua.warn("something suspicious")
 halua.notice("notable event")
 halua.error("recoverable error") // plain string also works (becomes Error("recoverable error"))
 halua.fatal("unrecoverable")
-halua.assert(user != null, "user must exist", { user }) // string error + meta; logs at ERROR if false
+halua.assert(user != null, "user must exist", { user }) // default logger accepts any meta shape (typed loggers enforce a specific interface)
 
 // high-res timing (uses performance.now, logs via .info on end)
 let end = halua.stamp("db lookup", "q42")
@@ -151,24 +151,32 @@ bad.info("this will not crash the process")
 
 The failure is reported to `console.error` (best effort) and other dispatchers continue working.
 
-## Rich Error Context with `errorMeta`
+## Rich Error Context with typed `errorMeta`
 
-The `.error(err, meta?)` and `.assert(condition, err, meta?)` APIs accept an optional second object.  
-With `NewTextDispatcher` (and `NewJSONDispatcher`), this object is delivered as the **second argument** to your send
-callback — completely separate from the formatted log line.
+The `.error(err, meta?)` and `.assert(condition, err, meta?)` methods accept an optional second object that travels
+separately from the normal log arguments. With `NewTextDispatcher` or `NewJSONDispatcher` this value is passed as the
+**second argument** to your `send` callback — keeping the formatted line clean while giving error trackers (Sentry,
+Datadog, etc.) rich structured context.
 
-This is especially useful for error monitoring. In the production setup shown at the top of this document we already
-had:
-
-```ts
-// Critical errors -> error tracking (Sentry, etc.)
-NewTextDispatcher(sendToErrorMonitoring, {level: Level.Error}),
-```
-
-Here is a realistic implementation of `sendToErrorMonitoring` that uses the `errorMeta`:
+Halua makes this even safer by letting you declare the shape of the meta object **per logger instance** using a generic
+type parameter:
 
 ```ts
+import { halua, NewTextDispatcher, Level } from "halua"
 import * as Sentry from "@sentry/node"
+
+type ErrorMonitoringMeta = {
+    issueKey: string
+    component?: string
+    userId?: number | string
+    requestId?: string
+    [key: string]: unknown // allow extra fields when needed
+}
+
+// A dedicated logger that only accepts the right meta shape
+let errorLogger = halua.create<ErrorMonitoringMeta>(
+    NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }),
+)
 
 function sendToErrorMonitoring(line: string, errorMeta?: Record<string, any>) {
     if (errorMeta?.issueKey) {
@@ -186,21 +194,39 @@ function sendToErrorMonitoring(line: string, errorMeta?: Record<string, any>) {
 }
 ```
 
-Usage stays ergonomic:
+Because the logger is typed, the compiler now enforces the correct shape at every call site:
 
 ```ts
-appLogger.error(new Error("Payment declined"), {
+errorLogger.error(new Error("Payment declined"), {
     issueKey: "PAY-48291",
     userId: 8472,
     component: "checkout",
     requestId: "req_abc123",
 })
+
+// Child loggers inherit the parent's ErrorMeta type automatically
+let checkoutLogger = errorLogger.child("flow", "checkout")
+checkoutLogger.assert(false, "inventory check failed", { issueKey: "INV-777" })
+
+// @ts-expect-error — wrong field name is caught at compile time
+errorLogger.error(new Error("bad"), { foo: "bar" })
 ```
 
-The human-readable line is still written normally, while Sentry receives rich, queryable context via the second
-`errorMeta` argument.
+You can create as many differently-typed error loggers as you need in the same application:
 
-The exact same two-argument pattern works when you use `NewJSONDispatcher` for your error channel.
+```ts
+type JobErrorMeta = { jobId: string; attempt: number; queue: string }
+
+let jobErrorLogger = halua.create<JobErrorMeta>(NewJSONDispatcher((json, meta) => { /* ... */ }))
+```
+
+The generic lives only on the `Halua` / `HaluaLogger` surface. The underlying `Dispatcher` contract and your `send`
+functions remain `Record<string, any>` (or `any`) so the same dispatcher factories stay reusable across all your
+typed loggers. Type safety is a compile-time benefit for the call sites that produce errors; the runtime wire format
+is unchanged.
+
+This pattern gives you autocomplete, early detection of stale or misspelled context keys, and self-documenting error
+channels without adding any runtime cost.
 
 ## When to Use What
 

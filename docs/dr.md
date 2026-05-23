@@ -1,5 +1,16 @@
 Next release: minor
 
+### Generic `ErrorMeta` for `.error(error, meta?)` and `.assert(cond, error, meta?)` (additive DX)
+
+- `HaluaLogger` and the concrete `Halua` class are now generic over the error metadata shape: `HaluaLogger<ErrorMeta = Record<string, any>>` (and `class Halua<ErrorMeta = ...>`).
+- `.error(error: unknown, meta?: ErrorMeta)` and `.assert(condition, error, unknown, meta?: ErrorMeta)` now carry the type parameter, enabling compile-time safety for well-known error context objects (e.g. `{ issueKey: string; userId?: number; component?: string }`).
+- `.create<EM>(dispatcherOrOptions)` accepts an explicit type argument to produce a logger with a different `ErrorMeta` shape; the returned instance and all its children inherit that shape.
+- `.child(...)` preserves the parent's `ErrorMeta` (child loggers are for adding log context, not for changing the error meta contract).
+- The internal `Dispatcher` / `Balancer` / `dispatch(..., errorMeta?: Record<string, any>)` wire protocol is unchanged (`Record<string, any>` at the boundary). The generic lives only on the high-level logger surface — dispatchers remain reusable across differently-typed logger instances.
+- Default generic parameter keeps 100% backward compatibility; all existing call sites continue to compile and behave identically at runtime.
+- New unit test in `index_unit.ts` exercises both the happy path with a custom meta type and `@ts-expect-error` enforcement for wrong shapes.
+- Purely additive type-level improvement (minor). No runtime or dispatcher contract changes. `tsc --noEmit` and full test suite green.
+
 ### Build system: tsup → Vite + vite-plugin-dts (internal DX)
 
 - Replaced `tsup` (and `tsup.config.ts`) with `vite build` (library mode) + `vite-plugin-dts` for declaration bundling.

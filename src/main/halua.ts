@@ -6,7 +6,7 @@ import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"
 import { HaluaUnableToDetermineDispatcher, unknownToError } from "./errors"
 
-export class Halua implements HaluaLogger {
+export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<ErrorMeta> {
     private readonly passedDispatchers: PassedDispatcher = []
     private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
@@ -23,18 +23,18 @@ export class Halua implements HaluaLogger {
         this.bindMethods()
     }
 
-    create(
+    create<EM = ErrorMeta>(
         arg1: PassedDispatcher | HaluaOptions = this.passedDispatchers,
         arg2: HaluaOptions | undefined = this.options,
-    ): HaluaLogger {
+    ): HaluaLogger<EM> {
         if (this.isDispatcherSpec(arg1)) {
-            return new Halua(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) })
+            return new Halua<EM>(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) })
         }
-        return new Halua(this.passedDispatchers, { ...(arg1 as HaluaOptions) })
+        return new Halua<EM>(this.passedDispatchers, { ...(arg1 as HaluaOptions) })
     }
 
-    child(...args: any[]): HaluaLogger {
-        return new Halua(this.passedDispatchers, {
+    child(...args: any[]): HaluaLogger<ErrorMeta> {
+        return new Halua<ErrorMeta>(this.passedDispatchers, {
             ...this.options,
             withArgs: (this.options.withArgs || []).concat(args),
         })
@@ -75,23 +75,23 @@ export class Halua implements HaluaLogger {
         this.sendToBalancer(Level.Notice, args)
     }
 
-    error(error: unknown, meta?: Record<string, any>): void {
+    error(error: unknown, meta?: ErrorMeta): void {
         let e = unknownToError(error)
         let payload: any[] = [e]
-        this.sendToBalancer(Level.Error, payload, meta)
+        this.sendToBalancer(Level.Error, payload, meta as any)
     }
 
     fatal(...args: any[]): void {
         this.sendToBalancer(Level.Fatal, args)
     }
 
-    assert(assertion: boolean, error: unknown, meta?: Record<string, any>): void {
+    assert(assertion: boolean, error: unknown, meta?: ErrorMeta): void {
         if (assertion) {
             return
         }
         let e = unknownToError(error)
         let payload: any[] = [e]
-        this.sendToBalancer(Level.Error, payload, meta)
+        this.sendToBalancer(Level.Error, payload, meta as any)
     }
 
     stamp(label: string, id?: any): () => void {
@@ -135,7 +135,7 @@ export class Halua implements HaluaLogger {
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
     }
 
-    private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: Record<string, any>) {
+    private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: any) {
         let finalArgs = args.concat(this.options.withArgs ?? [])
         let dispatchMeta: DispatcherExecuteMeta = { level, timestamp: Date.now() }
         if (this.options.redactDataRegExp) {
