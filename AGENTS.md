@@ -35,7 +35,7 @@ This project **is** the logger. When adding features or tools that need logging:
 - Example:
 
 ```ts
-import { halua } from "./src" // or "halua" in consuming packages
+import {halua} from "./src" // or "halua" in consuming packages
 
 try {
     riskyOperation()
@@ -47,14 +47,6 @@ try {
     }
 }
 ```
-
-## Utility Functions
-
-When you need general-purpose utilities (string, object, array helpers, etc.):
-
-- Prefer https://github.com/inshinrei/yorozu/tree/main/packages/utils
-- Only add new local utils in `src/util/` or `src/main/util/` when the functionality is logging-specific and cannot be
-  obtained from yorozu.
 
 ## Project Commands
 
@@ -70,8 +62,10 @@ benchmarks.
 
 ## Architecture Notes (Expert Mode)
 
-Halua's core is intentionally small and uses a simple synchronous `dispatch(meta: DispatcherExecuteMeta, args: any[]): void`
-protocol between `DispatchersBalancer` and `Dispatcher` implementations (see `DispatcherBase` default). The generator streaming
+Halua's core is intentionally small and uses a simple synchronous
+`dispatch(meta: DispatcherExecuteMeta, args: any[]): void`
+protocol between `DispatchersBalancer` and `Dispatcher` implementations (see `DispatcherBase` default). The generator
+streaming
 protocol was removed in v3 (see `docs/dr.md`) in favor of readability and lower allocations.
 
 - Do **not** introduce heavy abstractions or middleware layers on top of the balancer/dispatcher model without strong
@@ -79,15 +73,18 @@ protocol was removed in v3 (see `docs/dr.md`) in favor of readability and lower 
 - The level system (major + minor via `LEVEL+N` syntax) is powerful — keep the `extractLevels` + `MajorLevelMap` logic
   simple and well tested.
 - Error paths must never throw to user code; all dispatcher failures are routed through `tryReportAnError`.
-- When considering new dispatcher types (e.g. file dispatchers, remote), design them as `NewXxxDispatcher(...)` factories
+- When considering new dispatcher types (e.g. file dispatchers, remote), design them as `NewXxxDispatcher(...)`
+  factories
   returning `() => Dispatcher` (see `NewTextDispatcher` etc. for the pattern).
 
 ## Custom Dispatchers
 
-Implementing a raw `Dispatcher` (providing `dispatch(meta, args)`) is advanced. Prefer extending `DispatcherBase` and using
+Implementing a raw `Dispatcher` (providing `dispatch(meta, args)`) is advanced. Prefer extending `DispatcherBase` and
+using
 the exported `format` + `getType` (for text) or `toJSONValue` (for structured) to replicate built-in behavior exactly.
 
-See `NewTextDispatcher` / `NewJSONDispatcher` source for the exact `class extends DispatcherBase` + `this.formatArg = ...` pattern.
+See `NewTextDispatcher` / `NewJSONDispatcher` source for the exact `class extends DispatcherBase` +
+`this.formatArg = ...` pattern.
 The public re-exports (`DispatcherBase`, `format`, `getType`, `toJSONValue`) make custom dispatchers practical.
 
 If you design a new public dispatcher, export a `New*Dispatcher` factory and update both README and the tour document.
