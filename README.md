@@ -221,8 +221,8 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, 
 | `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                                                                      |
 | `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                                                             |
 | `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                 |
-| `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) becomes the second arg passed to dispatchers |
-| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error`                                                                      |
+| `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) — when supplied, the normalized Error instance is auto-attached under `error` key and the augmented object becomes the second arg to dispatchers |
+| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error` (auto-attaches normalized Error under `error` when meta supplied)                                                                      |
 | `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                                                              |
 | `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                                                                      |
 
@@ -241,6 +241,10 @@ The special `.error(unknown, meta?)` and `.assert(condition, unknown, meta?)` me
 object. When you use a custom `send` callback with `NewTextDispatcher` (or `NewJSONDispatcher`), this `meta` is
 delivered as the **second argument** to your send function.
 
+Halua automatically appends the *normalized Error instance* (the same one passed to the primary log args) under the
+`error` key of the meta object. This makes it trivial to forward the live `Error` (including `.cause`, custom props,
+and accurate stack) to error trackers instead of a string or plain-object snapshot.
+
 This is ideal for attaching correlation IDs, issue keys, user context, or routing hints to your error reporting service
 without polluting the normal log arguments.
 
@@ -252,14 +256,21 @@ import { halua, NewTextDispatcher } from "halua"
 // rich errorMeta (issueKey, etc.) to your error tracker.
 let errorSink = NewTextDispatcher((line, errorMeta) => {
     if (errorMeta?.issueKey) {
-        Sentry.captureMessage(line, {
-            level: "error",
-            tags: {
-                issueKey: errorMeta.issueKey,
-                component: errorMeta.component,
-            },
-            extra: errorMeta,
-        })
+        const err = errorMeta.error
+        // Destructure to omit the Error from `extra` (Sentry serializes it nicely on its own)
+        const { error: _err, ...context } = errorMeta
+        if (err instanceof Error) {
+            Sentry.captureException(err, {
+                level: "error",
+                tags: {
+                    issueKey: errorMeta.issueKey,
+                    component: errorMeta.component,
+                },
+                extra: context,
+            })
+        } else {
+            Sentry.captureMessage(line, { extra: context })
+        }
     } else {
         // Fallback: still surface the error even without extra context
         Sentry.captureMessage(line, "error")
@@ -271,8 +282,9 @@ let logger = halua.create(errorSink, { level: "WARN" })
 // Normal log — no meta attached (Note that .error will serialize passed string to Error)
 logger.error("something odd happened")
 
-// Critical path with traceable issue key — meta goes to the send callback
-// as the second argument, completely separate from the formatted line.
+// Critical path with traceable issue key — when you supply the second meta arg to .error or .assert,
+// Halua auto-appends the normalized Error under `errorMeta.error` (in addition to your fields).
+// The formatted line stays clean; your send fn receives the live Error + context for captureException.
 logger.error(new Error("Payment declined"), {
     issueKey: "PAY-48291",
     userId: 8472,
@@ -281,8 +293,8 @@ logger.error(new Error("Payment declined"), {
 })
 ```
 
-The `meta` is never mixed into the formatted `args` (exception: ConsoleHandler) — it is always available as a clean
-second parameter to your send function.
+The user-supplied portion of `meta` is never mixed into the formatted `args` (exception: ConsoleDispatcher) — it (plus the auto-attached `error`) is always available as a clean second parameter to your send function.
+When meta is absent, the second argument is `undefined`.
 
 ## Advanced / Custom Dispatchers
 

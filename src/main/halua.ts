@@ -78,7 +78,8 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
     error(error: unknown, meta?: ErrorMeta): void {
         let e = unknownToError(error)
         let payload: any[] = [e]
-        this.sendToBalancer(Level.Error, payload, meta as any)
+        let finalMeta = meta != null ? { ...(meta as any), error: e } : undefined
+        this.sendToBalancer(Level.Error, payload, finalMeta)
     }
 
     fatal(...args: any[]): void {
@@ -91,7 +92,8 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         }
         let e = unknownToError(error)
         let payload: any[] = [e]
-        this.sendToBalancer(Level.Error, payload, meta as any)
+        let finalMeta = meta != null ? { ...(meta as any), error: e } : undefined
+        this.sendToBalancer(Level.Error, payload, finalMeta)
     }
 
     stamp(label: string, id?: any): () => void {

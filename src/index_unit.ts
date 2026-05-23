@@ -333,6 +333,7 @@ describe("Halua logger e2e usage", () => {
         expect(cap[0]).toMatch(/ERROR Error: assert failed/)
         expect(cap[1]).toMatch(/ERROR Error: with meta/)
         expect(cap[1]).toContain("99")
+        expect(cap[1]).toContain('"error"')
     })
 
     test("throwing dispatcher is isolated; does not throw to caller and siblings still execute", () => {
@@ -424,14 +425,21 @@ describe("Halua logger e2e usage", () => {
 
         expect(captured.length).toBe(2)
         expect(metaLog.length).toBe(2)
-        expect(metaLog[0]).toEqual({ issueKey: "PAY-42", userId: 1001 })
-        expect(metaLog[1]).toEqual({ issueKey: "DB-7", component: "repo" })
+        expect(metaLog[0]).toMatchObject({ issueKey: "PAY-42", userId: 1001 })
+        expect(metaLog[0].error).toBeInstanceOf(Error)
+        expect(metaLog[0].error.message).toBe("payment failed")
+        expect(metaLog[1]).toMatchObject({ issueKey: "DB-7", component: "repo" })
+        expect(metaLog[1].error).toBeInstanceOf(Error)
+        expect(metaLog[1].error.message).toBe("db timeout")
 
         // Child inherits the parent's ErrorMeta type (no way to pass wrong shape)
         let child = logger.child("traceId", "t-123")
         child.error(new Error("child error"), { issueKey: "CHILD-1" })
 
         expect(captured.length).toBe(3)
+        expect(metaLog[2]).toMatchObject({ issueKey: "CHILD-1" })
+        expect(metaLog[2].error).toBeInstanceOf(Error)
+        expect(metaLog[2].error.message).toBe("child error")
 
         // @ts-expect-error — wrong meta shape must be rejected by the generic
         logger.error(new Error("bad"), { foo: "bar" })

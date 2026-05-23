@@ -21,6 +21,15 @@ Next release: minor
 - New unit test in `index_unit.ts` exercises both the happy path with a custom meta type and `@ts-expect-error` enforcement for wrong shapes.
 - Purely additive type-level improvement (minor). No runtime or dispatcher contract changes. `tsc --noEmit` and full test suite green.
 
+### Auto-append of normalized Error to user-supplied errorMeta (additive, improves Sentry/etc integration)
+- When `.error(err, meta)` or `.assert(cond, err, meta)` receives a non-null `meta`, Halua now automatically augments it with `{ ..., error: normalizedErrorInstance }` before passing to the dispatcher chain and send callbacks.
+- The appended value is always the *live* `Error` returned by `unknownToError` (original instance if already Error; newly constructed otherwise). This is distinct from the stringified/plaint-object form that appears inside the primary formatted args or JSON `args[]`.
+- Enables the canonical Sentry pattern `Sentry.captureException(errorMeta.error, { extra: context, tags: ... })` directly from a `NewTextDispatcher` / `NewJSONDispatcher` send handler without callers having to duplicate the error into their meta.
+- Only augments when the caller explicitly supplies the second/third argument; bare `logger.error(err)` or `logger.assert(false, err)` still yield `undefined` as the errorMeta second argument to send fns (no behavior change for non-meta paths).
+- Redaction (if configured) is applied to the augmented meta (including inside the Error's message) exactly as before.
+- Tests updated in `index_unit.ts`; docs in README + tour updated with improved captureException examples; dr.md entry added.
+- Purely additive runtime behavior for the documented `errorMeta` feature (minor). No wire-protocol or public API signature changes.
+
 ### Build system: tsup → Vite + vite-plugin-dts (internal DX)
 
 - Replaced `tsup` (and `tsup.config.ts`) with `vite build` (library mode) + `vite-plugin-dts` for declaration bundling.

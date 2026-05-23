@@ -1,6 +1,6 @@
-# Tour of Halua (v3)
+# Tour of Halua (v4)
 
-Last updated for Halua 3.x
+Last updated for Halua 4.0.0
 
 This document walks through real-world usage patterns beyond the quick start in the README.
 
@@ -166,6 +166,9 @@ separately from the normal log arguments. With `NewTextDispatcher` or `NewJSONDi
 **second argument** to your `send` callback — keeping the formatted line clean while giving error trackers (Sentry,
 Datadog, etc.) rich structured context.
 
+When a meta object is supplied, Halua automatically attaches the normalized `Error` instance under the `error` property
+so your handler can call `Sentry.captureException(errorMeta.error, { extra: ... })` with the real error object.
+
 Halua makes this even safer by letting you declare the shape of the meta object **per logger instance** using a generic
 type parameter:
 
@@ -186,21 +189,27 @@ let errorLogger = halua.create<ErrorMonitoringMeta>(NewTextDispatcher(sendToErro
 
 function sendToErrorMonitoring(line: string, errorMeta?: Record<string, any>) {
     if (errorMeta?.issueKey) {
-        Sentry.captureMessage(line, {
-            level: "error",
-            tags: {
-                issueKey: errorMeta.issueKey,
-                component: errorMeta.component,
-            },
-            extra: errorMeta,
-        })
+        const err = errorMeta.error
+        const { error: _err, ...context } = errorMeta
+        if (err instanceof Error) {
+            Sentry.captureException(err, {
+                level: "error",
+                tags: {
+                    issueKey: errorMeta.issueKey,
+                    component: errorMeta.component,
+                },
+                extra: context,
+            })
+        } else {
+            Sentry.captureMessage(line, { extra: context })
+        }
     } else {
         Sentry.captureMessage(line, "error")
     }
 }
 ```
 
-Because the logger is typed, the compiler now enforces the correct shape at every call site:
+Because the logger is typed, the compiler now enforces the correct shape at every call site. (The auto-attached `error` field is not part of the compile-time check — it is always present at runtime when you pass a meta object.)
 
 ```ts
 errorLogger.error(new Error("Payment declined"), {
