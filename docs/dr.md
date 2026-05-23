@@ -1,4 +1,4 @@
-Next release: major
+Next release: minor
 
 ### Source file naming standardization to kebab-case (repo hygiene / contributor DX)
 - All source `.ts` files, unit tests (`*_unit.ts` → `*-unit.ts`), dispatcher implementations, utilities, benchmarks, docs, and supporting files have been renamed from `CamelCase` / `snake_case` to consistent `kebab-case` (e.g. `ConsoleColoredDispatcher.ts` → `console-colored-dispatcher.ts`, `getType.ts` → `get-type.ts`, `tour_of_halua.md` → `tour-of-halua.md`, `AGENTS_FOR_MODULE.md` → `agents-for-module.md`, `vitest.global-setup.ts` → `vitest-global-setup.ts`).
