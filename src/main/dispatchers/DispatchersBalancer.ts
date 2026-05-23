@@ -15,7 +15,7 @@ const MajorLevelMap = new Map([
 ])
 
 export interface Balancer {
-    sendLog: (meta: DispatcherExecuteMeta, args: Array<any>) => void
+    sendLog: (meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) => void
 }
 
 export class DispatchersBalancer implements Balancer {
@@ -28,9 +28,9 @@ export class DispatchersBalancer implements Balancer {
         this.sendLog = this.sendLog.bind(this)
     }
 
-    sendLog(meta: DispatcherExecuteMeta, args: Array<any>) {
+    sendLog(meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) {
         this.discover(meta.level)
-        this.send(meta, args)
+        this.send(meta, args, errorMeta)
     }
 
     private discover(level: LogLevel) {
@@ -53,19 +53,19 @@ export class DispatchersBalancer implements Balancer {
         }
     }
 
-    private send(meta: DispatcherExecuteMeta, args: Array<any>) {
+    private send(meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) {
         try {
-            this.sendToDispatchers(meta, args)
+            this.sendToDispatchers(meta, args, errorMeta)
         } catch (e) {
             tryReportAnError(new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }))
         }
     }
 
-    private sendToDispatchers(meta: DispatcherExecuteMeta, args: Array<any>) {
+    private sendToDispatchers(meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) {
         let hs = this.map.get(meta.level) ?? []
         for (let h of hs) {
             try {
-                h.dispatch(meta, args)
+                h.dispatch(meta, args, errorMeta)
             } catch (e) {
                 tryReportAnError(
                     new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }),

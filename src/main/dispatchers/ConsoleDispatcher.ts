@@ -34,7 +34,7 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
                 this.printLevel = options.printLevel ?? true
             }
 
-            public dispatch(meta: DispatcherExecuteMeta, rawArgs: any[]): void {
+            public dispatch(meta: DispatcherExecuteMeta, rawArgs: any[], errorMeta?: Record<string, any>): void {
                 let args: Array<any> = []
 
                 if (this.printTimestamp) {
@@ -54,6 +54,11 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
                         formatted = value
                     }
                     args.push(formatted)
+                }
+
+                if (errorMeta !== undefined) {
+                    let m = typeof this.formatArg === "function" ? this.formatArg(errorMeta) : errorMeta
+                    args.push(m)
                 }
 
                 if (meta.level.startsWith("DEBUG")) {

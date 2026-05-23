@@ -1,7 +1,7 @@
 import type { Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { LogLevel } from "../../types/log"
 
-export type SendMethod = (data: string) => void
+export type SendMethod = (data: string, errorMeta?: Record<string, any>) => void
 
 export class DispatcherBase implements Dispatcher {
     public sendMethod: SendMethod
@@ -21,7 +21,7 @@ export class DispatcherBase implements Dispatcher {
         this.sendMethod = send ?? (() => {})
     }
 
-    public dispatch(meta: DispatcherExecuteMeta, args: any[]): void {
+    public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {
         let parts: any[] = []
 
         if (this.printTimestamp) {
@@ -42,7 +42,7 @@ export class DispatcherBase implements Dispatcher {
             parts.push(formatted)
         }
 
-        this.sendMethod(parts.join(" "))
+        this.sendMethod(parts.join(" "), errorMeta)
     }
 
     public formatTimestamp(t: number): string {

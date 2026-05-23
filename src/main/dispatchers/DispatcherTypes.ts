@@ -16,8 +16,12 @@ export interface Dispatcher {
     printTimestamp?: boolean
     printLevel?: boolean
 
-    /** primary dispatch: receives raw args; dispatcher decides formatting / structure / emission */
-    dispatch: (meta: DispatcherExecuteMeta, args: any[]) => void
+    /** primary dispatch: receives the execution meta, the primary log values (args), and optional errorMeta
+     *  (only populated for calls that went through .error(err, meta) or .assert(cond, err, meta)).
+     *  The errorMeta is deliberately kept separate from args so it does not pollute the "log values" list
+     *  and can be rendered specially by Text/JSON/Console dispatchers (e.g. top-level "meta" field in JSON).
+     */
+    dispatch: (meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>) => void
 
     formatArg?: (value: any) => any
     formatTimestamp?: (value: number) => string

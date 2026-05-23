@@ -4,11 +4,25 @@ Next release: major
 
 - `.error` and `.assert` signatures changed from varargs (`...args`) to dedicated forms that treat the first argument as the error (of type `unknown`) and an optional second `meta?: Record<string, any>`.
 - The `unknown` error value is passed through the existing `unknownToError` (now unit-tested in `errors_unit.ts`) which returns the input if already `Error`, wraps strings directly, and `JSON.stringify`s everything else (with original as `.cause`); circulars yield `Error("")`.
-- The normalized `Error` is always the first item sent to the dispatcher `args[]`; when `meta` is supplied it is passed as the *second* argument (so dispatchers see `[error, meta, ...childContext]`). Omitting `meta` keeps payload as single-element `[error]`.
+- The normalized `Error` is always the first (and usually only) item in the `args[]` passed to dispatchers. The optional `meta` is **no longer** appended to args; instead it travels as a dedicated third parameter to `dispatch(...)`.
 - This is a **breaking change** for any code that called `.error("msg", obj, ...)` or `.assert(false, "msg", 123)` expecting all values to be treated as opaque log arguments; such calls must be migrated to `.error(new Error("msg"), { detail: obj })` (or keep using strings, which now become `Error` messages) and `.assert(false, new Error("msg"), { code: 123 })`.
 - All instances (`halua`, children, `.create` results) receive the new behavior; other level methods remain `...args`.
 - Updated `HaluaLogger` interface, implementation, tests, README, and tour. Added `errors_unit.ts` exercising all branches of `unknownToError`.
 - Semver major because public method signatures on the core logger interface changed.
+
+### Dedicated `errorMeta` parameter on the `dispatch` protocol (follow-up to the `.error`/`.assert` changes)
+
+- To avoid polluting the primary `args` list (and therefore the rendered output of Text/JSON/Console dispatchers), the user-supplied `meta` from `.error(err, meta)` and `.assert(cond, err, meta)` is now passed as a **separate third argument** to the core `dispatch(meta, args, errorMeta?)` method.
+- `Balancer.sendLog` and the internal `Halua.sendToBalancer` were extended with the optional `errorMeta`.
+- Only the two special error paths ever supply a non-undefined `errorMeta`; every other logging call (`info`, `warn`, `logTo`, child context via `withArgs`, stamps, etc.) continues to flow through the classic two-argument path.
+- **Built-in handler updates**:
+  - `DispatcherBase` (default text path) accepts the param but deliberately ignores it for formatting — subclasses decide.
+  - `NewJSONDispatcher` now emits a top-level `"meta"` field (via `toJSONValue`) when `errorMeta` is present. `args` stays clean (typically contains only the normalized error for error-level logs).
+  - `NewTextDispatcher` overrides `dispatch` and appends a formatted representation of `errorMeta` (using the same pretty `formatArg`) when present — useful for human logs without forcing it into every custom base extension.
+  - `NewConsoleDispatcher` forwards the (raw or formatted) `errorMeta` as an extra argument to the underlying `console.error`/`console.*` call. Native consoles render the error + meta object beautifully.
+- This is a **breaking change for anyone implementing the `Dispatcher` interface directly or subclassing `DispatcherBase` and overriding `dispatch`** (they must now accept the optional third parameter to satisfy the updated public interface). The change was recorded as part of the same major release as the `.error` signature work.
+- Existing high-level usage and all built-in dispatchers continue to work; the improvement is entirely in the internal contract + structured output quality for error reporting.
+- Tests, README, tour, and `dr.md` updated. No new public API surface beyond the (already-breaking) `dispatch` signature tweak.
 
 ### Performance stamping API (`.stamp` / `.stampEnd`)
 

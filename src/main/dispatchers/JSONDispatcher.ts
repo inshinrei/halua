@@ -6,7 +6,7 @@ import { toarray } from "../util/cast"
 
 interface JSONLogDispatcherOptions extends BaseDispatcherOptions {}
 
-export function NewJSONDispatcher(send: (data: string) => void, options?: JSONLogDispatcherOptions) {
+export function NewJSONDispatcher(send: (data: string, errorMeta?: Record<string, any>) => void, options?: JSONLogDispatcherOptions) {
     return () =>
         new (class JSONDispatcher extends DispatcherBase {
             public level: LogLevel | undefined
@@ -20,7 +20,7 @@ export function NewJSONDispatcher(send: (data: string) => void, options?: JSONLo
                 this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
             }
 
-            public dispatch(meta: DispatcherExecuteMeta, args: any[]): void {
+            public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {
                 let obj: any = {}
                 if (this.printTimestamp) {
                     obj.timestamp = this.formatTimestamp(meta.timestamp)
@@ -30,7 +30,7 @@ export function NewJSONDispatcher(send: (data: string) => void, options?: JSONLo
                 }
                 obj.args = args.map((a: any) => toJSONValue(a))
 
-                this.sendMethod(JSON.stringify(obj))
+                this.sendMethod(JSON.stringify(obj), errorMeta)
             }
 
             public formatTimestamp(t: number) {

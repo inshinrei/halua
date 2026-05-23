@@ -75,10 +75,7 @@ export class Halua implements HaluaLogger {
     error(error: unknown, meta?: Record<string, any>): void {
         let e = unknownToError(error)
         let payload: any[] = [e]
-        if (meta !== undefined) {
-            payload.push(meta)
-        }
-        this.sendToBalancer(Level.Error, payload)
+        this.sendToBalancer(Level.Error, payload, meta)
     }
 
     fatal(...args: any[]): void {
@@ -91,10 +88,7 @@ export class Halua implements HaluaLogger {
         }
         let e = unknownToError(error)
         let payload: any[] = [e]
-        if (meta !== undefined) {
-            payload.push(meta)
-        }
-        this.sendToBalancer(Level.Error, payload)
+        this.sendToBalancer(Level.Error, payload, meta)
     }
 
     stamp(label: string, id?: any): () => void {
@@ -138,8 +132,9 @@ export class Halua implements HaluaLogger {
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
     }
 
-    private sendToBalancer(level: LogLevel, args: Array<any>) {
-        this.balancer.sendLog({ level, timestamp: Date.now() }, args.concat(this.options.withArgs ?? []))
+    private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: Record<string, any>) {
+        let finalArgs = args.concat(this.options.withArgs ?? [])
+        this.balancer.sendLog({ level, timestamp: Date.now() }, finalArgs, errorMeta)
     }
 
     private supposeIsDispatcher(v: any, reportError = true): boolean {
