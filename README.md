@@ -208,18 +208,18 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger }
 
 ### Logger Instance Methods
 
-| Method                                                        | Description                                                                                                                       |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                       |
-| `.child(...args)`                                             | Create child logger that appends context to every message                                                                         |
-| `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                           |
-| `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                              |
-| `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                     |
-| `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                         |
+| Method                                                        | Description                                                                                                                                                               |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                                                               |
+| `.child(...args)`                                             | Create child logger that appends context to every message                                                                                                                 |
+| `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                                                                   |
+| `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                                                                      |
+| `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                                                             |
+| `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                 |
 | `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) becomes the second arg passed to dispatchers |
-| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error`                              |
-| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                      |
-| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                              |
+| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error`                                                                      |
+| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                                                              |
+| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                                                                      |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 

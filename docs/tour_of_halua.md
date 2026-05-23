@@ -174,9 +174,7 @@ type ErrorMonitoringMeta = {
 }
 
 // A dedicated logger that only accepts the right meta shape
-let errorLogger = halua.create<ErrorMonitoringMeta>(
-    NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }),
-)
+let errorLogger = halua.create<ErrorMonitoringMeta>(NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }))
 
 function sendToErrorMonitoring(line: string, errorMeta?: Record<string, any>) {
     if (errorMeta?.issueKey) {
@@ -217,7 +215,11 @@ You can create as many differently-typed error loggers as you need in the same a
 ```ts
 type JobErrorMeta = { jobId: string; attempt: number; queue: string }
 
-let jobErrorLogger = halua.create<JobErrorMeta>(NewJSONDispatcher((json, meta) => { /* ... */ }))
+let jobErrorLogger = halua.create<JobErrorMeta>(
+    NewJSONDispatcher((json, meta) => {
+        /* ... */
+    }),
+)
 ```
 
 The generic lives only on the `Halua` / `HaluaLogger` surface. The underlying `Dispatcher` contract and your `send`
