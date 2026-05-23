@@ -21,8 +21,7 @@
     "files": [
         "lib",
         "README.md",
-        "LICENSE",
-        "AGENTS.md"
+        "LICENSE"
     ],
     "scripts": {
         "test": "vitest",
