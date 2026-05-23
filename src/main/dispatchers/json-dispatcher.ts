@@ -1,7 +1,7 @@
-import { DispatcherBase, SendMethod } from "./DispatcherBase"
+import { DispatcherBase, SendMethod } from "./dispatcher-base"
 import { toJSONValue } from "../format"
-import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
-import { prepareDispatchArgs } from "./DispatcherTypes"
+import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./dispatcher-types"
+import { prepareDispatchArgs } from "./dispatcher-types"
 
 export function NewJSONDispatcher(
     send: (data: string, errorMeta?: Record<string, any>) => void,

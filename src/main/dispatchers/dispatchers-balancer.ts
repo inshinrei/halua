@@ -1,5 +1,5 @@
 import { Level, LogLevel } from "../../types/log"
-import { Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
+import { Dispatcher, DispatcherExecuteMeta } from "./dispatcher-types"
 import { extractLevels } from "../util/string"
 import { HaluaFailedToCallDispatcher } from "../errors"
 import { tryReportAnError } from "../util/errors"

@@ -1,4 +1,4 @@
-import type { BaseDispatcherOptions, Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
+import type { BaseDispatcherOptions, Dispatcher, DispatcherExecuteMeta } from "./dispatcher-types"
 import { LogLevel } from "../../types/log"
 import { toarray } from "../util/cast"
 import { redact } from "../format"

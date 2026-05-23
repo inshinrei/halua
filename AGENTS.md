@@ -94,7 +94,7 @@ If you design a new public dispatcher, export a `New*Dispatcher` factory and upd
 
 ## Testing
 
-- Unit tests live next to source as `*_unit.ts` (Vitest).
+- Unit tests live next to source as `*-unit.ts` (Vitest).
 - Add tests for any new formatting, level, or dispatcher behavior.
 - The `format` and `getType` functions are the most critical pieces — they must handle every `ArgumentType` correctly
   for both text and JSON paths.
@@ -102,12 +102,12 @@ If you design a new public dispatcher, export a `New*Dispatcher` factory and upd
 ## Documentation
 
 - Keep `README.md` as the single source of truth for users.
-- The `docs/tour_of_halua.md` is a deeper narrative guide — keep it in sync with README examples.
+- The `docs/tour-of-halua.md` is a deeper narrative guide — keep it in sync with README examples.
 - When changing public API surface (new options, new export, behavioral change), update both documents in the same PR.
-- A consumer-oriented `AGENTS_FOR_MODULE.md` (API usage, logging policy, custom dispatcher guidance) lives at the
+- A consumer-oriented `agents-for-module.md` (API usage, logging policy, custom dispatcher guidance) lives at the
   repo root. On every `vite build` it is copied to `lib/AGENTS.md` (and therefore shipped inside the published npm
   package under `lib/`). This is the file that AI coding agents see when they inspect an installed `halua` module.
-  **Keep `AGENTS_FOR_MODULE.md` up to date** whenever public API, recommended usage patterns, or logging best
+  **Keep `agents-for-module.md` up to date** whenever public API, recommended usage patterns, or logging best
   practices for consumers change. Update it in the same PR as README / tour changes.
 - The full repo `AGENTS.md` (this file) is **not** published — it contains contributor / release / repo-specific
   sections that are irrelevant to library consumers.

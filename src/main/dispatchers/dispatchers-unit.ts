@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { NewTextDispatcher } from "./TextDispatcher"
-import { NewJSONDispatcher } from "./JSONDispatcher"
-import { NewConsoleDispatcher } from "./ConsoleDispatcher"
-import type { DispatcherExecuteMeta } from "./DispatcherTypes"
+import { NewTextDispatcher } from "./text-dispatcher"
+import { NewJSONDispatcher } from "./json-dispatcher"
+import { NewConsoleDispatcher } from "./console-dispatcher"
+import type { DispatcherExecuteMeta } from "./dispatcher-types"
 import { Level } from "../../types/log"
 import { DefaultRedactRegExp } from "../format"
 

@@ -1,6 +1,6 @@
-import type { ConsoleDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./DispatcherTypes"
-import { DispatcherBase } from "./DispatcherBase"
-import { prepareDispatchArgs, routeConsoleCall } from "./DispatcherTypes"
+import type { ConsoleDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./dispatcher-types"
+import { DispatcherBase } from "./dispatcher-base"
+import { prepareDispatchArgs, routeConsoleCall } from "./dispatcher-types"
 
 const isNode =
   typeof process !== "undefined" &&

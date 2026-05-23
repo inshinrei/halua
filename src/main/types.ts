@@ -1,5 +1,5 @@
 import { LogLevel } from "../types/log"
-import { Dispatcher } from "./dispatchers/DispatcherTypes"
+import { Dispatcher } from "./dispatchers/dispatcher-types"
 
 export type ArgumentType =
     | "undefined"

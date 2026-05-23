@@ -1,7 +1,7 @@
 import type { Argument, ArgumentType } from "./types"
 import { EmptySpacing, Spacing } from "./util/spacing"
 import { HaluaParse } from "./errors"
-import { getType } from "./getType"
+import { getType } from "./get-type"
 import { printTimes } from "./util/string"
 
 const FormatAsIs: Array<ArgumentType> = [

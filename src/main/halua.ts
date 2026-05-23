@@ -1,6 +1,6 @@
 import { HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
-import { Dispatcher, DispatcherExecuteMeta } from "./dispatchers/DispatcherTypes"
-import { Balancer, DispatchersBalancer } from "./dispatchers/DispatchersBalancer"
+import { Dispatcher, DispatcherExecuteMeta } from "./dispatchers/dispatcher-types"
+import { Balancer, DispatchersBalancer } from "./dispatchers/dispatchers-balancer"
 import { Level, LogLevel } from "../types/log"
 import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"

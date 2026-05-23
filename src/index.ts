@@ -1,6 +1,6 @@
 import { Halua } from "./main/halua"
-import { NewConsoleDispatcher } from "./main/dispatchers/ConsoleDispatcher"
-import { NewConsoleColoredDispatcher } from "./main/dispatchers/ConsoleColoredDispatcher"
+import { NewConsoleDispatcher } from "./main/dispatchers/console-dispatcher"
+import { NewConsoleColoredDispatcher } from "./main/dispatchers/console-colored-dispatcher"
 
 const logConsole: Console | null = (() => {
     try {
@@ -12,14 +12,14 @@ const logConsole: Console | null = (() => {
 
 export const halua = new Halua(logConsole ? NewConsoleDispatcher(logConsole) : [])
 
-export type { Dispatcher, ConsoleLike } from "./main/dispatchers/DispatcherTypes"
+export type { Dispatcher, ConsoleLike } from "./main/dispatchers/dispatcher-types"
 export type { HaluaLogger } from "./main/types"
 
 export { Level } from "./types/log"
 export { NewConsoleDispatcher, NewConsoleColoredDispatcher }
-export { NewJSONDispatcher } from "./main/dispatchers/JSONDispatcher"
-export { NewTextDispatcher } from "./main/dispatchers/TextDispatcher"
+export { NewJSONDispatcher } from "./main/dispatchers/json-dispatcher"
+export { NewTextDispatcher } from "./main/dispatchers/text-dispatcher"
 
-export { DispatcherBase } from "./main/dispatchers/DispatcherBase"
+export { DispatcherBase } from "./main/dispatchers/dispatcher-base"
 export { format, toJSONValue, redact, DefaultRedactRegExp } from "./main/format"
-export { getType } from "./main/getType"
+export { getType } from "./main/get-type"

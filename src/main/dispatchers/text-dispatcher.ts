@@ -1,7 +1,7 @@
-import { DispatcherBase, SendMethod } from "./DispatcherBase"
+import { DispatcherBase, SendMethod } from "./dispatcher-base"
 import { format } from "../format"
-import { getType } from "../getType"
-import type { BaseDispatcherOptions } from "./DispatcherTypes"
+import { getType } from "../get-type"
+import type { BaseDispatcherOptions } from "./dispatcher-types"
 
 export function NewTextDispatcher(
     send: (data: string, errorMeta?: Record<string, any>) => void,

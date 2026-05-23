@@ -26,7 +26,7 @@
     "scripts": {
         "test": "vitest",
         "dev": "vitest",
-        "bench": "node benchmarks/main_bench.js",
+        "bench": "node benchmarks/main-bench.js",
         "build": "vite build",
         "prepare": "pnpm run lint && pnpm run test run && pnpm run build",
         "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\"",

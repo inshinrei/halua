@@ -336,7 +336,7 @@ fileLogger.warn("something happened", { user: 42 })
 ```
 
 The `Dispatcher` interface (`dispatch(meta, args)`) + `DispatcherBase` + `format`/`getType`/`toJSONValue` are the public
-extension surface. See `src/main/dispatchers/TextDispatcher.ts`, `JSONDispatcher.ts` for reference implementations.
+extension surface. See `src/main/dispatchers/text-dispatcher.ts`, `json-dispatcher.ts` for reference implementations.
 
 **Semver note for custom dispatchers**: `Dispatcher`, `dispatch`, `DispatcherBase`, and the formatter trio are stable
 within a major version. Changes that would break existing custom `Dispatcher` implementations are released only as
@@ -354,4 +354,4 @@ MIT © [inshinrei](https://github.com/inshinrei)
 
 ---
 
-**See also:** [Tour of Halua](https://github.com/inshinrei/halua/blob/main/docs/tour_of_halua.md) for a narrative deep dive and decision records in `docs/dr.md`.
+**See also:** [Tour of Halua](https://github.com/inshinrei/halua/blob/main/docs/tour-of-halua.md) for a narrative deep dive and decision records in `docs/dr.md`.

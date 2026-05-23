@@ -6,14 +6,14 @@ import path from "node:path"
 const copyModuleAgentsPlugin = {
     name: "copy-module-agents",
     closeBundle() {
-        const src = path.resolve("AGENTS_FOR_MODULE.md")
+        const src = path.resolve("agents-for-module.md")
         const dest = path.resolve("lib", "AGENTS.md")
         try {
             fs.copyFileSync(src, dest)
         } catch (err) {
             // non-fatal during non-build runs or if src missing
             if (process.env.CI) {
-                console.warn("[copy-module-agents] Could not copy AGENTS_FOR_MODULE.md:", err)
+                console.warn("[copy-module-agents] Could not copy agents-for-module.md:", err)
             }
         }
     },
@@ -39,7 +39,7 @@ export default defineConfig({
         target: "esnext",
     },
     test: {
-        globalSetup: "./src/vitest.global-setup.ts",
-        include: ["src/**/*_unit.?(c|m)[jt]s?(x)"],
+        globalSetup: "./src/vitest-global-setup.ts",
+        include: ["src/**/*-unit.?(c|m)[jt]s?(x)"],
     },
 })

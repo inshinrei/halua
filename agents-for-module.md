@@ -140,4 +140,4 @@ authors. Breaking changes to them are only done in major releases.
 ---
 
 Follow the logging policy strictly. When the public API or recommended usage patterns change, the source of truth for
-this file (`AGENTS_FOR_MODULE.md` in the repo) must be updated together with README.md and docs/tour_of_halua.md.
+this file (`agents-for-module.md` in the repo) must be updated together with README.md and docs/tour-of-halua.md.
