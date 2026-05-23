@@ -33,10 +33,10 @@ pnpm add halua
 ## Quick Start
 
 ```ts
-import {halua} from "halua"
+import { halua } from "halua"
 
 halua.info("Application started")
-halua.warn("Disk space low", {available: "12%"})
+halua.warn("Disk space low", { available: "12%" })
 halua.error("timeout") // strings accepted too (unknownToError normalizes to Error)
 ```
 
@@ -54,7 +54,7 @@ halua.error("timeout") // strings accepted too (unknownToError normalizes to Err
 Use the built-in dispatcher factories to create purpose-specific loggers:
 
 ```ts
-import {halua, NewTextDispatcher, NewJSONDispatcher, Level} from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
 
 // Text logger (human readable)
 let textLogger = halua.create(NewTextDispatcher((line) => sendToLogServer(line)))
@@ -65,17 +65,17 @@ let jsonLogger = halua.create(NewJSONDispatcher((json) => writeToArchive(json)))
 // Console logger (explicit)
 let consoleLogger = halua.create(NewConsoleDispatcher(console))
 
-textLogger.info("user action", {id: 123, type: "click"})
+textLogger.info("user action", { id: 123, type: "click" })
 // -> 22/05/2026 21:55:50 INFO user action { id: 123, type: "click" }
 
-jsonLogger.info("structured", {success: true})
+jsonLogger.info("structured", { success: true })
 // -> {"timestamp":"2026-05-22T18:55:50.430Z","level":"INFO","args":["structured",{"success": true}]}
 ```
 
 You can pass an array to use **multiple dispatchers at once**:
 
 ```ts
-let prodLogger = halua.create([NewTextDispatcher(sendToFile), NewJSONDispatcher(sendToElastic)], {level: Level.Info})
+let prodLogger = halua.create([NewTextDispatcher(sendToFile), NewJSONDispatcher(sendToElastic)], { level: Level.Info })
 ```
 
 ## Child Loggers (Context)
@@ -96,10 +96,10 @@ Call `.create({ withArgs: [] })` to clear context on a child.
 ## Level Control
 
 ```ts
-import {Level} from "halua"
+import { Level } from "halua"
 
 // Instance level (affects all dispatchers that don't override)
-let logger = halua.create({level: Level.Warn})
+let logger = halua.create({ level: Level.Warn })
 
 logger.debug("hidden")
 logger.info("hidden")
@@ -111,8 +111,8 @@ logger.error("visible")
 
 ```ts
 let logger = halua.create([
-    NewTextDispatcher(sendToFile, {level: Level.Info}),
-    NewJSONDispatcher(sendToMetrics, {level: Level.Error}),
+    NewTextDispatcher(sendToFile, { level: Level.Info }),
+    NewJSONDispatcher(sendToMetrics, { level: Level.Error }),
 ])
 ```
 
@@ -121,7 +121,7 @@ let logger = halua.create([
 Use the `LEVEL+N` syntax for fine-grained control (e.g. sampling, feature flags):
 
 ```ts
-let logger = halua.create(NewTextDispatcher(out), {level: `${Level.Info}+2`})
+let logger = halua.create(NewTextDispatcher(out), { level: `${Level.Info}+2` })
 
 logger.logTo("INFO+1", "sampled out")
 logger.logTo("INFO+2", "important info") // logged
@@ -136,7 +136,7 @@ You can also pass string levels directly: `{ level: "ERROR+7" }` or `logTo("DEBU
 All `New*Dispatcher` factories accept a second `options` argument:
 
 | Option           | Type                     | Default     | Description                                                         |
-|------------------|--------------------------|-------------|---------------------------------------------------------------------|
+| ---------------- | ------------------------ | ----------- | ------------------------------------------------------------------- |
 | `level`          | `LogLevel`               | `undefined` | Minimum level this dispatcher accepts                               |
 | `exact`          | `LogLevel \| LogLevel[]` | `null`      | Only log these exact levels (ignores normal hierarchy)              |
 | `printTimestamp` | `boolean`                | `true`      | Include timestamp in output                                         |
@@ -150,7 +150,7 @@ All `New*Dispatcher` factories accept a second `options` argument:
 ### Main Export
 
 ```ts
-import {halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher} from "halua"
+import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher } from "halua"
 ```
 
 - `halua` — default logger instance (preconfigured with `NewConsoleDispatcher`)
@@ -162,7 +162,7 @@ import {halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher
 ### Advanced Exports (for custom dispatcher authors)
 
 ```ts
-import {DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger} from "halua"
+import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger } from "halua"
 ```
 
 - `DispatcherBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via
@@ -176,7 +176,7 @@ import {DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger} f
 ### Logger Instance Methods
 
 | Method                                                        | Description                                                                                                                       |
-|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                       |
 | `.child(...args)`                                             | Create child logger that appends context to every message                                                                         |
 | `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                           |
@@ -206,7 +206,7 @@ without polluting the normal log arguments.
 
 ```ts
 import * as Sentry from "@sentry/node"
-import {halua, NewTextDispatcher} from "halua"
+import { halua, NewTextDispatcher } from "halua"
 
 // Human-readable logs via TextDispatcher, while still forwarding
 // rich errorMeta (issueKey, etc.) to your error tracker.
@@ -226,7 +226,7 @@ let errorSink = NewTextDispatcher((line, errorMeta) => {
     }
 })
 
-let logger = halua.create(errorSink, {level: "WARN"})
+let logger = halua.create(errorSink, { level: "WARN" })
 
 // Normal log — no meta attached (Note that .error will serialize passed string to Error)
 logger.error("something odd happened")
@@ -250,14 +250,14 @@ Extend `DispatcherBase` (and set `formatArg` using the exported `format` + `getT
 to write custom dispatchers for files, remote services, pretty printers, etc.
 
 ```ts
-import {halua, DispatcherBase, format, getType, toJSONValue, NewTextDispatcher} from "halua"
+import { halua, DispatcherBase, format, getType, toJSONValue, NewTextDispatcher } from "halua"
 
 function NewFileDispatcher(sendLine) {
     return () =>
         new (class FileDispatcher extends DispatcherBase {
             constructor(send) {
                 super(send)
-                this.formatArg = (v) => format({type: getType(v), value: v}, /*spacing*/ true)
+                this.formatArg = (v) => format({ type: getType(v), value: v }, /*spacing*/ true)
             }
         })(sendLine)
 }

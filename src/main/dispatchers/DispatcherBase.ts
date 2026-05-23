@@ -1,5 +1,6 @@
-import type { Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
+import type { BaseDispatcherOptions, Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { LogLevel } from "../../types/log"
+import { toarray } from "../util/cast"
 
 export type SendMethod = (data: string, errorMeta?: Record<string, any>) => void
 
@@ -16,9 +17,14 @@ export class DispatcherBase implements Dispatcher {
     _lastTimestampSec = -1
     _lastTimestampStr = ""
 
-    constructor(send?: SendMethod) {
+    constructor(send: SendMethod = () => {}, options: BaseDispatcherOptions = {}) {
         this.dispatch = this.dispatch.bind(this)
-        this.sendMethod = send ?? (() => {})
+        this.sendMethod = send
+
+        this.printTimestamp = options.printTimestamp ?? true
+        this.printLevel = options.printLevel ?? true
+        this.level = options.level
+        this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
     }
 
     public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {

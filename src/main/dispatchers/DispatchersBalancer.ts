@@ -57,7 +57,9 @@ export class DispatchersBalancer implements Balancer {
         try {
             this.sendToDispatchers(meta, args, errorMeta)
         } catch (e) {
-            tryReportAnError(new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }))
+            tryReportAnError(
+                new HaluaFailedToCallDispatcher(`Unable to call dispatch method of a dispatcher`, { cause: e }),
+            )
         }
     }
 

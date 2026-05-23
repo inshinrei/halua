@@ -34,7 +34,10 @@ export class Halua implements HaluaLogger {
     }
 
     child(...args: any[]): HaluaLogger {
-        return new Halua(this.passedDispatchers, { ...this.options, withArgs: (this.options.withArgs || []).concat(args) })
+        return new Halua(this.passedDispatchers, {
+            ...this.options,
+            withArgs: (this.options.withArgs || []).concat(args),
+        })
     }
 
     setDispatchers(dispatcher: PassedDispatcher): void {

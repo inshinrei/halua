@@ -260,11 +260,13 @@ describe("Halua logger e2e usage", () => {
     test("assert only emits on false condition at ERROR level", () => {
         let cap: string[] = []
 
-        let logger = halua.create(NewTextDispatcher((l, errorMeta) => {
-            let out = l
-            if (errorMeta) out += " " + JSON.stringify(errorMeta)
-            cap.push(out)
-        }))
+        let logger = halua.create(
+            NewTextDispatcher((l, errorMeta) => {
+                let out = l
+                if (errorMeta) out += " " + JSON.stringify(errorMeta)
+                cap.push(out)
+            }),
+        )
 
         logger.assert(true, "should not appear")
         logger.assert(false, "assert failed") // bare string error (normalized by unknownToError)

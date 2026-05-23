@@ -1,23 +1,15 @@
-import type { LogLevel } from "../../types/log"
 import { DispatcherBase, SendMethod } from "./DispatcherBase"
 import { toJSONValue } from "../format"
 import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
-import { toarray } from "../util/cast"
 
-interface JSONLogDispatcherOptions extends BaseDispatcherOptions {}
-
-export function NewJSONDispatcher(send: (data: string, errorMeta?: Record<string, any>) => void, options?: JSONLogDispatcherOptions) {
+export function NewJSONDispatcher(
+    send: (data: string, errorMeta?: Record<string, any>) => void,
+    options?: BaseDispatcherOptions,
+) {
     return () =>
         new (class JSONDispatcher extends DispatcherBase {
-            public level: LogLevel | undefined
-            public exact: Array<LogLevel> | null = null
-
-            constructor(send: SendMethod, options: JSONLogDispatcherOptions = {}) {
-                super(send)
-
-                this.applyOptionalOptions(options)
-                this.level = options.level
-                this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
+            constructor(send: SendMethod, options: BaseDispatcherOptions = {}) {
+                super(send, options)
             }
 
             public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {
@@ -35,11 +27,6 @@ export function NewJSONDispatcher(send: (data: string, errorMeta?: Record<string
 
             public formatTimestamp(t: number) {
                 return new Date(t).toISOString()
-            }
-
-            applyOptionalOptions(options: JSONLogDispatcherOptions) {
-                this.printTimestamp = options.printTimestamp ?? true
-                this.printLevel = options.printLevel ?? true
             }
         })(send, options)
 }

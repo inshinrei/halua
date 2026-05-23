@@ -16,10 +16,10 @@ Next release: major
 - `Balancer.sendLog` and the internal `Halua.sendToBalancer` were extended with the optional `errorMeta`.
 - Only the two special error paths ever supply a non-undefined `errorMeta`; every other logging call (`info`, `warn`, `logTo`, child context via `withArgs`, stamps, etc.) continues to flow through the classic two-argument path.
 - **Built-in handler updates**:
-  - `DispatcherBase` (default text path) accepts the param but deliberately ignores it for formatting — subclasses decide.
-  - `NewJSONDispatcher` now emits a top-level `"meta"` field (via `toJSONValue`) when `errorMeta` is present. `args` stays clean (typically contains only the normalized error for error-level logs).
-  - `NewTextDispatcher` overrides `dispatch` and appends a formatted representation of `errorMeta` (using the same pretty `formatArg`) when present — useful for human logs without forcing it into every custom base extension.
-  - `NewConsoleDispatcher` forwards the (raw or formatted) `errorMeta` as an extra argument to the underlying `console.error`/`console.*` call. Native consoles render the error + meta object beautifully.
+    - `DispatcherBase` (default text path) accepts the param but deliberately ignores it for formatting — subclasses decide.
+    - `NewJSONDispatcher` now emits a top-level `"meta"` field (via `toJSONValue`) when `errorMeta` is present. `args` stays clean (typically contains only the normalized error for error-level logs).
+    - `NewTextDispatcher` overrides `dispatch` and appends a formatted representation of `errorMeta` (using the same pretty `formatArg`) when present — useful for human logs without forcing it into every custom base extension.
+    - `NewConsoleDispatcher` forwards the (raw or formatted) `errorMeta` as an extra argument to the underlying `console.error`/`console.*` call. Native consoles render the error + meta object beautifully.
 - This is a **breaking change for anyone implementing the `Dispatcher` interface directly or subclassing `DispatcherBase` and overriding `dispatch`** (they must now accept the optional third parameter to satisfy the updated public interface). The change was recorded as part of the same major release as the `.error` signature work.
 - Existing high-level usage and all built-in dispatchers continue to work; the improvement is entirely in the internal contract + structured output quality for error reporting.
 - Tests, README, tour, and `dr.md` updated. No new public API surface beyond the (already-breaking) `dispatch` signature tweak.
