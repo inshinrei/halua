@@ -1,4 +1,5 @@
 import { type LogLevel } from "../../types/log"
+import { redact } from "../format"
 
 export interface DispatcherExecuteMeta {
     timestamp: number
@@ -47,4 +48,47 @@ export interface BaseDispatcherOptions {
     printLevel?: boolean
     /** RegExp for redacting sensitive data (keys in objs/maps + content matches in strings). Takes precedence over any logger-level redactDataRegExp. */
     redactDataRegExp?: RegExp
+}
+
+export interface ConsoleDispatcherOptions extends Omit<BaseDispatcherOptions, "spacing"> {}
+
+/**
+ * Shared preprocessing used by Console, ConsoleColored and JSON dispatchers
+ * (they all override dispatch() and must replicate the redaction + errorMeta handling
+ * that DispatcherBase normally does).
+ */
+export function prepareDispatchArgs(
+  redactDataRegExp: RegExp | undefined,
+  meta: DispatcherExecuteMeta,
+  rawArgs: any[],
+  errorMeta?: Record<string, any>
+) {
+  let effectiveRe = redactDataRegExp || (meta as any).redactDataRegExp
+  let processedRawArgs = effectiveRe ? rawArgs.map((v: any) => redact(v, effectiveRe)) : rawArgs
+  let processedErrorMeta = errorMeta
+  if (effectiveRe && errorMeta != null) {
+    processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
+  }
+  return { processedRawArgs, processedErrorMeta }
+}
+
+/**
+ * Centralizes the level -> console method decision and the upper-case robustness.
+ * Used by both NewConsoleDispatcher and NewConsoleColoredDispatcher.
+ */
+export function routeConsoleCall(target: ConsoleLike, level: string, args: any[]): void {
+  let ul = level.toUpperCase()
+  if (ul.startsWith("DEBUG")) {
+    target.debug(...args)
+    return
+  }
+  if (ul.startsWith("WARN")) {
+    target.warn(...args)
+    return
+  }
+  if (ul.startsWith("ERROR") || ul.startsWith("FATAL")) {
+    target.error(...args)
+    return
+  }
+  target.info(...args)
 }

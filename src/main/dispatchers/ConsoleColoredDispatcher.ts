@@ -1,8 +1,6 @@
-import type { BaseDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./DispatcherTypes"
+import type { ConsoleDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { DispatcherBase } from "./DispatcherBase"
-import { redact } from "../format"
-
-interface ConsoleDispatcherOptions extends Omit<BaseDispatcherOptions, "spacing"> {}
+import { prepareDispatchArgs, routeConsoleCall } from "./DispatcherTypes"
 
 const isNode =
   typeof process !== "undefined" &&
@@ -49,12 +47,12 @@ export function NewConsoleColoredDispatcher(console: ConsoleLike, options?: Cons
       }
 
       public dispatch(meta: DispatcherExecuteMeta, rawArgs: any[], errorMeta?: Record<string, any>): void {
-        let effectiveRe = this.redactDataRegExp || (meta as any).redactDataRegExp
-        let processedRawArgs = effectiveRe ? rawArgs.map((v: any) => redact(v, effectiveRe)) : rawArgs
-        let processedErrorMeta = errorMeta
-        if (effectiveRe && errorMeta != null) {
-          processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
-        }
+        let { processedRawArgs, processedErrorMeta } = prepareDispatchArgs(
+          this.redactDataRegExp,
+          meta,
+          rawArgs,
+          errorMeta
+        )
 
         let colorKey = getColorForLevel(meta.level)
 
@@ -87,7 +85,7 @@ export function NewConsoleColoredDispatcher(console: ConsoleLike, options?: Cons
             args.push(m)
           }
 
-          this._routeToConsole(meta.level, args)
+          routeConsoleCall(this.console, meta.level, args)
           return
         }
 
@@ -128,24 +126,7 @@ export function NewConsoleColoredDispatcher(console: ConsoleLike, options?: Cons
           cargs.push(m)
         }
 
-        this._routeToConsole(meta.level, cargs)
-      }
-
-      _routeToConsole(level: string, args: any[]): void {
-        let ul = level.toUpperCase()
-        if (ul.startsWith("DEBUG")) {
-          this.console.debug(...args)
-          return
-        }
-        if (ul.startsWith("WARN")) {
-          this.console.warn(...args)
-          return
-        }
-        if (ul.startsWith("ERROR") || ul.startsWith("FATAL")) {
-          this.console.error(...args)
-          return
-        }
-        this.console.info(...args)
+        routeConsoleCall(this.console, meta.level, cargs)
       }
     })(console, options)
 }
