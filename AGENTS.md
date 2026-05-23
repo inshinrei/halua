@@ -59,7 +59,7 @@ When you need general-purpose utilities (string, object, array helpers, etc.):
 ## Project Commands
 
 - `pnpm test` / `pnpm dev` — run Vitest in watch (dev) or single run (`pnpm test run`)
-- `pnpm build` — clean build with tsup (outputs to `lib/`, generates .d.ts)
+- `pnpm build` — clean build with vite (outputs to `lib/`, generates .d.ts)
 - `pnpm bench` — run the tinybench performance suite (uses built `lib/`)
 - `pnpm prepare` — runs full test + build (executed on publish)
 

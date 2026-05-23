@@ -1,5 +1,13 @@
 Next release: minor
 
+### Build system: tsup → Vite + vite-plugin-dts (internal DX)
+
+- Replaced `tsup` (and `tsup.config.ts`) with `vite build` (library mode) + `vite-plugin-dts` for declaration bundling.
+- `package.json` build script and `exports` updated to use single `index.d.ts` for both ESM and CJS types (dropped redundant identical `index.d.cts`).
+- Consolidated test + build config into `vite.config.ts` (removed `vitest.config.ts`).
+- Output artifacts (`lib/index.{js,cjs,d.ts}`), runtime behavior, and published package shape unchanged for consumers.
+- Dev dependency swap; prepare / CI / lint unaffected. Non-breaking internal change (minor).
+
 ### Sensitive data redaction via `redactDataRegExp` (on loggers + per-dispatcher override)
 
 - Added `redactDataRegExp?: RegExp` to `HaluaOptions` (for `create` / instance-level default) and `BaseDispatcherOptions` (per-dispatcher, takes precedence).

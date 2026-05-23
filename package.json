@@ -13,7 +13,7 @@
                 "default": "./lib/index.js"
             },
             "require": {
-                "types": "./lib/index.d.cts",
+                "types": "./lib/index.d.ts",
                 "default": "./lib/index.cjs"
             }
         }
@@ -28,7 +28,7 @@
         "test": "vitest",
         "dev": "vitest",
         "bench": "node benchmarks/main_bench.js",
-        "build": "tsup",
+        "build": "vite build",
         "prepare": "pnpm run lint && pnpm run test run && pnpm run build",
         "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\"",
         "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"",
@@ -58,9 +58,10 @@
         "prettier": "^3.6.1",
         "tinybench": "^5.0.0",
         "ts-node": "^10.9.2",
-        "tsup": "^8.5.0",
         "typescript": "^5.8.3",
-        "vitest": "^3.2.4"
+        "vite": "^6.0.0",
+        "vite-plugin-dts": "^4.0.0",
+        "vitest": "4.1.7"
     },
     "publishConfig": {
         "access": "public"
