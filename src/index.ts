@@ -1,10 +1,13 @@
 import { Halua } from "./main/halua"
 import { NewConsoleDispatcher } from "./main/dispatchers/ConsoleDispatcher"
 
-let logConsole: Console | null = null
-try {
-    logConsole = typeof self !== "undefined" ? self.console : console
-} catch (_) {}
+const logConsole: Console | null = (() => {
+    try {
+        return typeof self !== "undefined" ? self.console : console
+    } catch (_) {
+        return null
+    }
+})()
 
 export const halua = new Halua(logConsole ? NewConsoleDispatcher(logConsole) : [])
 

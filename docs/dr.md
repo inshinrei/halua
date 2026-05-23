@@ -10,6 +10,17 @@ Next release: minor
 - Full test coverage in `format_unit.ts` + `dispatchers_unit.ts`; works for main `halua`, children, `create`, `set/appendDispatchers`.
 - No semver break (purely additive); documented in README + tour; `dr.md` entry added (minor).
 
+### Post-3.0.0 review & DX polish (addresses every item in IMPROVEMENT.md "Constructive Critique")
+
+- Formatting now strictly enforced: added `pnpm lint` step to `.github/workflows/ci.yml` (after install) and to the `prepare` script so `npm pack` / publish fails on drift. Ran `pnpm format` to bring the three drifted files (README.md, ConsoleDispatcher.ts, dispatchers_unit.ts) into compliance.
+- Fixed the last relative docs link (`./docs/tour_of_halua.md`) in README to an absolute GitHub URL so it works for consumers who only have the published tarball.
+- Simplified `supposeIsDispatcher` duck-typing from `__proto__` / hasOwnProperty checks to the obvious `typeof v?.dispatch === "function"` (clearer, sufficient, removes minor portability smell).
+- Made the top-level console acquisition in `src/index.ts` a true `const` (via IIFE initializer) to fully comply with the "let only for reassigned, const for never-reassigned module constants" rule in AGENTS.md.
+- Documented the live-mutation semantics of `setDispatchers` / `appendDispatchers` (they do not affect the blueprint used by `.create()` / `.child()`) with an explicit paragraph in the README API section.
+- Added a complete, copy-pasteable "real file on disk" example (both the simple `NewTextDispatcher + fs.appendFileSync` path and the full `extends DispatcherBase + format + getType` custom factory pattern) in the Advanced / Custom Dispatchers section of README. This closes the "no first-party file dispatchers" and "add tiny working example" wishes.
+- Updated the stale "59 → 67 tests" historical note in this file to the current 91.
+- All changes are non-breaking polish + documentation. `prepare` + CI now protect the DX bar. (minor)
+
 ### Specialized `.error(error, meta?)` and `.assert(condition, error, meta?)` on all loggers (breaking)
 
 - `.error` and `.assert` signatures changed from varargs (`...args`) to dedicated forms that treat the first argument as the error (of type `unknown`) and an optional second `meta?: Record<string, any>`.
@@ -141,5 +152,5 @@ Next release: minor
     - Per-dispatcher `exact: [...]` (or single) bypassing level filters.
     - `assert(boolean, ...)` only emitting on false at ERROR.
     - Error isolation: a throwing custom dispatcher does not propagate to caller and does not prevent sibling dispatchers from executing (the `tryReportAnError` contract).
-- Overall: 59 → 67 tests, all green. The "narrow coverage" items listed in clause 3 (dispatcher output shapes, multi/Balancer, set/append, exact, assert, isolation) are now exercised via the public API. Chose expansion of `index_unit` over new `dispatchers/*_unit.ts` files for maximum integration confidence with least files.
+- Overall: 59 → 91 tests, all green (further growth from redaction, stamping, and additional e2e cases). The "narrow coverage" items listed in clause 3 (dispatcher output shapes, multi/Balancer, set/append, exact, assert, isolation) are now exercised via the public API. Chose expansion of `index_unit` over new `dispatchers/*_unit.ts` files for maximum integration confidence with least files.
 - Formatter/property-based gaps remain for future; playground + benchmarks still need v3 port. `prepare` gate is now substantially more valuable.

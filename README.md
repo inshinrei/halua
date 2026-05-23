@@ -136,7 +136,7 @@ You can also pass string levels directly: `{ level: "ERROR+7" }` or `logTo("DEBU
 Pass `redactDataRegExp` (a `RegExp`) to `halua.create(options)` for the logger instance (applies to all its dispatchers) or to individual `New*Dispatcher(..., { redactDataRegExp })` (overrides the logger default).
 
 - In strings (and strings inside arrays): all matches of the regexp are replaced by `"^_^"`
-- In objects and Maps: if a *key* matches the regexp, its value (any type) is replaced entirely by `"^_^"`
+- In objects and Maps: if a _key_ matches the regexp, its value (any type) is replaced entirely by `"^_^"`
 - Works for both text and structured (JSON) output, and for `errorMeta`
 - Use the exported `DefaultRedactRegExp` for common PII (passwords, tokens, api keys, emails, SSNs, JWTs, credit cards, etc.) or provide your own.
 
@@ -144,10 +144,13 @@ Pass `redactDataRegExp` (a `RegExp`) to `halua.create(options)` for the logger i
 import { halua, NewJSONDispatcher, DefaultRedactRegExp } from "halua"
 
 // logger-level default (affects dispatchers without their own setting)
-let prodLogger = halua.create([
-    NewJSONDispatcher(sendToStore),
-    NewTextDispatcher(sendToFile, { level: Level.Warn }) // this one can override if needed
-], { redactDataRegExp: DefaultRedactRegExp })
+let prodLogger = halua.create(
+    [
+        NewJSONDispatcher(sendToStore),
+        NewTextDispatcher(sendToFile, { level: Level.Warn }), // this one can override if needed
+    ],
+    { redactDataRegExp: DefaultRedactRegExp },
+)
 
 prodLogger.info("login", { user: "alice", password: "hunter2", apiKey: "sk_xxx" })
 // args become: ["login", { user: "alice", password: "^_^", apiKey: "^_^" }]
@@ -162,14 +165,14 @@ The `redact` helper is also exported for custom dispatchers or preprocessing.
 
 All `New*Dispatcher` factories accept a second `options` argument:
 
-| Option           | Type                     | Default     | Description                                                         |
-| ---------------- | ------------------------ | ----------- | ------------------------------------------------------------------- |
-| `level`          | `LogLevel`               | `undefined` | Minimum level this dispatcher accepts                               |
-| `exact`          | `LogLevel \| LogLevel[]` | `null`      | Only log these exact levels (ignores normal hierarchy)              |
-| `printTimestamp` | `boolean`                | `true`      | Include timestamp in output                                         |
-| `printLevel`     | `boolean`                | `true`      | Include level name in output                                        |
-| `spacing`        | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only) |
-| `redactDataRegExp` | `RegExp`               | `undefined` | Redact sensitive data in strings/arrays and by key in objects/maps (see feature section) |
+| Option             | Type                     | Default     | Description                                                                              |
+| ------------------ | ------------------------ | ----------- | ---------------------------------------------------------------------------------------- |
+| `level`            | `LogLevel`               | `undefined` | Minimum level this dispatcher accepts                                                    |
+| `exact`            | `LogLevel \| LogLevel[]` | `null`      | Only log these exact levels (ignores normal hierarchy)                                   |
+| `printTimestamp`   | `boolean`                | `true`      | Include timestamp in output                                                              |
+| `printLevel`       | `boolean`                | `true`      | Include level name in output                                                             |
+| `spacing`          | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only)                      |
+| `redactDataRegExp` | `RegExp`                 | `undefined` | Redact sensitive data in strings/arrays and by key in objects/maps (see feature section) |
 
 `NewConsoleDispatcher` does not support `spacing` (it passes values directly to console methods).
 
@@ -219,6 +222,8 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger }
 | `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                              |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
+
+`setDispatchers` and `appendDispatchers` mutate the dispatcher list on the **live instance only**. They do not update the blueprint used by later `.create(...)` or `.child(...)` calls on that same logger (those continue to inherit the dispatchers that were supplied when the logger was originally built). If you need a fresh logger with the new set, call `halua.create(newDispatchers)` (or the mutated logger's `.create(newDispatchers)`).
 
 ## Error Handling
 
@@ -276,23 +281,41 @@ second parameter to your send function.
 
 ## Advanced / Custom Dispatchers
 
-Extend `DispatcherBase` (and set `formatArg` using the exported `format` + `getType`, or `toJSONValue` for structured)
-to write custom dispatchers for files, remote services, pretty printers, etc.
+For simple file (or any sink) logging the easiest approach is to use a built-in factory with your own send function:
 
 ```ts
-import { halua, DispatcherBase, format, getType, toJSONValue, NewTextDispatcher } from "halua"
+import { halua, NewTextDispatcher } from "halua"
+import fs from "node:fs"
 
-function NewFileDispatcher(sendLine) {
+let logPath = "app.log"
+
+let fileLogger = halua.create(
+    NewTextDispatcher((line) => {
+        fs.appendFileSync(logPath, line + "\n")
+    }),
+)
+```
+
+If you need full control (custom dispatch, different prefixing, rotation, binary framing, remote calls, etc.) extend `DispatcherBase` and use the exported `format` + `getType` (or `toJSONValue`) exactly as the built-ins do:
+
+```ts
+import { halua, DispatcherBase, format, getType, toJSONValue } from "halua"
+import fs from "node:fs"
+
+const NewFileDispatcher = (filePath: string) => {
     return () =>
         new (class FileDispatcher extends DispatcherBase {
-            constructor(send) {
-                super(send)
-                this.formatArg = (v) => format({ type: getType(v), value: v }, /*spacing*/ true)
+            constructor() {
+                super((line) => {
+                    fs.appendFileSync(filePath, line + "\n")
+                })
+                this.formatArg = (v) => format({ type: getType(v), value: v }, true)
             }
-        })(sendLine)
+        })()
 }
 
-let fileLogger = halua.create(NewFileDispatcher(appendToFile))
+let fileLogger = halua.create(NewFileDispatcher("app.log"), { level: "INFO" })
+fileLogger.warn("something happened", { user: 42 })
 ```
 
 The `Dispatcher` interface (`dispatch(meta, args)`) + `DispatcherBase` + `format`/`getType`/`toJSONValue` are the public
@@ -314,4 +337,4 @@ MIT © [inshinrei](https://github.com/inshinrei)
 
 ---
 
-**See also:** [Tour of Halua](./docs/tour_of_halua.md) for a narrative deep dive and decision records in `docs/dr.md`.
+**See also:** [Tour of Halua](https://github.com/inshinrei/halua/blob/main/docs/tour_of_halua.md) for a narrative deep dive and decision records in `docs/dr.md`.

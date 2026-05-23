@@ -145,10 +145,8 @@ export class Halua implements HaluaLogger {
     }
 
     private supposeIsDispatcher(v: any, reportError = true): boolean {
-        /** __proto__ checks for function declaration, ownProp checks for arrow func */
-        let isDispatcher =
-            Object.prototype.hasOwnProperty.call(v.__proto__, "dispatch") ||
-            Object.prototype.hasOwnProperty.call(v, "dispatch")
+        // duck-type on the public dispatch method (sufficient for all built-in and custom Dispatcher shapes)
+        let isDispatcher = typeof v?.dispatch === "function"
         if (!isDispatcher && reportError) {
             tryReportAnError(new HaluaUnableToDetermineDispatcher(`Unable to find dispatch method of a dispatcher`))
         }

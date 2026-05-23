@@ -77,9 +77,12 @@ describe("dispatcher redact support", () => {
     it("NewTextDispatcher redacts using its own redactDataRegExp option", () => {
         let received: string | undefined
         const re = /password|secret/i
-        const d = NewTextDispatcher((line) => {
-            received = line
-        }, { redactDataRegExp: re })()
+        const d = NewTextDispatcher(
+            (line) => {
+                received = line
+            },
+            { redactDataRegExp: re },
+        )()
 
         d.dispatch(baseMeta, ["user password is hunter2", { secret: "s3cr3t", safe: 1 }])
 
@@ -94,10 +97,13 @@ describe("dispatcher redact support", () => {
         let receivedJson: string | undefined
         let receivedMeta: any
         const re = /token/i
-        const d = NewJSONDispatcher((json, meta) => {
-            receivedJson = json
-            receivedMeta = meta
-        }, { redactDataRegExp: re })()
+        const d = NewJSONDispatcher(
+            (json, meta) => {
+                receivedJson = json
+                receivedMeta = meta
+            },
+            { redactDataRegExp: re },
+        )()
 
         d.dispatch(baseMeta, [{ apiToken: "t123", ok: true }], { authToken: "bearer xyz", other: "data" })
 
@@ -126,9 +132,12 @@ describe("dispatcher redact support", () => {
         const metaRe = /email/i
         const dispatchRe = /secret/i
         const metaWith: DispatcherExecuteMeta = { ...baseMeta, redactDataRegExp: metaRe }
-        const d = NewTextDispatcher((line) => {
-            received = line
-        }, { redactDataRegExp: dispatchRe })()
+        const d = NewTextDispatcher(
+            (line) => {
+                received = line
+            },
+            { redactDataRegExp: dispatchRe },
+        )()
 
         d.dispatch(metaWith, ["secret data and email a@b.com"])
 

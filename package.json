@@ -29,7 +29,7 @@
         "dev": "vitest",
         "bench": "node benchmarks/main_bench.js",
         "build": "tsup",
-        "prepare": "pnpm run test run && pnpm run build",
+        "prepare": "pnpm run lint && pnpm run test run && pnpm run build",
         "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\"",
         "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"",
         "lint": "pnpm run format:check",

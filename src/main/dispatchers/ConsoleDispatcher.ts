@@ -51,7 +51,8 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
                 }
 
                 if (processedErrorMeta !== undefined) {
-                    let m = typeof this.formatArg === "function" ? this.formatArg(processedErrorMeta) : processedErrorMeta
+                    let m =
+                        typeof this.formatArg === "function" ? this.formatArg(processedErrorMeta) : processedErrorMeta
                     args.push(m)
                 }
 
