@@ -35,7 +35,7 @@ This project **is** the logger. When adding features or tools that need logging:
 - Example:
 
 ```ts
-import {halua} from "./src" // or "halua" in consuming packages
+import { halua } from "./src" // or "halua" in consuming packages
 
 try {
     riskyOperation()
