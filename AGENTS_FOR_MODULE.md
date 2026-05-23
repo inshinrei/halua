@@ -13,7 +13,7 @@ All application code that uses halua **must** route its logs through a halua log
 
 - Import the ready-to-use instance: `import { halua } from "halua"`
 - Or create purpose-built loggers:
-  `import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "halua"`
+  `import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, NewConsoleColoredDispatcher, Level } from "halua"`
 - Use `.error(err)` **only** for `Error` instances (or subclasses). For plain messages use a regular level or
   `halua.error("message string")` — the implementation normalizes unknown values.
 - Always prefer structured data as subsequent arguments: `logger.info("user action", { userId, action })`
@@ -45,10 +45,12 @@ import {
     NewTextDispatcher,
     NewJSONDispatcher,
     NewConsoleDispatcher,
+    NewConsoleColoredDispatcher,
     // advanced (for custom dispatchers)
     DispatcherBase,
     Dispatcher,
     HaluaLogger,
+    ConsoleLike,
     format,
     getType,
     toJSONValue,

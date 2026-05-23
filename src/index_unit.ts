@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { halua, Level, NewConsoleDispatcher, NewJSONDispatcher, NewTextDispatcher } from "./index"
+import { halua, Level, NewConsoleDispatcher, NewConsoleColoredDispatcher, NewJSONDispatcher, NewTextDispatcher } from "./index"
 
 describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
@@ -200,6 +200,62 @@ describe("Halua logger e2e usage", () => {
         expect(calls[1].method).toBe("info")
         expect(calls[2].method).toBe("warn")
         expect(calls[3].method).toBe("error")
+    })
+
+    test("NewConsoleColoredDispatcher adds ANSI colors (node path) and routes levels correctly", () => {
+        let calls: Array<{ method: string; args: any[] }> = []
+
+        let mock = {
+            debug: (...a: any[]) => {
+                calls.push({ method: "debug", args: a })
+            },
+            info: (...a: any[]) => {
+                calls.push({ method: "info", args: a })
+            },
+            warn: (...a: any[]) => {
+                calls.push({ method: "warn", args: a })
+            },
+            error: (...a: any[]) => {
+                calls.push({ method: "error", args: a })
+            },
+        }
+
+        let logger = halua.create(NewConsoleColoredDispatcher(mock))
+
+        logger.trace("t")
+        logger.debug("d")
+        logger.info("i")
+        logger.notice("n")
+        logger.warn("w")
+        logger.error(new Error("e"))
+        logger.fatal("f")
+
+        expect(calls.length).toBe(7)
+        expect(calls[0].method).toBe("info") // trace -> info
+        expect(calls[1].method).toBe("debug")
+        expect(calls[2].method).toBe("info")
+        expect(calls[3].method).toBe("info") // notice
+        expect(calls[4].method).toBe("warn")
+        expect(calls[5].method).toBe("error")
+        expect(calls[6].method).toBe("error") // fatal
+
+        // check ANSI codes present on level arg (node path)
+        let debugArg = calls[1].args.find((a: any) => typeof a === "string" && a.includes("DEBUG"))
+        expect(debugArg).toBeDefined()
+        expect(debugArg).toMatch(/\u001b\[35m.*DEBUG.*\u001b\[0m/)
+
+        let infoArg = calls[2].args.find((a: any) => typeof a === "string" && a.includes("INFO"))
+        expect(infoArg).toMatch(/\u001b\[34m.*INFO.*\u001b\[0m/)
+
+        let noticeArg = calls[3].args.find((a: any) => typeof a === "string" && a.includes("NOTICE"))
+        expect(noticeArg).toMatch(/\u001b\[38;5;208m.*NOTICE.*\u001b\[0m/)
+
+        let warnArg = calls[4].args.find((a: any) => typeof a === "string" && a.includes("WARN"))
+        expect(warnArg).toMatch(/\u001b\[31m.*WARN.*\u001b\[0m/)
+
+        // error/fatal also red
+        let errArg = calls[5].args.find((a: any) => typeof a === "string" && a.includes("ERROR"))
+        expect(errArg).toMatch(/\u001b\[31m.*ERROR.*\u001b\[0m/)
     })
 
     test("create accepts array of dispatchers for multi-dispatcher dispatch via Balancer", () => {

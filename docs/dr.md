@@ -1,5 +1,15 @@
 Next release: minor
 
+### `NewConsoleColoredDispatcher` (additive)
+
+- New `NewConsoleColoredDispatcher(console, options?)` factory, symmetric to `NewConsoleDispatcher` but emits colored output.
+- Colors (by major level): `TRACE`/`DEBUG` = purple, `INFO` = blue, `NOTICE` = orange, `WARN`/`ERROR`/`FATAL` = red.
+- Cross-platform: uses ANSI escape codes in Node.js (including 256-color orange), `%c` CSS styling in browsers (works with `console.debug/info/warn/error`).
+- Supports all same options (`level`, `exact`, `printTimestamp`, `printLevel`, `redactDataRegExp`) and `errorMeta` forwarding; reuses `DispatcherBase` + `ConsoleLike` type.
+- Exported alongside existing dispatchers; `ConsoleLike` also exported for typing console mocks or wrappers.
+- Unit test coverage added; works with minor levels (e.g. `DEBUG+3`) and custom `logTo`.
+- Purely additive (minor). README, tour, AGENTS_FOR_MODULE, and dr.md updated.
+
 ### Generic `ErrorMeta` for `.error(error, meta?)` and `.assert(cond, error, meta?)` (additive DX)
 
 - `HaluaLogger` and the concrete `Halua` class are now generic over the error metadata shape: `HaluaLogger<ErrorMeta = Record<string, any>>` (and `class Halua<ErrorMeta = ...>`).

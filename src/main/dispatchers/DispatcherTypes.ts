@@ -32,6 +32,13 @@ export interface Dispatcher {
     formatTimestamp?: (value: number) => string
 }
 
+export interface ConsoleLike {
+    debug: (...args: any[]) => void
+    info: (...args: any[]) => void
+    warn: (...args: any[]) => void
+    error: (...args: any[]) => void
+}
+
 export interface BaseDispatcherOptions {
     level?: LogLevel
     exact?: LogLevel | Array<LogLevel>

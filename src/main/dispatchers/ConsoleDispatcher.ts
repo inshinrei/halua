@@ -1,21 +1,14 @@
-import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
+import type { BaseDispatcherOptions, ConsoleLike, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { DispatcherBase } from "./DispatcherBase"
 import { redact } from "../format"
 
-interface OutputConsole {
-    debug: (...args: any[]) => void
-    info: (...args: any[]) => void
-    warn: (...args: any[]) => void
-    error: (...args: any[]) => void
-}
-
 interface ConsoleDispatcherOptions extends Omit<BaseDispatcherOptions, "spacing"> {}
 
-export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDispatcherOptions) {
+export function NewConsoleDispatcher(console: ConsoleLike, options?: ConsoleDispatcherOptions) {
     return () =>
         new (class ConsoleDispatcher extends DispatcherBase {
             constructor(
-                readonly console: OutputConsole,
+                readonly console: ConsoleLike,
                 options: ConsoleDispatcherOptions = {},
             ) {
                 super(() => {}, options)

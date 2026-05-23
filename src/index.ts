@@ -1,5 +1,6 @@
 import { Halua } from "./main/halua"
 import { NewConsoleDispatcher } from "./main/dispatchers/ConsoleDispatcher"
+import { NewConsoleColoredDispatcher } from "./main/dispatchers/ConsoleColoredDispatcher"
 
 const logConsole: Console | null = (() => {
     try {
@@ -11,11 +12,11 @@ const logConsole: Console | null = (() => {
 
 export const halua = new Halua(logConsole ? NewConsoleDispatcher(logConsole) : [])
 
-export type { Dispatcher } from "./main/dispatchers/DispatcherTypes"
+export type { Dispatcher, ConsoleLike } from "./main/dispatchers/DispatcherTypes"
 export type { HaluaLogger } from "./main/types"
 
 export { Level } from "./types/log"
-export { NewConsoleDispatcher }
+export { NewConsoleDispatcher, NewConsoleColoredDispatcher }
 export { NewJSONDispatcher } from "./main/dispatchers/JSONDispatcher"
 export { NewTextDispatcher } from "./main/dispatchers/TextDispatcher"
 

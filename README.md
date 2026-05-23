@@ -11,7 +11,7 @@ loggers, fine-grained level filtering (including minor levels like `INFO+3`), an
 ## Features
 
 - Zero-config default logger (writes to `console` using appropriate methods)
-- Three built-in dispatchers: `NewTextDispatcher`, `NewJSONDispatcher`, `NewConsoleDispatcher`
+- Four built-in dispatchers: `NewTextDispatcher`, `NewJSONDispatcher`, `NewConsoleDispatcher`, `NewConsoleColoredDispatcher`
 - Compose any number of dispatchers per logger instance
 - Child loggers that automatically append context (`logger.child("user", 42)`)
 - Powerful level system: `TRACE` < `DEBUG` < `INFO` < `NOTICE` < `WARN` < `ERROR` < `FATAL` + minor levels (`INFO+5`)
@@ -64,6 +64,9 @@ let jsonLogger = halua.create(NewJSONDispatcher((json) => writeToArchive(json)))
 
 // Console logger (explicit)
 let consoleLogger = halua.create(NewConsoleDispatcher(console))
+
+// Colored console (ANSI in Node, %c CSS in browsers; colors: trace/debug=purple, info=blue, notice=orange, warn/error/fatal=red)
+let colorLogger = halua.create(NewConsoleColoredDispatcher(console))
 
 textLogger.info("user action", { id: 123, type: "click" })
 // -> 22/05/2026 21:55:50 INFO user action { id: 123, type: "click" }
@@ -174,14 +177,14 @@ All `New*Dispatcher` factories accept a second `options` argument:
 | `spacing`          | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only)                      |
 | `redactDataRegExp` | `RegExp`                 | `undefined` | Redact sensitive data in strings/arrays and by key in objects/maps (see feature section) |
 
-`NewConsoleDispatcher` does not support `spacing` (it passes values directly to console methods).
+`NewConsoleDispatcher` and `NewConsoleColoredDispatcher` do not support `spacing` (they pass values directly to console methods).
 
 ## API Reference
 
 ### Main Export
 
 ```ts
-import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher } from "halua"
+import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, NewConsoleColoredDispatcher } from "halua"
 ```
 
 - `halua` — default logger instance (preconfigured with `NewConsoleDispatcher`)
@@ -189,11 +192,12 @@ import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatche
 - `NewTextDispatcher(send: (line: string, errorMeta?: Record<string, any>) => void, options?)` → factory
 - `NewJSONDispatcher(send: (json: string, errorMeta?: Record<string, any>) => void, options?)` → factory
 - `NewConsoleDispatcher(console: {debug,info,warn,error}, options?)` → factory
+- `NewConsoleColoredDispatcher(console: {debug,info,warn,error}, options?)` → factory (colors levels: TRACE/DEBUG=purple, INFO=blue, NOTICE=orange, WARN/ERROR/FATAL=red; uses ANSI in Node, %c in browsers)
 
 ### Advanced Exports (for custom dispatcher authors)
 
 ```ts
-import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger } from "halua"
+import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, ConsoleLike } from "halua"
 ```
 
 - `DispatcherBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via
@@ -205,6 +209,7 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger }
 - `DefaultRedactRegExp` — built-in regexp matching common sensitive keys and value patterns (password, token, email, ssn, jwt, cc, etc.)
 - `Dispatcher` — interface for raw custom dispatchers (`dispatch(meta, args): void`)
 - `HaluaLogger` — the logger instance interface
+- `ConsoleLike` — minimal `{ debug, info, warn, error }` shape accepted by `NewConsoleDispatcher` / `NewConsoleColoredDispatcher`
 
 ### Logger Instance Methods
 
