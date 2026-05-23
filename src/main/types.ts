@@ -45,9 +45,9 @@ export interface HaluaLogger {
     info: (...args: any[]) => void
     warn: (...args: any[]) => void
     notice: (...args: any[]) => void
-    error: (...args: any[]) => void
+    error: (error: unknown, meta?: Record<string, any>) => void
     fatal: (...args: any[]) => void
-    assert: (assertion: boolean, ...args: any[]) => void
+    assert: (assertion: boolean, error: unknown, meta?: Record<string, any>) => void
 
     stamp: (label: string, id?: any) => () => void
     stampEnd: (id: any) => void

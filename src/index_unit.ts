@@ -254,7 +254,7 @@ describe("Halua logger e2e usage", () => {
 
         expect(normalCap.length).toBe(2)
         expect(exactCap.length).toBe(1)
-        expect(exactCap[0]).toMatch(/ERROR visible to both/)
+        expect(exactCap[0]).toMatch(/ERROR Error: visible to both/)
     })
 
     test("assert only emits on false condition at ERROR level", () => {
@@ -263,12 +263,14 @@ describe("Halua logger e2e usage", () => {
         let logger = halua.create(NewTextDispatcher((l) => cap.push(l)))
 
         logger.assert(true, "should not appear")
-        logger.assert(false, "assert failed", 99)
+        logger.assert(false, "assert failed") // bare string error (normalized by unknownToError)
+        logger.assert(false, "with meta", { code: 99 })
         logger.assert(1 === 1, "also skipped")
 
-        expect(cap.length).toBe(1)
-        expect(cap[0]).toMatch(/ERROR assert failed/)
-        expect(cap[0]).toContain("99")
+        expect(cap.length).toBe(2)
+        expect(cap[0]).toMatch(/ERROR Error: assert failed/)
+        expect(cap[1]).toMatch(/ERROR Error: with meta/)
+        expect(cap[1]).toContain("99")
     })
 
     test("throwing dispatcher is isolated; does not throw to caller and siblings still execute", () => {

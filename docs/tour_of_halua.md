@@ -46,9 +46,9 @@ halua.debug("debug info")
 halua.info("normal operation")
 halua.warn("something suspicious")
 halua.notice("notable event")
-halua.error("recoverable error")
+halua.error("recoverable error") // plain string also works (becomes Error("recoverable error"))
 halua.fatal("unrecoverable")
-halua.assert(user != null, "user must exist") // logs at ERROR if false
+halua.assert(user != null, "user must exist", { user }) // string error + meta; logs at ERROR if false
 
 // high-res timing (uses performance.now, logs via .info on end)
 let end = halua.stamp("db lookup", "q42")

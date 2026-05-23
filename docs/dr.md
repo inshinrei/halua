@@ -1,4 +1,14 @@
-Next release: minor
+Next release: major
+
+### Specialized `.error(error, meta?)` and `.assert(condition, error, meta?)` on all loggers (breaking)
+
+- `.error` and `.assert` signatures changed from varargs (`...args`) to dedicated forms that treat the first argument as the error (of type `unknown`) and an optional second `meta?: Record<string, any>`.
+- The `unknown` error value is passed through the existing `unknownToError` (now unit-tested in `errors_unit.ts`) which returns the input if already `Error`, wraps strings directly, and `JSON.stringify`s everything else (with original as `.cause`); circulars yield `Error("")`.
+- The normalized `Error` is always the first item sent to the dispatcher `args[]`; when `meta` is supplied it is passed as the *second* argument (so dispatchers see `[error, meta, ...childContext]`). Omitting `meta` keeps payload as single-element `[error]`.
+- This is a **breaking change** for any code that called `.error("msg", obj, ...)` or `.assert(false, "msg", 123)` expecting all values to be treated as opaque log arguments; such calls must be migrated to `.error(new Error("msg"), { detail: obj })` (or keep using strings, which now become `Error` messages) and `.assert(false, new Error("msg"), { code: 123 })`.
+- All instances (`halua`, children, `.create` results) receive the new behavior; other level methods remain `...args`.
+- Updated `HaluaLogger` interface, implementation, tests, README, and tour. Added `errors_unit.ts` exercising all branches of `unknownToError`.
+- Semver major because public method signatures on the core logger interface changed.
 
 ### Performance stamping API (`.stamp` / `.stampEnd`)
 
