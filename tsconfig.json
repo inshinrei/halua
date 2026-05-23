@@ -4,6 +4,7 @@
         "module": "esnext",
         "lib": ["esnext", "dom"],
         "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
         "declaration": true,
         "outDir": "./lib",
         "skipLibCheck": true,

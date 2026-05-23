@@ -54,13 +54,13 @@
     },
     "homepage": "https://github.com/inshinrei/halua#readme",
     "devDependencies": {
-        "@types/node": "^24.9.1",
-        "prettier": "^3.6.1",
-        "tinybench": "^5.0.0",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.8.3",
-        "vite": "^6.0.0",
-        "vite-plugin-dts": "^4.0.0",
+        "@types/node": "25.9.1",
+        "prettier": "3.8.3",
+        "tinybench": "6.0.2",
+        "ts-node": "10.9.2",
+        "typescript": "6.0.3",
+        "vite": "6.4.2",
+        "vite-plugin-dts": "4.5.4",
         "vitest": "4.1.7"
     },
     "publishConfig": {
