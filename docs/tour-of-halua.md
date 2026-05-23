@@ -14,22 +14,22 @@ import {
     NewConsoleDispatcher,
     NewConsoleColoredDispatcher,
     Level,
-    DefaultRedactRegExp
+    DefaultRedactRegExp,
 } from "halua"
 
 // In a real app you would have your own transport functions
 let dispatchers = [
     // High-volume structured logs -> compressed archive / object storage
-    NewJSONDispatcher(writeToZipArchive, {level: Level.Info}),
+    NewJSONDispatcher(writeToZipArchive, { level: Level.Info }),
 
     // Important events -> backend
-    NewTextDispatcher(sendToServer, {level: Level.Notice}),
+    NewTextDispatcher(sendToServer, { level: Level.Notice }),
 
     // User analytics on a dedicated minor level so you can filter easily
-    NewTextDispatcher(sendUserAction, {level: "INFO+1"}),
+    NewTextDispatcher(sendUserAction, { level: "INFO+1" }),
 
     // Critical errors -> error tracking (Sentry, etc.)
-    NewTextDispatcher(sendToErrorMonitoring, {level: Level.Error}),
+    NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }),
 ]
 
 // Add pretty console output only in development
@@ -38,7 +38,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Create the root logger for the whole application
-let appLogger = halua.create(dispatchers, {level: Level.Info, redactDataRegExp: DefaultRedactRegExp})
+let appLogger = halua.create(dispatchers, { level: Level.Info, redactDataRegExp: DefaultRedactRegExp })
 
 // Later you can still mutate dispatchers if needed
 // appLogger.appendDispatchers(NewJSONDispatcher(anotherDestination))
@@ -47,7 +47,7 @@ let appLogger = halua.create(dispatchers, {level: Level.Info, redactDataRegExp: 
 ## Basic Logging Methods
 
 ```ts
-import {halua} from "halua"
+import { halua } from "halua"
 
 halua.trace("very verbose")
 halua.debug("debug info")
@@ -56,7 +56,7 @@ halua.warn("something suspicious")
 halua.notice("notable event")
 halua.error("recoverable error") // plain string also works (becomes Error("recoverable error"))
 halua.fatal("unrecoverable")
-halua.assert(user != null, "user must exist", {user}) // default logger accepts any meta shape (typed loggers enforce a specific interface)
+halua.assert(user != null, "user must exist", { user }) // default logger accepts any meta shape (typed loggers enforce a specific interface)
 
 // high-res timing (uses performance.now, logs via .info on end)
 let end = halua.stamp("db lookup", "q42")
@@ -69,7 +69,7 @@ end() // or halua.stampEnd("q42")  ->  ... INFO db lookup took 3.14ms
 `.create(...)` is the main way to obtain new logger instances.
 
 ```ts
-import {halua, NewTextDispatcher, NewJSONDispatcher, Level} from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
 
 let fileLogger = halua.create(NewTextDispatcher(appendToFile), {
     level: Level.Warn,
@@ -80,7 +80,7 @@ let jsonMetrics = halua.create(NewJSONDispatcher(postToCollector), {
 })
 
 // Combine previous dispatchers with new options
-let debugFileLogger = fileLogger.create({level: Level.Debug})
+let debugFileLogger = fileLogger.create({ level: Level.Debug })
 ```
 
 You can also create a logger from another dispatcher while keeping previous options:
@@ -97,18 +97,18 @@ Child loggers are the recommended way to carry request/operation context.
 ```ts
 let req = halua.child("requestId", "req_9f3a", "tenant", "acme")
 
-req.info("started processing order", {orderId: 88321})
+req.info("started processing order", { orderId: 88321 })
 // 22/05/2026 ... INFO started processing order { orderId: 88321 } requestId req_9f3a tenant acme
 
 let step = req.child("step", "payment")
-step.warn("slow payment gateway", {latencyMs: 1240})
+step.warn("slow payment gateway", { latencyMs: 1240 })
 // ... WARN slow payment gateway { latencyMs: 1240 } requestId ... step payment
 ```
 
 To reset context:
 
 ```ts
-let clean = someChild.create({withArgs: []})
+let clean = someChild.create({ withArgs: [] })
 ```
 
 ## Level System Deep Dive
@@ -121,7 +121,7 @@ A message is emitted when:
 2. Majors are equal and its **minor** part is >= configured minor
 
 ```ts
-let logger = halua.create({level: `${Level.Info}+3`}) // or "INFO+3"
+let logger = halua.create({ level: `${Level.Info}+3` }) // or "INFO+3"
 
 logger.logTo("INFO+2", "filtered") // hidden (minor too low)
 logger.logTo("INFO+3", "borderline") // emitted
@@ -131,7 +131,7 @@ logger.logTo("NOTICE", "higher") // emitted (major wins)
 You can also set `exact` on a dispatcher to bypass the hierarchy completely (useful for dedicated channels):
 
 ```ts
-NewTextDispatcher(sendAudit, {exact: ["AUDIT", "SECURITY"]})
+NewTextDispatcher(sendAudit, { exact: ["AUDIT", "SECURITY"] })
 ```
 
 ## Formatting Behavior
@@ -173,7 +173,7 @@ Halua makes this even safer by letting you declare the shape of the meta object 
 type parameter:
 
 ```ts
-import {halua, NewTextDispatcher, Level} from "halua"
+import { halua, NewTextDispatcher, Level } from "halua"
 import * as Sentry from "@sentry/node"
 
 type ErrorMonitoringMeta = {
@@ -185,7 +185,7 @@ type ErrorMonitoringMeta = {
 }
 
 // A dedicated logger that only accepts the right meta shape
-let errorLogger = halua.create<ErrorMonitoringMeta>(NewTextDispatcher(sendToErrorMonitoring, {level: Level.Error}))
+let errorLogger = halua.create<ErrorMonitoringMeta>(NewTextDispatcher(sendToErrorMonitoring, { level: Level.Error }))
 
 function sendToErrorMonitoring(line: string, errorMeta?: Record<string, any>) {
     if (errorMeta?.issueKey) {
@@ -221,10 +221,10 @@ errorLogger.error(new Error("Payment declined"), {
 
 // Child loggers inherit the parent's ErrorMeta type automatically
 let checkoutLogger = errorLogger.child("flow", "checkout")
-checkoutLogger.assert(false, "inventory check failed", {issueKey: "INV-777"})
+checkoutLogger.assert(false, "inventory check failed", { issueKey: "INV-777" })
 
 // @ts-expect-error — wrong field name is caught at compile time
-errorLogger.error(new Error("bad"), {foo: "bar"})
+errorLogger.error(new Error("bad"), { foo: "bar" })
 ```
 
 You can create as many differently-typed error loggers as you need in the same application:
@@ -250,7 +250,7 @@ channels without adding any runtime cost.
 ## When to Use What
 
 | Use Case                | Recommended Approach                                                      |
-|-------------------------|---------------------------------------------------------------------------|
+| ----------------------- | ------------------------------------------------------------------------- |
 | Local dev / CLI         | Default `halua` or `NewConsoleDispatcher` / `NewConsoleColoredDispatcher` |
 | Server file logs        | `NewTextDispatcher` + rotation lib                                        |
 | Cloud / SIEM / ELK      | `NewJSONDispatcher`                                                       |

@@ -18,7 +18,7 @@ export function NewJSONDispatcher(
                     this.redactDataRegExp,
                     meta,
                     rawArgs,
-                    errorMeta
+                    errorMeta,
                 )
 
                 let obj: any = {}

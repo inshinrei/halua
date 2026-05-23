@@ -5,7 +5,10 @@ import { prepareDispatchArgs, routeConsoleCall } from "./dispatcher-types"
 export function NewConsoleDispatcher(console: ConsoleLike, options?: ConsoleDispatcherOptions) {
     return () =>
         new (class ConsoleDispatcher extends DispatcherBase {
-            constructor(readonly console: ConsoleLike, options: ConsoleDispatcherOptions = {}) {
+            constructor(
+                readonly console: ConsoleLike,
+                options: ConsoleDispatcherOptions = {},
+            ) {
                 super(() => {}, options)
             }
 
@@ -14,7 +17,7 @@ export function NewConsoleDispatcher(console: ConsoleLike, options?: ConsoleDisp
                     this.redactDataRegExp,
                     meta,
                     rawArgs,
-                    errorMeta
+                    errorMeta,
                 )
 
                 let args: any[] = []
@@ -39,7 +42,8 @@ export function NewConsoleDispatcher(console: ConsoleLike, options?: ConsoleDisp
                 }
 
                 if (processedErrorMeta !== undefined) {
-                    let m = typeof this.formatArg === "function" ? this.formatArg(processedErrorMeta) : processedErrorMeta
+                    let m =
+                        typeof this.formatArg === "function" ? this.formatArg(processedErrorMeta) : processedErrorMeta
                     args.push(m)
                 }
 

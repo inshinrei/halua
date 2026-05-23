@@ -64,7 +64,7 @@ import {
 ```ts
 let fileLogger = halua.create(
     NewTextDispatcher((line, errorMeta) => fs.appendFileSync("app.log", line + "\n")),
-    {level: Level.Info, redactDataRegExp: DefaultRedactRegExp},
+    { level: Level.Info, redactDataRegExp: DefaultRedactRegExp },
 )
 
 let jsonLogger = halua.create(NewJSONDispatcher(sendToElastic))
@@ -84,7 +84,7 @@ reqLogger.info("starting work")
 
 ```ts
 logger.logTo("INFO+3", "very important event")
-halua.create(dispatcher, {level: "DEBUG+2"})
+halua.create(dispatcher, { level: "DEBUG+2" })
 ```
 
 ### Redaction of secrets

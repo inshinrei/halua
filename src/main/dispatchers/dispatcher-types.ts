@@ -58,18 +58,18 @@ export interface ConsoleDispatcherOptions extends Omit<BaseDispatcherOptions, "s
  * that DispatcherBase normally does).
  */
 export function prepareDispatchArgs(
-  redactDataRegExp: RegExp | undefined,
-  meta: DispatcherExecuteMeta,
-  rawArgs: any[],
-  errorMeta?: Record<string, any>
+    redactDataRegExp: RegExp | undefined,
+    meta: DispatcherExecuteMeta,
+    rawArgs: any[],
+    errorMeta?: Record<string, any>,
 ) {
-  let effectiveRe = redactDataRegExp || (meta as any).redactDataRegExp
-  let processedRawArgs = effectiveRe ? rawArgs.map((v: any) => redact(v, effectiveRe)) : rawArgs
-  let processedErrorMeta = errorMeta
-  if (effectiveRe && errorMeta != null) {
-    processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
-  }
-  return { processedRawArgs, processedErrorMeta }
+    let effectiveRe = redactDataRegExp || (meta as any).redactDataRegExp
+    let processedRawArgs = effectiveRe ? rawArgs.map((v: any) => redact(v, effectiveRe)) : rawArgs
+    let processedErrorMeta = errorMeta
+    if (effectiveRe && errorMeta != null) {
+        processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
+    }
+    return { processedRawArgs, processedErrorMeta }
 }
 
 /**
@@ -77,18 +77,18 @@ export function prepareDispatchArgs(
  * Used by both NewConsoleDispatcher and NewConsoleColoredDispatcher.
  */
 export function routeConsoleCall(target: ConsoleLike, level: string, args: any[]): void {
-  let ul = level.toUpperCase()
-  if (ul.startsWith("DEBUG")) {
-    target.debug(...args)
-    return
-  }
-  if (ul.startsWith("WARN")) {
-    target.warn(...args)
-    return
-  }
-  if (ul.startsWith("ERROR") || ul.startsWith("FATAL")) {
-    target.error(...args)
-    return
-  }
-  target.info(...args)
+    let ul = level.toUpperCase()
+    if (ul.startsWith("DEBUG")) {
+        target.debug(...args)
+        return
+    }
+    if (ul.startsWith("WARN")) {
+        target.warn(...args)
+        return
+    }
+    if (ul.startsWith("ERROR") || ul.startsWith("FATAL")) {
+        target.error(...args)
+        return
+    }
+    target.info(...args)
 }

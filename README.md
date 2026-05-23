@@ -184,7 +184,14 @@ All `New*Dispatcher` factories accept a second `options` argument:
 ### Main Export
 
 ```ts
-import { halua, Level, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, NewConsoleColoredDispatcher } from "halua"
+import {
+    halua,
+    Level,
+    NewTextDispatcher,
+    NewJSONDispatcher,
+    NewConsoleDispatcher,
+    NewConsoleColoredDispatcher,
+} from "halua"
 ```
 
 - `halua` — default logger instance (preconfigured with `NewConsoleDispatcher`)
@@ -213,18 +220,18 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, 
 
 ### Logger Instance Methods
 
-| Method                                                        | Description                                                                                                                                                               |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                                                               |
-| `.child(...args)`                                             | Create child logger that appends context to every message                                                                                                                 |
-| `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                                                                   |
-| `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                                                                      |
-| `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                                                             |
-| `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                 |
+| Method                                                        | Description                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                                                                                                                                                                   |
+| `.child(...args)`                                             | Create child logger that appends context to every message                                                                                                                                                                                                                     |
+| `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                                                                                                                                                                       |
+| `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                                                                                                                                                                          |
+| `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                                                                                                                                                                 |
+| `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                                                                                                                     |
 | `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) — when supplied, the normalized Error instance is auto-attached under `error` key and the augmented object becomes the second arg to dispatchers |
-| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error` (auto-attaches normalized Error under `error` when meta supplied)                                                                      |
-| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                                                              |
-| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                                                                      |
+| `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error` (auto-attaches normalized Error under `error` when meta supplied)                                                                                                        |
+| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                                                                                                                                                                  |
+| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                                                                                                                                                                          |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 
@@ -241,7 +248,7 @@ The special `.error(unknown, meta?)` and `.assert(condition, unknown, meta?)` me
 object. When you use a custom `send` callback with `NewTextDispatcher` (or `NewJSONDispatcher`), this `meta` is
 delivered as the **second argument** to your send function.
 
-Halua automatically appends the *normalized Error instance* (the same one passed to the primary log args) under the
+Halua automatically appends the _normalized Error instance_ (the same one passed to the primary log args) under the
 `error` key of the meta object. This makes it trivial to forward the live `Error` (including `.cause`, custom props,
 and accurate stack) to error trackers instead of a string or plain-object snapshot.
 

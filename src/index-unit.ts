@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest"
 
-import { halua, Level, NewConsoleDispatcher, NewConsoleColoredDispatcher, NewJSONDispatcher, NewTextDispatcher } from "./index"
+import {
+    halua,
+    Level,
+    NewConsoleDispatcher,
+    NewConsoleColoredDispatcher,
+    NewJSONDispatcher,
+    NewTextDispatcher,
+} from "./index"
 
 describe("Halua logger e2e usage", () => {
     test("create new instance for logging", () => {
