@@ -1,4 +1,13 @@
-Next release: minor
+Next release: major
+
+### Source file naming standardization to kebab-case (repo hygiene / contributor DX)
+- All source `.ts` files, unit tests (`*_unit.ts` → `*-unit.ts`), dispatcher implementations, utilities, benchmarks, docs, and supporting files have been renamed from `CamelCase` / `snake_case` to consistent `kebab-case` (e.g. `ConsoleColoredDispatcher.ts` → `console-colored-dispatcher.ts`, `getType.ts` → `get-type.ts`, `tour_of_halua.md` → `tour-of-halua.md`, `AGENTS_FOR_MODULE.md` → `agents-for-module.md`, `vitest.global-setup.ts` → `vitest-global-setup.ts`).
+- `AGENTS.md` (root + the one shipped inside the package as `lib/AGENTS.md`) remains the only intentional exception, per project design.
+- No folders required changes.
+- **Zero impact on consumers**: the published package is unaffected (only `lib/index.{js,cjs,d.ts}` are distributed; public API, `New*Dispatcher` factories, `DispatcherBase`, `format`, `getType`, etc. are identical). Import paths for users stay `"halua"`.
+- All internal imports, build/test config (`vite.config.ts`, `tsconfig.json`), package scripts, and documentation references were updated atomically.
+- Full verification: `pnpm test run` (93/93 green) + `pnpm build` succeeded.
+- This change improves consistency with the project's `AGENTS.md` rules and modern TS ecosystem conventions. It is a breaking change **only** for anyone directly depending on the previous internal source file paths (unsupported / extremely rare). Bumped as a major release to clearly establish the new canonical source layout going forward.
 
 ### `NewConsoleColoredDispatcher` (additive)
 
