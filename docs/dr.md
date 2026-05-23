@@ -1,4 +1,16 @@
-Next release: minor
+Next release: patch
+
+### Fix empty `lib/index.d.ts` after v4.0.0 source rename (build / publishing fix)
+
+- After the kebab-case file renames in 4.0.0, `pnpm build` produced a broken `lib/index.d.ts` containing only `export { }` (~12 bytes) instead of the full public type surface.
+- Root causes: `vite-plugin-dts@4.5.4` (with its vendored old API Extractor + TS 5.9) became unable to roll up the declaration graph after the module renames; additionally, Node types for `process` (used in `console-colored-dispatcher.ts`) were only provided transitively by a test setup file.
+- Fix:
+  - Upgraded to `vite-plugin-dts@5.0.1` + added `@microsoft/api-extractor@7.58.7`.
+  - Switched to the v5 `bundleTypes: true` mechanism (plus `entryRoot: "src"` and explicit `tsconfigPath`).
+  - Added `"types": ["node"]` to `tsconfig.json`.
+  - Added `/// <reference types="node" />` in `console-colored-dispatcher.ts`.
+- Result: `lib/index.d.ts` is now a correct ~9.4 KB bundled declaration file exposing the complete public API (`Halua`, `New*Dispatcher` factories, `DispatcherBase`, `format`, `getType`, `redact`, `Level`, etc.).
+- No runtime, public API, or consumer-visible changes. Pure build tooling and publishing hygiene fix (patch).
 
 ### Source file naming standardization to kebab-case (repo hygiene / contributor DX)
 
