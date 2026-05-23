@@ -261,8 +261,15 @@ describe("redact", () => {
     it("redacts matched substrings inside strings", () => {
         let re = /secret|password|token/i
         expect(redact("my password is hunter2", re)).toBe("my ^_^ is hunter2")
-        expect(redact("token=abc123", re)).toBe("^_^=abc123")
+        expect(redact("token=abc123", re)).toBe("^_^")
         expect(redact("no match here", re)).toBe("no match here")
+
+        // Enhanced: when a sensitive key match is followed by = or :, also redact the value
+        expect(redact("auth token=sk_live_12345", re)).toBe("auth ^_^")
+        expect(redact("password: hunter2", re)).toBe("^_^")
+        expect(redact("password = 'secret value with spaces'", re)).toBe("^_^")
+        expect(redact("token =abc123 extra", re)).toBe("^_^ extra")
+        expect(redact("set token and continue", re)).toBe("set ^_^ and continue") // no = so we don't over-eat
     })
 
     it("redacts strings inside arrays (recursively)", () => {
@@ -320,7 +327,7 @@ describe("redact", () => {
         let re = /secret/i
         let err = new Error("auth failed: secret=abc123")
         let r = redact(err, re) as Error
-        expect(r.message).toBe("auth failed: ^_^=abc123")
+        expect(r.message).toBe("auth failed: ^_^")
         expect(r).toBeInstanceOf(Error)
     })
 

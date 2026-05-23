@@ -389,9 +389,25 @@ function redactString(str: string, re: RegExp): string {
     let last = 0
     let match: RegExpExecArray | null
     while ((match = searchRe.exec(str)) !== null) {
-        result += str.slice(last, match.index) + REDACTION_TOKEN
-        last = searchRe.lastIndex
-        // always continue for all matches (we forced g)
+        let matchEnd = searchRe.lastIndex
+        let replacement = REDACTION_TOKEN
+        let newLast = matchEnd
+
+        // Smart assignment redaction: if the matched sensitive key (e.g. "token", "password")
+        // is immediately followed by "=" or ":" (common in "KEY=VALUE" or "key: secret" log lines),
+        // also redact the value after the operator. This makes simple user regexps much more effective.
+        let tail = str.slice(matchEnd)
+        let assign = tail.match(/^(\s*[=:]\s*)(".*?"|'.*?'|\S+)?/)
+
+        if (assign) {
+            newLast = matchEnd + assign[0].length
+            replacement = REDACTION_TOKEN
+            // Tell the global search regex to resume *after* the extended region we just swallowed
+            searchRe.lastIndex = newLast
+        }
+
+        result += str.slice(last, match.index) + replacement
+        last = newLast
     }
     result += str.slice(last)
     return result
