@@ -131,6 +131,33 @@ logger.logTo("WARN", "always higher major level") // logged
 
 You can also pass string levels directly: `{ level: "ERROR+7" }` or `logTo("DEBUG+10", ...)`.
 
+## Sensitive Data Redaction
+
+Pass `redactDataRegExp` (a `RegExp`) to `halua.create(options)` for the logger instance (applies to all its dispatchers) or to individual `New*Dispatcher(..., { redactDataRegExp })` (overrides the logger default).
+
+- In strings (and strings inside arrays): all matches of the regexp are replaced by `"^_^"`
+- In objects and Maps: if a *key* matches the regexp, its value (any type) is replaced entirely by `"^_^"`
+- Works for both text and structured (JSON) output, and for `errorMeta`
+- Use the exported `DefaultRedactRegExp` for common PII (passwords, tokens, api keys, emails, SSNs, JWTs, credit cards, etc.) or provide your own.
+
+```ts
+import { halua, NewJSONDispatcher, DefaultRedactRegExp } from "halua"
+
+// logger-level default (affects dispatchers without their own setting)
+let prodLogger = halua.create([
+    NewJSONDispatcher(sendToStore),
+    NewTextDispatcher(sendToFile, { level: Level.Warn }) // this one can override if needed
+], { redactDataRegExp: DefaultRedactRegExp })
+
+prodLogger.info("login", { user: "alice", password: "hunter2", apiKey: "sk_xxx" })
+// args become: ["login", { user: "alice", password: "^_^", apiKey: "^_^" }]
+
+prodLogger.info("token eyJhbGciOi...abc.123", "email: foo@bar.com")
+// the string arg will have secrets replaced by ^_^
+```
+
+The `redact` helper is also exported for custom dispatchers or preprocessing.
+
 ## Dispatcher Options
 
 All `New*Dispatcher` factories accept a second `options` argument:
@@ -142,6 +169,7 @@ All `New*Dispatcher` factories accept a second `options` argument:
 | `printTimestamp` | `boolean`                | `true`      | Include timestamp in output                                         |
 | `printLevel`     | `boolean`                | `true`      | Include level name in output                                        |
 | `spacing`        | `boolean`                | `true`      | Pretty-print objects/arrays with tabs & newlines (Text & JSON only) |
+| `redactDataRegExp` | `RegExp`               | `undefined` | Redact sensitive data in strings/arrays and by key in objects/maps (see feature section) |
 
 `NewConsoleDispatcher` does not support `spacing` (it passes values directly to console methods).
 
@@ -170,6 +198,8 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger }
 - `format(spec: {type, value, ...})` — the text pretty-printer (handles circulars, Errors, Maps, etc.)
 - `getType(value)` — returns `ArgumentType` discriminant for any JS value
 - `toJSONValue(value)` — converts any value to a JSON-legal tree (Errors → {name,message,stack[]}, etc.)
+- `redact(value, regexp?)` — recursively redacts strings by content match and object/map values by key match (used internally by the redact feature)
+- `DefaultRedactRegExp` — built-in regexp matching common sensitive keys and value patterns (password, token, email, ssn, jwt, cc, etc.)
 - `Dispatcher` — interface for raw custom dispatchers (`dispatch(meta, args): void`)
 - `HaluaLogger` — the logger instance interface
 

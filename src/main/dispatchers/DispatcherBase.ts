@@ -1,6 +1,7 @@
 import type { BaseDispatcherOptions, Dispatcher, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { LogLevel } from "../../types/log"
 import { toarray } from "../util/cast"
+import { redact } from "../format"
 
 export type SendMethod = (data: string, errorMeta?: Record<string, any>) => void
 
@@ -14,6 +15,8 @@ export class DispatcherBase implements Dispatcher {
     public printTimestamp: boolean = true
     public printLevel: boolean = true
 
+    public redactDataRegExp?: RegExp
+
     _lastTimestampSec = -1
     _lastTimestampStr = ""
 
@@ -25,9 +28,17 @@ export class DispatcherBase implements Dispatcher {
         this.printLevel = options.printLevel ?? true
         this.level = options.level
         this.exact = options.exact ? (toarray(options.exact) as Array<LogLevel>) : null
+        this.redactDataRegExp = options.redactDataRegExp
     }
 
     public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {
+        let effectiveRe = this.redactDataRegExp || (meta as any).redactDataRegExp
+        let processedArgs = effectiveRe ? args.map((v: any) => redact(v, effectiveRe)) : args
+        let processedErrorMeta = errorMeta
+        if (effectiveRe && errorMeta != null) {
+            processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
+        }
+
         let parts: any[] = []
 
         if (this.printTimestamp) {
@@ -38,7 +49,7 @@ export class DispatcherBase implements Dispatcher {
             parts.push(meta.level)
         }
 
-        for (let value of args) {
+        for (let value of processedArgs) {
             let formatted: any
             if (typeof this.formatArg === "function") {
                 formatted = this.formatArg(value)
@@ -48,7 +59,7 @@ export class DispatcherBase implements Dispatcher {
             parts.push(formatted)
         }
 
-        this.sendMethod(parts.join(" "), errorMeta)
+        this.sendMethod(parts.join(" "), processedErrorMeta)
     }
 
     public formatTimestamp(t: number): string {

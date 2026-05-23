@@ -1,5 +1,5 @@
 import { DispatcherBase, SendMethod } from "./DispatcherBase"
-import { toJSONValue } from "../format"
+import { redact, toJSONValue } from "../format"
 import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
 
 export function NewJSONDispatcher(
@@ -13,6 +13,13 @@ export function NewJSONDispatcher(
             }
 
             public dispatch(meta: DispatcherExecuteMeta, args: any[], errorMeta?: Record<string, any>): void {
+                let effectiveRe = this.redactDataRegExp || (meta as any).redactDataRegExp
+                let processedArgs = effectiveRe ? args.map((a: any) => redact(a, effectiveRe)) : args
+                let processedErrorMeta = errorMeta
+                if (effectiveRe && errorMeta != null) {
+                    processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
+                }
+
                 let obj: any = {}
                 if (this.printTimestamp) {
                     obj.timestamp = this.formatTimestamp(meta.timestamp)
@@ -20,9 +27,9 @@ export function NewJSONDispatcher(
                 if (this.printLevel) {
                     obj.level = meta.level
                 }
-                obj.args = args.map((a: any) => toJSONValue(a))
+                obj.args = processedArgs.map((a: any) => toJSONValue(a))
 
-                this.sendMethod(JSON.stringify(obj), errorMeta)
+                this.sendMethod(JSON.stringify(obj), processedErrorMeta)
             }
 
             public formatTimestamp(t: number) {

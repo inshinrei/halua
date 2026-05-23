@@ -7,7 +7,7 @@ This document walks through real-world usage patterns beyond the quick start in 
 ## Production Application Setup Example
 
 ```ts
-import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level } from "halua"
+import { halua, NewTextDispatcher, NewJSONDispatcher, NewConsoleDispatcher, Level, DefaultRedactRegExp } from "halua"
 
 // In a real app you would have your own transport functions
 let dispatchers = [
@@ -30,7 +30,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Create the root logger for the whole application
-let appLogger = halua.create(dispatchers, { level: Level.Info })
+let appLogger = halua.create(dispatchers, { level: Level.Info, redactDataRegExp: DefaultRedactRegExp })
 
 // Later you can still mutate dispatchers if needed
 // appLogger.appendDispatchers(NewJSONDispatcher(anotherDestination))

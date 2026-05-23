@@ -17,5 +17,5 @@ export { NewJSONDispatcher } from "./main/dispatchers/JSONDispatcher"
 export { NewTextDispatcher } from "./main/dispatchers/TextDispatcher"
 
 export { DispatcherBase } from "./main/dispatchers/DispatcherBase"
-export { format, toJSONValue } from "./main/format"
+export { format, toJSONValue, redact, DefaultRedactRegExp } from "./main/format"
 export { getType } from "./main/getType"

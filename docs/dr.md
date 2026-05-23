@@ -1,4 +1,14 @@
-Next release: major
+Next release: minor
+
+### Sensitive data redaction via `redactDataRegExp` (on loggers + per-dispatcher override)
+
+- Added `redactDataRegExp?: RegExp` to `HaluaOptions` (for `create` / instance-level default) and `BaseDispatcherOptions` (per-dispatcher, takes precedence).
+- `DispatcherExecuteMeta` now carries optional `redactDataRegExp` from the logger so dispatchers without explicit setting inherit it.
+- New exported `DefaultRedactRegExp` (common PII keys like password/apiKey/token/email/ssn + value patterns for JWTs, emails, SSNs, CCNs, bearer tokens) and `redact(value, re?)` helper (deep, handles strings/arrays/objs/maps/sets/errors/circulars safely, replaces matches or whole keyed-values with `"^_^"`).
+- Redaction applied centrally in `DispatcherBase.dispatch` (and replicated in JSON/Console overrides) before formatting / `toJSONValue` / `formatArg`; also redacts `errorMeta`.
+- Text, JSON, and Console dispatchers + custom `DispatcherBase` subclasses automatically benefit; custom raw `dispatch` overrides should call `redact` manually if desired.
+- Full test coverage in `format_unit.ts` + `dispatchers_unit.ts`; works for main `halua`, children, `create`, `set/appendDispatchers`.
+- No semver break (purely additive); documented in README + tour; `dr.md` entry added (minor).
 
 ### Specialized `.error(error, meta?)` and `.assert(condition, error, meta?)` on all loggers (breaking)
 

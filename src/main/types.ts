@@ -56,6 +56,8 @@ export interface HaluaLogger {
 export interface HaluaOptions {
     level?: LogLevel
     withArgs?: Array<any>
+    /** RegExp used to redact sensitive data (keys in objects/maps, content in strings). Overrides per-dispatcher if set on dispatcher. */
+    redactDataRegExp?: RegExp
 }
 
 export type PassedDispatcher = (() => Dispatcher) | Array<() => Dispatcher>

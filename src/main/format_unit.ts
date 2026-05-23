@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { format, toJSONValue } from "./format"
+import { format, toJSONValue, redact, DefaultRedactRegExp } from "./format"
 import { HaluaParse } from "./errors"
 
 describe("format", () => {
@@ -249,5 +249,89 @@ describe("toJSONValue", () => {
 
     it("bigint to string", () => {
         expect(toJSONValue(BigInt(123))).toBe("123")
+    })
+})
+
+describe("redact", () => {
+    it("returns value as-is when no regexp provided", () => {
+        expect(redact({ a: "secret" })).toEqual({ a: "secret" })
+        expect(redact("foo")).toBe("foo")
+    })
+
+    it("redacts matched substrings inside strings", () => {
+        let re = /secret|password|token/i
+        expect(redact("my password is hunter2", re)).toBe("my ^_^ is hunter2")
+        expect(redact("token=abc123", re)).toBe("^_^=abc123")
+        expect(redact("no match here", re)).toBe("no match here")
+    })
+
+    it("redacts strings inside arrays (recursively)", () => {
+        let re = /foo/i
+        expect(redact(["bar", "foo baz", 42, { x: "foo" }], re)).toEqual(["bar", "^_^ baz", 42, { x: "^_^" }])
+    })
+
+    it("redacts entire value when object key matches regexp", () => {
+        let re = /password|token/i
+        let input = { user: "u1", password: "hunter2", apiToken: "tok123", normal: "ok", nested: { apiToken: "s" } }
+        let out = redact(input, re)
+        expect(out).toEqual({
+            user: "u1",
+            password: "^_^",
+            apiToken: "^_^",
+            normal: "ok",
+            nested: { apiToken: "^_^" },
+        })
+    })
+
+    it("redacts values in Maps when key (stringified) matches", () => {
+        let re = /secret/i
+        let m = new Map<any, any>([
+            ["user", "u"],
+            ["secret", "s3cr3t"],
+            [123, "numericKey"],
+            ["other", { deep: "secret" }],
+        ])
+        let out = redact(m, re) as Map<any, any>
+        expect(out.get("user")).toBe("u")
+        expect(out.get("secret")).toBe("^_^")
+        expect(out.get(123)).toBe("numericKey")
+        expect(out.get("other")).toEqual({ deep: "^_^" })
+    })
+
+    it("uses DefaultRedactRegExp to catch common sensitive keys and value patterns", () => {
+        let input = {
+            api_key: "sk_live_123",
+            userEmail: "a@b.com",
+            ssn: "123-45-6789",
+            jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgN1H8e1n5f8v5f8v5f8v5f8v",
+            normal: "safe data",
+            phone: "555-123-4567",
+        }
+        let out = redact(input, DefaultRedactRegExp)
+        expect(out.api_key).toBe("^_^")
+        expect(out.userEmail).toBe("^_^")
+        expect(out.ssn).toBe("^_^")
+        expect(String(out.jwt)).toMatch(/^\^_\^/)
+        expect(out.normal).toBe("safe data")
+        expect(out.phone).toBe("^_^")
+    })
+
+    it("redacts inside Error messages", () => {
+        let re = /secret/i
+        let err = new Error("auth failed: secret=abc123")
+        let r = redact(err, re) as Error
+        expect(r.message).toBe("auth failed: ^_^=abc123")
+        expect(r).toBeInstanceOf(Error)
+    })
+
+    it("handles nested structures and circular refs safely without leaking originals", () => {
+        let re = /pw/i
+        let o: any = { a: { pw: "x", safe: 1 } }
+        o.a.self = o
+        let r = redact(o, re)
+        expect(r.a.pw).toBe("^_^")
+        expect(r.a.safe).toBe(1)
+        expect(typeof r.a.self).toBe("string")
+        expect(r.a.self).toBe("[Circular]")
     })
 })

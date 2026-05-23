@@ -3,6 +3,8 @@ import { type LogLevel } from "../../types/log"
 export interface DispatcherExecuteMeta {
     timestamp: number
     level: LogLevel
+    /** optional default redact regexp from the logger instance (per-dispatcher options override it) */
+    redactDataRegExp?: RegExp
 }
 
 export interface Dispatcher {
@@ -15,6 +17,9 @@ export interface Dispatcher {
 
     printTimestamp?: boolean
     printLevel?: boolean
+
+    /** RegExp for redacting sensitive data in this dispatcher's output (takes precedence over logger-level) */
+    redactDataRegExp?: RegExp
 
     /** primary dispatch: receives the execution meta, the primary log values (args), and optional errorMeta
      *  (only populated for calls that went through .error(err, meta) or .assert(cond, err, meta)).
@@ -33,4 +38,6 @@ export interface BaseDispatcherOptions {
     spacing?: boolean
     printTimestamp?: boolean
     printLevel?: boolean
+    /** RegExp for redacting sensitive data (keys in objs/maps + content matches in strings). Takes precedence over any logger-level redactDataRegExp. */
+    redactDataRegExp?: RegExp
 }

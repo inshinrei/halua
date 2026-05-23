@@ -1,5 +1,5 @@
 import { HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
-import { Dispatcher } from "./dispatchers/DispatcherTypes"
+import { Dispatcher, DispatcherExecuteMeta } from "./dispatchers/DispatcherTypes"
 import { Balancer, DispatchersBalancer } from "./dispatchers/DispatchersBalancer"
 import { Level, LogLevel } from "../types/log"
 import { toarray } from "./util/cast"
@@ -137,7 +137,11 @@ export class Halua implements HaluaLogger {
 
     private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: Record<string, any>) {
         let finalArgs = args.concat(this.options.withArgs ?? [])
-        this.balancer.sendLog({ level, timestamp: Date.now() }, finalArgs, errorMeta)
+        let dispatchMeta: DispatcherExecuteMeta = { level, timestamp: Date.now() }
+        if (this.options.redactDataRegExp) {
+            dispatchMeta.redactDataRegExp = this.options.redactDataRegExp
+        }
+        this.balancer.sendLog(dispatchMeta, finalArgs, errorMeta)
     }
 
     private supposeIsDispatcher(v: any, reportError = true): boolean {

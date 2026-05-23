@@ -1,5 +1,5 @@
 import { Bench } from "tinybench"
-import { halua, NewConsoleDispatcher, NewJSONDispatcher, NewTextDispatcher } from "../lib/index.js"
+import { halua, NewConsoleDispatcher, NewJSONDispatcher, NewTextDispatcher, DefaultRedactRegExp } from "../lib/index.js"
 
 const bench = new Bench({ name: "halua v3 benchmark (dispatch + DispatcherBase)", time: 100 })
 
@@ -10,6 +10,15 @@ const noopConsole = { debug: noopSend, info: noopSend, warn: noopSend, error: no
 let textLogger = halua.create(NewTextDispatcher(noopSend))
 let jsonLogger = halua.create(NewJSONDispatcher(noopSend))
 let consoleLogger = halua.create(NewConsoleDispatcher(noopConsole))
+
+// Redaction enabled (worst-case for perf: always traverse + regex + new containers)
+let textLoggerRedact = halua.create(NewTextDispatcher(noopSend), { redactDataRegExp: DefaultRedactRegExp })
+let jsonLoggerRedact = halua.create(NewJSONDispatcher(noopSend), { redactDataRegExp: DefaultRedactRegExp })
+let consoleLoggerRedact = halua.create(NewConsoleDispatcher(noopConsole), { redactDataRegExp: DefaultRedactRegExp })
+
+// Also a simple regexp (less backtracking than the big Default one)
+const simpleRedactRe = /password|secret|token|api[_-]?key|email/i
+let textLoggerRedactSimple = halua.create(NewTextDispatcher(noopSend), { redactDataRegExp: simpleRedactRe })
 
 bench
     .add("text dispatcher", () => {
@@ -29,6 +38,26 @@ bench
     })
     .add("console dispatcher obj", () => {
         consoleLogger.info("hello", { from: "world" })
+    })
+
+    // === Redaction overhead cases (using DefaultRedactRegExp unless noted) ===
+    .add("text + redact (string, no match)", () => {
+        textLoggerRedact.info("normal message without secrets")
+    })
+    .add("text + redact (string, match)", () => {
+        textLoggerRedact.info("user password is hunter2 and token=sk_123")
+    })
+    .add("text + redact (obj with sensitive key)", () => {
+        textLoggerRedact.info("login", { user: "alice", password: "hunter2", api_key: "sk_live_xxx", safe: 42 })
+    })
+    .add("text + redact (array of strings)", () => {
+        textLoggerRedact.info("events", ["ok", "password leaked here", "email: foo@bar.com", "fine"])
+    })
+    .add("json + redact (obj with sensitive key)", () => {
+        jsonLoggerRedact.info("login", { user: "alice", password: "hunter2", api_key: "sk_live_xxx" })
+    })
+    .add("text + redact (simple re, obj)", () => {
+        textLoggerRedactSimple.info("login", { user: "alice", password: "hunter2", safe: 42 })
     })
 
 await bench.run()

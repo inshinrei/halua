@@ -1,5 +1,6 @@
 import type { BaseDispatcherOptions, DispatcherExecuteMeta } from "./DispatcherTypes"
 import { DispatcherBase } from "./DispatcherBase"
+import { redact } from "../format"
 
 interface OutputConsole {
     debug: (...args: any[]) => void
@@ -21,6 +22,13 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
             }
 
             public dispatch(meta: DispatcherExecuteMeta, rawArgs: any[], errorMeta?: Record<string, any>): void {
+                let effectiveRe = this.redactDataRegExp || (meta as any).redactDataRegExp
+                let processedRawArgs = effectiveRe ? rawArgs.map((v: any) => redact(v, effectiveRe)) : rawArgs
+                let processedErrorMeta = errorMeta
+                if (effectiveRe && errorMeta != null) {
+                    processedErrorMeta = redact(errorMeta, effectiveRe) as Record<string, any>
+                }
+
                 let args: Array<any> = []
 
                 if (this.printTimestamp) {
@@ -32,7 +40,7 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
                     args.push(`${margin}${meta.level}`)
                 }
 
-                for (let value of rawArgs) {
+                for (let value of processedRawArgs) {
                     let formatted: any
                     if (typeof this.formatArg === "function") {
                         formatted = this.formatArg(value)
@@ -42,8 +50,8 @@ export function NewConsoleDispatcher(console: OutputConsole, options?: ConsoleDi
                     args.push(formatted)
                 }
 
-                if (errorMeta !== undefined) {
-                    let m = typeof this.formatArg === "function" ? this.formatArg(errorMeta) : errorMeta
+                if (processedErrorMeta !== undefined) {
+                    let m = typeof this.formatArg === "function" ? this.formatArg(processedErrorMeta) : processedErrorMeta
                     args.push(m)
                 }
 

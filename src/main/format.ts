@@ -251,3 +251,148 @@ function convertToJSONValue(value: any, seen: WeakSet<object>): any {
     }
     return String(value)
 }
+
+const REDACTION_TOKEN = "^_^"
+
+/**
+ * Default RegExp for redacting sensitive data in logs.
+ * Matches common sensitive key names (e.g. password, apiKey, token, email, ssn)
+ * via substring (for camelCase/snake_case keys) and common sensitive value patterns
+ * (JWTs, emails, SSNs, credit cards, bearer tokens).
+ * Use with `redactDataRegExp` option on loggers or dispatchers.
+ */
+export const DefaultRedactRegExp =
+    /pass(?:word|wd)?|secret|token|api[_-]?key|access[_-]?token|auth(?:orization)?|private[_-]?key|credential|session(?:[_-]?id)?|cookie|ssn|social[_-]?sec(?:urity)?|credit[_-]?card|cc[_-]?num(?:ber)?|cvv|cvc|pin|email|phone|mobile|tel|bearer|eyJ[0-9a-zA-Z_-]{10,}\.[0-9a-zA-Z_-]{10,}|\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b|\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b|\b(?:\d[ -]*){13,16}\b/i
+
+/**
+ * Recursively redacts sensitive data from a value according to regexp.
+ * - Strings (and strings inside arrays): matched substrings replaced by "^_^"
+ * - Objects/Maps: if *key* matches regexp, the corresponding value is replaced by "^_^" entirely
+ * - Handles circulars safely (returns "[Circular]")
+ * - Also redacts inside Error messages
+ * - Other types passed through
+ */
+export function redact(value: any, regexp?: RegExp): any {
+    if (!regexp) {
+        return value
+    }
+    return redactRec(value, regexp, new WeakSet<object>())
+}
+
+function redactRec(value: any, re: RegExp, seen: WeakSet<object>): any {
+    if (value == null) {
+        return value
+    }
+    let type = getType(value)
+    if (type === "string") {
+        return redactString(value, re)
+    }
+    if (type === "array") {
+        if (seen.has(value)) {
+            return "[Circular]"
+        }
+        seen.add(value)
+        let result: any[] = []
+        for (let entry of value) {
+            result.push(redactRec(entry, re, seen))
+        }
+        seen.delete(value)
+        return result
+    }
+    if (type === "object") {
+        if (seen.has(value)) {
+            return "[Circular]"
+        }
+        seen.add(value)
+        let result: any = {}
+        for (let key of Object.keys(value)) {
+            let k = key
+            re.lastIndex = 0
+            if (re.test(k)) {
+                result[k] = REDACTION_TOKEN
+            } else {
+                result[k] = redactRec(value[k], re, seen)
+            }
+        }
+        seen.delete(value)
+        return result
+    }
+    if (type === "map") {
+        if (seen.has(value)) {
+            return "[Circular]"
+        }
+        seen.add(value)
+        let result = new Map()
+        for (let [k, v] of value as Map<any, any>) {
+            let keyStr = typeof k === "string" ? k : String(k ?? "")
+            re.lastIndex = 0
+            if (re.test(keyStr)) {
+                result.set(k, REDACTION_TOKEN)
+            } else {
+                result.set(k, redactRec(v, re, seen))
+            }
+        }
+        seen.delete(value)
+        return result
+    }
+    if (type === "set") {
+        if (seen.has(value)) {
+            return "[Circular]"
+        }
+        seen.add(value)
+        let result = new Set()
+        for (let item of value as Set<any>) {
+            result.add(redactRec(item, re, seen))
+        }
+        seen.delete(value)
+        return result
+    }
+    if (type === "error") {
+        let msg = (value as any).message
+        if (typeof msg === "string") {
+            msg = redactString(msg, re)
+        }
+        let Ctor = (value as any).constructor || Error
+        let redacted: any
+        try {
+            redacted = new Ctor(msg)
+            if ((value as any).name) {
+                redacted.name = (value as any).name
+            }
+            if ((value as any).stack) {
+                redacted.stack = (value as any).stack
+            }
+        } catch (_) {
+            redacted = value
+        }
+        return redacted
+    }
+    return value
+}
+
+function redactString(str: string, re: RegExp): string {
+    if (!re || typeof str !== "string") {
+        return str
+    }
+    let flags = re.flags || ""
+    if (!flags.includes("g")) {
+        flags = flags + "g"
+    }
+    let searchRe: RegExp
+    try {
+        searchRe = new RegExp(re.source, flags)
+    } catch (_) {
+        return str
+    }
+    searchRe.lastIndex = 0
+    let result = ""
+    let last = 0
+    let match: RegExpExecArray | null
+    while ((match = searchRe.exec(str)) !== null) {
+        result += str.slice(last, match.index) + REDACTION_TOKEN
+        last = searchRe.lastIndex
+        // always continue for all matches (we forced g)
+    }
+    result += str.slice(last)
+    return result
+}
