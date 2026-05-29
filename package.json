@@ -1,6 +1,6 @@
 {
     "name": "halua",
-    "version": "4.0.2",
+    "version": "4.1.0",
     "description": "Tiny zero-dependency logger with pluggable dispatchers, child contexts, minor levels (e.g. INFO+5) and safe formatting",
     "type": "module",
     "main": "lib/index.cjs",
