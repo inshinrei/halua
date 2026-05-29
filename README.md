@@ -16,6 +16,7 @@ loggers, fine-grained level filtering (including minor levels like `INFO+3`), an
 - Child loggers that automatically append context (`logger.child("user", 42)`)
 - Powerful level system: `TRACE` < `DEBUG` < `INFO` < `NOTICE` < `WARN` < `ERROR` < `FATAL` + minor levels (`INFO+5`)
 - Per-dispatcher level overrides and exact-match mode
+- Zero-cost disabled levels: calling a level with no active dispatchers (e.g. `debug` in prod) is a true no-op with zero overhead
 - Beautiful structured formatting for objects, arrays, Maps, Sets, Errors, etc.
 - Safe by design — dispatcher errors never crash your application
 - `.stamp(label, id?)` + `.stampEnd(id)` (or returned ender) for `performance.now`-based timing with automatic pretty
