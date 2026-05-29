@@ -16,6 +16,7 @@ const MajorLevelMap = new Map([
 
 export interface Balancer {
     sendLog: (meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) => void
+    hasHandlers: (level: LogLevel) => boolean
 }
 
 export class DispatchersBalancer implements Balancer {
@@ -26,11 +27,22 @@ export class DispatchersBalancer implements Balancer {
         private dispatchers: Array<Dispatcher>,
     ) {
         this.sendLog = this.sendLog.bind(this)
+        this.hasHandlers = this.hasHandlers.bind(this)
     }
 
     sendLog(meta: DispatcherExecuteMeta, args: Array<any>, errorMeta?: Record<string, any>) {
         this.discover(meta.level)
+        let hs = this.map.get(meta.level) ?? []
+        if (hs.length === 0) {
+            return
+        }
         this.send(meta, args, errorMeta)
+    }
+
+    hasHandlers(level: LogLevel): boolean {
+        this.discover(level)
+        let hs = this.map.get(level)
+        return !!(hs && hs.length > 0)
     }
 
     private discover(level: LogLevel) {

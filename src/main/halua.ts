@@ -6,11 +6,25 @@ import { toarray } from "./util/cast"
 import { tryReportAnError } from "./util/errors"
 import { HaluaUnableToDetermineDispatcher, unknownToError } from "./errors"
 
+const NOOP = () => {}
+
 export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<ErrorMeta> {
     private readonly passedDispatchers: PassedDispatcher = []
     private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
     private stamps: Map<any, { label: string; start: number }> = new Map()
+
+    // Level-aware logging methods. These are conditionally assigned to real bound impls
+    // or NOOP after construction / update (using the balancer's discover/hasHandlers).
+    trace!: (...args: any[]) => void
+    debug!: (...args: any[]) => void
+    info!: (...args: any[]) => void
+    warn!: (...args: any[]) => void
+    notice!: (...args: any[]) => void
+    error!: (error: unknown, meta?: ErrorMeta) => void
+    fatal!: (...args: any[]) => void
+    assert!: (assertion: boolean, error: unknown, meta?: ErrorMeta) => void
+    logTo!: (level: LogLevel, ...args: any[]) => void
 
     constructor(
         passed: PassedDispatcher,
@@ -20,7 +34,8 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         this.dispatchers = this.buildDispatchers(passed)
 
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
-        this.bindMethods()
+        this.bindCoreMethods()
+        this.refreshLevelMethods()
     }
 
     create<EM = ErrorMeta>(
@@ -51,42 +66,45 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         this.updateBalancer()
     }
 
-    logTo(level: LogLevel, ...args: any[]): void {
+    // logTo and the level methods below are declared as properties above and assigned in refreshLevelMethods.
+    // Their implementations live in the private _* methods so we can swap the public slots to NOOP.
+
+    private _logTo(level: LogLevel, ...args: any[]): void {
         this.sendToBalancer(level, args)
     }
 
-    trace(...args: any[]): void {
+    private _trace(...args: any[]): void {
         this.sendToBalancer(Level.Trace, args)
     }
 
-    debug(...args: any[]): void {
+    private _debug(...args: any[]): void {
         this.sendToBalancer(Level.Debug, args)
     }
 
-    info(...args: any[]): void {
+    private _info(...args: any[]): void {
         this.sendToBalancer(Level.Info, args)
     }
 
-    warn(...args: any[]): void {
+    private _warn(...args: any[]): void {
         this.sendToBalancer(Level.Warn, args)
     }
 
-    notice(...args: any[]): void {
+    private _notice(...args: any[]): void {
         this.sendToBalancer(Level.Notice, args)
     }
 
-    error(error: unknown, meta?: ErrorMeta): void {
+    private _error(error: unknown, meta?: ErrorMeta): void {
         let e = unknownToError(error)
         let payload: any[] = [e]
         let finalMeta = meta != null ? { ...(meta as any), error: e } : undefined
         this.sendToBalancer(Level.Error, payload, finalMeta)
     }
 
-    fatal(...args: any[]): void {
+    private _fatal(...args: any[]): void {
         this.sendToBalancer(Level.Fatal, args)
     }
 
-    assert(assertion: boolean, error: unknown, meta?: ErrorMeta): void {
+    private _assert(assertion: boolean, error: unknown, meta?: ErrorMeta): void {
         if (assertion) {
             return
         }
@@ -135,6 +153,7 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
 
     private updateBalancer() {
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
+        this.refreshLevelMethods()
     }
 
     private sendToBalancer(level: LogLevel, args: Array<any>, errorMeta?: any) {
@@ -167,26 +186,29 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         return entries.map((b) => b()).filter((h) => this.supposeIsDispatcher(h))
     }
 
-    private bindMethods(): void {
+    private bindCoreMethods(): void {
         this.create = this.create.bind(this)
         this.child = this.child.bind(this)
 
         this.setDispatchers = this.setDispatchers.bind(this)
         this.appendDispatchers = this.appendDispatchers.bind(this)
 
-        this.logTo = this.logTo.bind(this)
-        this.trace = this.trace.bind(this)
-        this.debug = this.debug.bind(this)
-        this.info = this.info.bind(this)
-        this.warn = this.warn.bind(this)
-        this.notice = this.notice.bind(this)
-        this.error = this.error.bind(this)
-        this.fatal = this.fatal.bind(this)
-        this.assert = this.assert.bind(this)
-
         this.stamp = this.stamp.bind(this)
         this.stampEnd = this.stampEnd.bind(this)
 
         this.supposeIsDispatcher = this.supposeIsDispatcher.bind(this)
+    }
+
+    private refreshLevelMethods(): void {
+        const isEnabled = (level: LogLevel): boolean => this.balancer.hasHandlers(level)
+        this.trace = isEnabled(Level.Trace) ? this._trace.bind(this) : NOOP
+        this.debug = isEnabled(Level.Debug) ? this._debug.bind(this) : NOOP
+        this.info = isEnabled(Level.Info) ? this._info.bind(this) : NOOP
+        this.warn = isEnabled(Level.Warn) ? this._warn.bind(this) : NOOP
+        this.notice = isEnabled(Level.Notice) ? this._notice.bind(this) : NOOP
+        this.error = isEnabled(Level.Error) ? this._error.bind(this) : NOOP
+        this.fatal = isEnabled(Level.Fatal) ? this._fatal.bind(this) : NOOP
+        this.assert = isEnabled(Level.Error) ? this._assert.bind(this) : NOOP
+        this.logTo = this._logTo.bind(this)
     }
 }

@@ -302,6 +302,45 @@ describe("Halua logger e2e usage", () => {
         expect(c3.length).toBe(1)
     })
 
+    test("level methods become NOOP when no dispatcher accepts the level, and are reset after append/set", () => {
+        let cap: string[] = []
+        let baseH = NewTextDispatcher((l) => cap.push(l))
+
+        // Instance threshold = Error: accepts Fatal + Error (via MajorLevelMap). Lower levels get NOOP methods.
+        let logger = halua.create(baseH, { level: Level.Error })
+
+        logger.debug("d")
+        logger.info("i")
+        logger.warn("w")
+        logger.notice("n")
+        logger.trace("t")
+        logger.fatal("f")
+        logger.error("e1")
+        logger.assert(false, "a1")
+
+        expect(cap.length).toBe(3)
+        expect(cap.some((c) => c.includes("f"))).toBe(true)
+        expect(cap.some((c) => c.includes("e1"))).toBe(true)
+        expect(cap.some((c) => c.includes("a1"))).toBe(true)
+
+        // Append a dispatcher with its own low level (bypasses instance threshold for its entries)
+        let lowH = NewTextDispatcher((l) => cap.push(l), { level: Level.Debug })
+        logger.appendDispatchers(lowH)
+
+        logger.debug("d2")
+        logger.info("i2")
+        expect(cap.some((c) => c.includes("d2"))).toBe(true)
+        expect(cap.some((c) => c.includes("i2"))).toBe(true)
+
+        // setDispatchers to a higher-threshold dispatcher re-noops lower methods
+        let highOnly = NewTextDispatcher((l) => cap.push(l), { level: Level.Warn })
+        logger.setDispatchers(highOnly)
+        let before = cap.length
+        logger.info("should be noop again")
+        logger.debug("noop")
+        expect(cap.length).toBe(before)
+    })
+
     test("exact option on individual dispatcher bypasses parent level filter", () => {
         let exactCap: string[] = []
         let normalCap: string[] = []
