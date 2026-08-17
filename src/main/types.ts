@@ -28,13 +28,18 @@ export interface Argument {
     value: any
 }
 
-export interface HaluaLogger<ErrorMeta = Record<string, any>> {
+export interface Feature<Api = {}> {
+    contributeDispatchers?: () => Array<() => Dispatcher>
+    apply: (host: HaluaLogger<any, any>) => Api
+}
+
+export interface HaluaLogger<ErrorMeta = Record<string, any>, Caps = {}> {
     create: {
-        <EM = ErrorMeta>(dispatcher: PassedDispatcher): HaluaLogger<EM>
-        <EM = ErrorMeta>(options: HaluaOptions): HaluaLogger<EM>
-        <EM = ErrorMeta>(arg1?: PassedDispatcher | HaluaOptions, options?: HaluaOptions): HaluaLogger<EM>
+        <EM = ErrorMeta>(dispatcher: PassedDispatcher): HaluaLogger<EM, Caps> & Caps
+        <EM = ErrorMeta>(options: HaluaOptions): HaluaLogger<EM, Caps> & Caps
+        <EM = ErrorMeta>(arg1?: PassedDispatcher | HaluaOptions, options?: HaluaOptions): HaluaLogger<EM, Caps> & Caps
     }
-    child: (...args: any[]) => HaluaLogger<ErrorMeta>
+    child: (...args: any[]) => HaluaLogger<ErrorMeta, Caps> & Caps
 
     setDispatchers: (dispatcher: PassedDispatcher) => void
     appendDispatchers: (dispatcher: PassedDispatcher) => void
