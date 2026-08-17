@@ -61,7 +61,8 @@ halua.assert(user != null, "user must exist", { user }) // default logger accept
 // high-res timing (uses performance.now, logs via .info on end)
 let end = halua.stamp("db lookup", "q42")
 doQuery()
-end() // or halua.stampEnd("q42")  ->  ... INFO db lookup took 3.14ms
+let elapsedMs = end() // or let elapsedMs = halua.stampEnd("q42")
+// -> ... INFO db lookup took 3.14ms
 ```
 
 ## Creating Specialized Loggers
