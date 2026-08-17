@@ -34,22 +34,73 @@ try {
 }
 ```
 
+#### Log-driven development (mandatory for new work)
+
+Before implementing a feature, request, job, or tool call, write the log story: a flow mark, a `start`, the decision
+branches, a `done`, and one `never-happen` / failure. Then implement until that story is what the process emits.
+
+- One child per unit of work: `let log = halua.flow("<stable-name>", { …ids })`. Do not log that work on the root logger.
+- First argument is one of: `start` | `skip` | `retry` | `done` | `never-happen`. Next argument is a structured object.
+- `flow` values are stable `kebab-case` (`checkout`, not `tmp`).
+- `.span("<verb noun>", fn)` (or the ender form) around I/O and anything that can be slow. It logs `start` / `done` with
+  `elapsedMs`, or `.error` / `never-happen` on throw.
+- `.error(err, meta)` only for `Error`. Non-errors use `warn("never-happen", …)`.
+- Do not delete these lines when the feature works. Drop to DEBUG or leave them.
+- Verify: run the path, collect records/lines that contain `flow <name>`, confirm `start` → … → `done` (or the expected
+  failure). Do not claim the feature works from tests alone if the mark’s stream is missing or incoherent.
+- In tests, compose capture:
+  `createHalua().dispatchers(...).use(spanFlow()).use(capture()).build()` and assert on `logger.collect()`.
+
+```ts
+let log = halua.flow("checkout", { requestId: reqId })
+log.info("start", { orderId })
+try {
+    let result = await log.span("charge", async () => charge(order))
+    if (!result.ok) {
+        log.warn("skip", { reason: result.reason })
+        return
+    }
+    log.info("done", { paymentId: result.id })
+} catch (err) {
+    if (err instanceof Error) {
+        log.error(err, { orderId })
+    } else {
+        log.warn("never-happen", { err })
+    }
+}
+```
+
+Wrong:
+
+```ts
+console.log("charging")
+halua.info("ok")
+```
+
 ## Public API & Common Patterns (for AI agents)
 
 ### Core exports
 
 ```ts
 import {
-    halua, // default Console-backed logger instance
+    halua, // default Console-backed logger (includes spanFlow: .flow / .span)
+    createHalua, // fluent builder
+    spanFlow,
+    capture,
     Level, // Trace | Debug | Info | Notice | Warn | Error | Fatal
     NewTextDispatcher,
     NewJSONDispatcher,
     NewConsoleDispatcher,
     NewConsoleColoredDispatcher,
-    // advanced (for custom dispatchers)
+    // advanced (for custom dispatchers / features)
     DispatcherBase,
     Dispatcher,
     HaluaLogger,
+    HaluaBuilder,
+    Feature,
+    SpanFlowApi,
+    CaptureApi,
+    CapturedRecord,
     ConsoleLike,
     format,
     getType,
@@ -70,14 +121,31 @@ let fileLogger = halua.create(
 let jsonLogger = halua.create(NewJSONDispatcher(sendToElastic))
 ```
 
-You can pass an array for multiple dispatchers on the same logger.
+You can pass an array for multiple dispatchers on the same logger. `.create()` on the default instance keeps `.flow` /
+`.span`.
+
+### Building a logger (features)
+
+```ts
+let logger = createHalua()
+    .dispatchers(NewTextDispatcher((line) => fs.appendFileSync("app.log", line + "\n")))
+    .use(spanFlow())
+    .use(capture())
+    .level(Level.Debug)
+    .build()
+```
+
+`capture()` is opt-in. Use it in tests and assert on `logger.collect()`.
 
 ### Child contexts (recommended for request/trace scoping)
 
+The reserved flow-mark key is `flow`. Prefer `halua.flow(name, ctx?)`, which is `child("flow", name, …flattened pairs)`
+underneath. `.child(...)` remains valid for extra pairs (`step`, ids, …).
+
 ```ts
-let reqLogger = halua.child("requestId", reqId, "user", userId)
-reqLogger.info("starting work")
-// output will contain the context pairs automatically
+let reqLogger = halua.flow("checkout", { requestId: reqId, user: userId })
+reqLogger.info("start")
+// output will contain: flow checkout requestId … user …
 ```
 
 ### Minor levels & sampling
@@ -132,8 +200,8 @@ authors. Breaking changes to them are only done in major releases.
 
 ## When in doubt
 
-- Start with the default `halua` or `halua.create(New*Dispatcher(yourSendFn))`.
-- Use child loggers for context instead of manually prefixing strings.
+- Start with the default `halua` or `createHalua().dispatchers(New*Dispatcher(yourSendFn)).use(spanFlow()).build()`.
+- Use `halua.flow(name, ctx)` (or child loggers) for context instead of manually prefixing strings.
 - Let halua do the formatting — feed it rich JS values (Errors, Maps, Dates, circular structures are all handled).
 - Read the package README.md (shipped alongside this file) for the complete reference.
 

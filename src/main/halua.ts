@@ -1,4 +1,4 @@
-import { HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
+import { Feature, HaluaLogger, HaluaOptions, PassedDispatcher } from "./types"
 import { Dispatcher, DispatcherExecuteMeta } from "./dispatchers/dispatcher-types"
 import { Balancer, DispatchersBalancer } from "./dispatchers/dispatchers-balancer"
 import { Level, LogLevel } from "../types/log"
@@ -8,8 +8,17 @@ import { HaluaUnableToDetermineDispatcher, unknownToError } from "./errors"
 
 const NOOP = () => {}
 
+export function instantiate<EM = Record<string, any>, Caps = {}>(
+    passed: PassedDispatcher,
+    options: HaluaOptions = {},
+    features: Feature<any>[] = [],
+): HaluaLogger<EM, Caps> & Caps {
+    return new Halua<EM>(passed, options, features) as unknown as HaluaLogger<EM, Caps> & Caps
+}
+
 export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<ErrorMeta> {
     private readonly passedDispatchers: PassedDispatcher = []
+    private readonly features: Feature<any>[] = []
     private dispatchers: Array<Dispatcher> = []
     private balancer: Balancer
     private stamps: Map<any, { label: string; start: number }> = new Map()
@@ -29,13 +38,16 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
     constructor(
         passed: PassedDispatcher,
         private options: HaluaOptions = {},
+        features: Feature<any>[] = [],
     ) {
         this.passedDispatchers = passed
-        this.dispatchers = this.buildDispatchers(passed)
+        this.features = features
+        this.dispatchers = this.buildDispatchers(this.mergeFeatureDispatchers(passed))
 
         this.balancer = new DispatchersBalancer(this.options.level || Level.Trace, this.dispatchers)
         this.bindCoreMethods()
         this.refreshLevelMethods()
+        this.applyFeatures()
     }
 
     create<EM = ErrorMeta>(
@@ -43,20 +55,24 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         arg2: HaluaOptions | undefined = this.options,
     ): HaluaLogger<EM> {
         if (this.isDispatcherSpec(arg1)) {
-            return new Halua<EM>(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) })
+            return instantiate<EM, any>(arg1 as PassedDispatcher, { ...(arg2 ?? this.options) }, this.features)
         }
-        return new Halua<EM>(this.passedDispatchers, { ...(arg1 as HaluaOptions) })
+        return instantiate<EM, any>(this.passedDispatchers, { ...(arg1 as HaluaOptions) }, this.features)
     }
 
     child(...args: any[]): HaluaLogger<ErrorMeta> {
-        return new Halua<ErrorMeta>(this.passedDispatchers, {
-            ...this.options,
-            withArgs: (this.options.withArgs || []).concat(args),
-        })
+        return instantiate<ErrorMeta, any>(
+            this.passedDispatchers,
+            {
+                ...this.options,
+                withArgs: (this.options.withArgs || []).concat(args),
+            },
+            this.features,
+        )
     }
 
     setDispatchers(dispatcher: PassedDispatcher): void {
-        this.dispatchers = this.buildDispatchers(dispatcher)
+        this.dispatchers = this.buildDispatchers(this.mergeFeatureDispatchers(dispatcher))
         this.updateBalancer()
     }
 
@@ -182,6 +198,22 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
             return v.every((x: any) => typeof x === "function")
         }
         return typeof v === "function"
+    }
+
+    private mergeFeatureDispatchers(passed: PassedDispatcher): Array<() => Dispatcher> {
+        let extras: Array<() => Dispatcher> = []
+        for (let f of this.features) {
+            if (f.contributeDispatchers) {
+                extras.push(...f.contributeDispatchers())
+            }
+        }
+        return toarray(passed).concat(extras)
+    }
+
+    private applyFeatures(): void {
+        for (let f of this.features) {
+            Object.assign(this, f.apply(this as any))
+        }
     }
 
     private buildDispatchers(passed: PassedDispatcher): Array<Dispatcher> {

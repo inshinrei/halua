@@ -1,6 +1,6 @@
 # Tour of Halua (v4)
 
-Last updated for Halua 4.0.0
+Last updated for Halua post-4.1.0 (createHalua + spanFlow + capture)
 
 This document walks through real-world usage patterns beyond the quick start in the README.
 
@@ -9,6 +9,9 @@ This document walks through real-world usage patterns beyond the quick start in 
 ```ts
 import {
     halua,
+    createHalua,
+    spanFlow,
+    capture,
     NewTextDispatcher,
     NewJSONDispatcher,
     NewConsoleDispatcher,
@@ -67,10 +70,11 @@ let elapsedMs = end() // or let elapsedMs = halua.stampEnd("q42")
 
 ## Creating Specialized Loggers
 
-`.create(...)` is the main way to obtain new logger instances.
+`.create(...)` is the main way to obtain new logger instances. It inherits features from the parent (the default
+`halua` already has `spanFlow`, so `.create(...)` keeps `.flow` / `.span`).
 
 ```ts
-import { halua, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
+import { halua, createHalua, spanFlow, capture, NewTextDispatcher, NewJSONDispatcher, Level } from "halua"
 
 let fileLogger = halua.create(NewTextDispatcher(appendToFile), {
     level: Level.Warn,
@@ -91,9 +95,18 @@ let base = halua.create(NewTextDispatcher(send))
 let jsonVersion = base.create(NewJSONDispatcher(send))
 ```
 
+Use `createHalua()` when you need to attach `capture()` for tests, or to build a logger _without_ `spanFlow`:
+
+```ts
+let testLog = createHalua().dispatchers(NewTextDispatcher(send)).use(spanFlow()).use(capture()).build()
+
+let bare = createHalua().dispatchers(NewTextDispatcher(send)).build()
+```
+
 ## Child Loggers & Structured Context
 
-Child loggers are the recommended way to carry request/operation context.
+Child loggers are the recommended way to carry request/operation context. For a unit of work, prefer a **flow mark**
+via `.flow(name, ctx?)` (sugar for `child("flow", name, …flattened pairs)`).
 
 ```ts
 let req = halua.child("requestId", "req_9f3a", "tenant", "acme")
@@ -105,6 +118,22 @@ let step = req.child("step", "payment")
 step.warn("slow payment gateway", { latencyMs: 1240 })
 // ... WARN slow payment gateway { latencyMs: 1240 } requestId ... step payment
 ```
+
+Log-driven checkout story (grep `flow checkout`):
+
+```ts
+let log = halua.flow("checkout", { requestId: "req_9f3a" })
+log.info("start", { orderId: 88321 })
+let result = await log.span("charge", async () => charge(order))
+if (!result.ok) {
+    log.warn("skip", { reason: result.reason })
+} else {
+    log.info("done", { paymentId: result.id })
+}
+```
+
+`.span(label, fn)` logs `start` / `done` with `{ span, elapsedMs }` on a `span <label>` child (or `.error` /
+`never-happen` on throw, then rethrows). Use `.stamp` when you only want the pretty `took X.XXms` line.
 
 To reset context:
 
@@ -256,7 +285,7 @@ channels without adding any runtime cost.
 | Server file logs        | `NewTextDispatcher` + rotation lib                                        |
 | Cloud / SIEM / ELK      | `NewJSONDispatcher`                                                       |
 | Multiple destinations   | Array of dispatchers + per-dispatcher levels                              |
-| Request tracing         | `.child(...)` everywhere                                                  |
+| Request tracing         | `.flow(name, ctx)` + nested `.span` / `.child`                            |
 | Sampling / feature logs | Minor levels (`INFO+10`, etc.)                                            |
 | Audit / security only   | Dispatcher with `exact: [...]`                                            |
 
@@ -264,6 +293,7 @@ channels without adding any runtime cost.
 
 - [README](../README.md) — installation, API table, quick reference
 - `docs/dr.md` — architectural decision records
+- `docs/research/log-driven-development.md` — LDD rationale (repo-only, not published)
 - Source in `src/main/dispatchers/` — see `DispatcherBase` + its `dispatch(meta, args)` (and the New\*Dispatcher
   factories) if you need a custom transport
 

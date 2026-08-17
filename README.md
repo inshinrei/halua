@@ -14,6 +14,9 @@ loggers, fine-grained level filtering (including minor levels like `INFO+3`), an
 - Four built-in dispatchers: `NewTextDispatcher`, `NewJSONDispatcher`, `NewConsoleDispatcher`, `NewConsoleColoredDispatcher`
 - Compose any number of dispatchers per logger instance
 - Child loggers that automatically append context (`logger.child("user", 42)`)
+- `createHalua()` fluent builder with typed `.use(feature)` (accumulates)
+- Default logger includes `.flow(name, ctx?)` and `.span(label, fn?)` for log-driven development
+- Opt-in `capture()` for asserting the log story in tests
 - Powerful level system: `TRACE` < `DEBUG` < `INFO` < `NOTICE` < `WARN` < `ERROR` < `FATAL` + minor levels (`INFO+5`)
 - Per-dispatcher level overrides and exact-match mode
 - Zero-cost disabled levels: calling a level with no active dispatchers (e.g. `debug` in prod) is a true no-op with zero overhead
@@ -96,6 +99,53 @@ stepLogger.warn("slow validation")
 ```
 
 Call `.create({ withArgs: [] })` to clear context on a child.
+
+### Flow marks & spans
+
+The reserved mark key is `flow`. `halua.flow(name, ctx?)` is `child("flow", name, …flattened ctx)`. `.span` logs
+`start` / `done` with `{ span, elapsedMs }` on a `span <label>` child; on throw it logs `.error` or `never-happen` and
+rethrows. It does not emit the stamp `took X.XXms` line (use `.stamp` when you only want timing).
+
+```ts
+let log = halua.flow("checkout", { requestId: "abc-123" })
+log.info("start", { orderId: 88 })
+let result = await log.span("charge", async () => charge(order))
+log.info("done", { paymentId: result.id })
+// grep: flow checkout
+```
+
+## Building a logger
+
+`.create(dispatchers?, options?)` is still the shortcut and inherits features from the parent (the default `halua`
+already has `spanFlow`). Use `createHalua()` when you need to compose features from scratch — including opt-in
+`capture()`, or a logger _without_ `.flow` / `.span`.
+
+```ts
+import { createHalua, spanFlow, capture, NewTextDispatcher, Level } from "halua"
+
+let logger = createHalua()
+    .dispatchers(NewTextDispatcher((line) => sendToLogServer(line)))
+    .use(spanFlow())
+    .use(capture())
+    .level(Level.Debug)
+    .build()
+```
+
+## Asserting the log story
+
+```ts
+let logger = createHalua()
+    .dispatchers(NewTextDispatcher(() => {}))
+    .use(spanFlow())
+    .use(capture())
+    .build()
+
+logger.flow("checkout").info("start")
+expect(logger.collect().some((r) => r.args[0] === "start")).toBe(true)
+```
+
+`collect()` returns a copy of raw dispatch records (`{ timestamp, level, args, errorMeta? }`). `clear()` empties the
+shared buffer (parent and children share one).
 
 ## Level Control
 
@@ -187,6 +237,9 @@ All `New*Dispatcher` factories accept a second `options` argument:
 ```ts
 import {
     halua,
+    createHalua,
+    spanFlow,
+    capture,
     Level,
     NewTextDispatcher,
     NewJSONDispatcher,
@@ -195,7 +248,10 @@ import {
 } from "halua"
 ```
 
-- `halua` — default logger instance (preconfigured with `NewConsoleDispatcher`)
+- `halua` — default logger instance (preconfigured with `NewConsoleDispatcher` + `spanFlow()`)
+- `createHalua()` — fluent builder (`dispatchers`, `level`, `redact`, `withArgs`, `use`, `build`)
+- `spanFlow()` — feature: `.flow(name, ctx?)` and `.span(label, fn?)`
+- `capture()` — opt-in feature: `.collect()` / `.clear()`
 - `Level` — enum: `Trace | Debug | Info | Notice | Warn | Error | Fatal`
 - `NewTextDispatcher(send: (line: string, errorMeta?: Record<string, any>) => void, options?)` → factory
 - `NewJSONDispatcher(send: (json: string, errorMeta?: Record<string, any>) => void, options?)` → factory
@@ -205,7 +261,20 @@ import {
 ### Advanced Exports (for custom dispatcher authors)
 
 ```ts
-import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, ConsoleLike } from "halua"
+import {
+    DispatcherBase,
+    format,
+    getType,
+    toJSONValue,
+    Dispatcher,
+    HaluaLogger,
+    HaluaBuilder,
+    Feature,
+    SpanFlowApi,
+    CaptureApi,
+    CapturedRecord,
+    ConsoleLike,
+} from "halua"
 ```
 
 - `DispatcherBase` — extendable base class implementing `dispatch(meta, args)` + timestamp/level prefixing; override via
@@ -216,7 +285,10 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, 
 - `redact(value, regexp?)` — recursively redacts strings by content match and object/map values by key match (used internally by the redact feature)
 - `DefaultRedactRegExp` — built-in regexp matching common sensitive keys and value patterns (password, token, email, ssn, jwt, cc, etc.)
 - `Dispatcher` — interface for raw custom dispatchers (`dispatch(meta, args): void`)
-- `HaluaLogger` — the logger instance interface
+- `HaluaLogger` — the logger instance interface (`HaluaLogger<ErrorMeta, Caps>`)
+- `HaluaBuilder` — fluent builder returned by `createHalua()`
+- `Feature` — `{ apply(host), contributeDispatchers?() }` used by `.use()`
+- `SpanFlowApi` / `CaptureApi` / `CapturedRecord` — feature method and record types
 - `ConsoleLike` — minimal `{ debug, info, warn, error }` shape accepted by `NewConsoleDispatcher` / `NewConsoleColoredDispatcher`
 
 ### Logger Instance Methods
@@ -225,14 +297,17 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, 
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.create(dispatcher?, options?)`                              | Create a new independent logger (inherits dispatchers/options when partial)                                                                                                                                                                                                   |
 | `.child(...args)`                                             | Create child logger that appends context to every message                                                                                                                                                                                                                     |
+| `.flow(name, ctx?)`                                           | `spanFlow()` (on by default): child marked `flow <name>` plus flattened `ctx` pairs. Does not emit a line                                                                                                                                                                     |
+| `.span(label, fn?)`                                           | `spanFlow()` (on by default): `start`/`done` `{ span, elapsedMs }` on a `span <label>` child; callback form rethrows after `.error` / `never-happen`. Ender form `() => number`                                                                                               |
+| `.collect()` / `.clear()`                                     | `capture()` only: copy or empty the shared raw-record buffer                                                                                                                                                                                                                  |
 | `.setDispatchers(dispatcher \| dispatchers[])`                | Replace all dispatchers                                                                                                                                                                                                                                                       |
 | `.appendDispatchers(...)`                                     | Add more dispatchers to existing set                                                                                                                                                                                                                                          |
 | `.logTo(level, ...args)`                                      | Log at a custom / minor level                                                                                                                                                                                                                                                 |
 | `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                                                                                                                     |
 | `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) — when supplied, the normalized Error instance is auto-attached under `error` key and the augmented object becomes the second arg to dispatchers |
 | `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error` (auto-attaches normalized Error under `error` when meta supplied)                                                                                                        |
-| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender `() => number` (raw elapsed ms); optional id for `.stampEnd` |
-| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`; returns elapsed ms or `undefined` if unknown |
+| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender `() => number` (raw elapsed ms); optional id for `.stampEnd`                                                                                                                                                     |
+| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`; returns elapsed ms or `undefined` if unknown                                                                                                                                            |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 
