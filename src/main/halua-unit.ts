@@ -18,12 +18,20 @@ function pingFeature(): Feature<PingApi> {
 
 describe("instantiate + feature inheritance", () => {
     test("apply() methods land on the instance", () => {
-        let logger = instantiate(NewTextDispatcher(() => {}), {}, [pingFeature()]) as HaluaLogger & PingApi
+        let logger = instantiate(
+            NewTextDispatcher(() => {}),
+            {},
+            [pingFeature()],
+        ) as HaluaLogger & PingApi
         expect(logger.ping()).toBe("pong")
     })
 
     test("child() and create() keep the same feature methods", () => {
-        let logger = instantiate(NewTextDispatcher(() => {}), {}, [pingFeature()]) as HaluaLogger & PingApi
+        let logger = instantiate(
+            NewTextDispatcher(() => {}),
+            {},
+            [pingFeature()],
+        ) as HaluaLogger & PingApi
         expect(logger.child("k", "v").ping()).toBe("pong")
         expect(logger.create({}).ping()).toBe("pong")
         expect(logger.create(NewTextDispatcher(() => {})).ping()).toBe("pong")
@@ -40,7 +48,11 @@ describe("instantiate + feature inheritance", () => {
                 return {}
             },
         }
-        let logger = instantiate(NewTextDispatcher((line) => userLines.push(line)), {}, [extra])
+        let logger = instantiate(
+            NewTextDispatcher((line) => userLines.push(line)),
+            {},
+            [extra],
+        )
         logger.info("hello")
         expect(userLines.some((l) => l.includes("hello"))).toBe(true)
         expect(extraLines.some((l) => l.includes("hello"))).toBe(true)

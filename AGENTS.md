@@ -48,6 +48,17 @@ try {
 }
 ```
 
+## Log-driven development
+
+Features and tools in this repo follow the consumer LDD convention (see shipped `agents-for-module.md`):
+`halua.flow("<name>", ctx?)`, event names `start` | `skip` | `retry` | `done` | `never-happen`, `.span` around I/O.
+
+- New public logging behavior (format, child, stamp, span, JSON shape, features) needs a unit test that asserts the
+  _story_ (mark present, event order), not only that a line was emitted. Use `capture()` for that.
+- Injectable LDD features (`spanFlow`, `capture`) attach via `createHalua().use(...)`. They are **not** dispatch
+  middleware: a feature may add methods and optional dispatchers only.
+- Rationale: `docs/research/log-driven-development.md`.
+
 ## Project Commands
 
 - `pnpm test` / `pnpm dev` — run Vitest in watch (dev) or single run (`pnpm test run`)
@@ -76,6 +87,8 @@ protocol was removed in v3 (see `docs/dr.md`) in favor of readability and lower 
 - When considering new dispatcher types (e.g. file dispatchers, remote), design them as `NewXxxDispatcher(...)`
   factories
   returning `() => Dispatcher` (see `NewTextDispatcher` etc. for the pattern).
+- Logger features (`Feature.apply` + optional `contributeDispatchers`) are copied onto `.child()` / `.create()`. Do not
+  add an `onDispatch` / middleware hook; capture is a dispatcher.
 
 ## Custom Dispatchers
 

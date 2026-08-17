@@ -1,6 +1,17 @@
 # Log-driven development and Halua
 
-Status: research only. Not a committed API. Not shipped in the npm package.
+Status: implemented in-tree as `createHalua` + `spanFlow` + `capture` (this release). Still not a separate npm
+package; `docs/research/` is not published.
+
+## What shipped
+
+- `createHalua()` fluent builder with typed `.use(feature)`.
+- `spanFlow()`: `.flow(name, ctx?)` and `.span(label, fn?)`. On by default on the `halua` export.
+- `capture()`: opt-in `.collect()` / `.clear()` of raw dispatch records.
+- Agent/README/tour docs teach the `flow` + `start`/`skip`/`retry`/`done`/`never-happen` convention against these APIs.
+
+Stayed out of scope: object-form `.child({})` on core, JSON `ctx` / splitting `withArgs` out of `args`, OpenTelemetry,
+instance `.use()` after `build()`, event methods (`.start()` / `.done()`), stamp pretty-line from `span`.
 
 This note answers two questions:
 
