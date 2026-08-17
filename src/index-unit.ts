@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import {
     halua,
@@ -449,6 +449,35 @@ describe("Halua logger e2e usage", () => {
         // ender is idempotent
         end1()
         expect(captured.length).toBe(3)
+    })
+
+    test("stamp ender and stampEnd return raw elapsed ms", () => {
+        let now = 1000
+        let spy = vi.spyOn(performance, "now").mockImplementation(() => now)
+
+        let logger = halua.create(
+            NewTextDispatcher(() => {
+                // discard formatted lines; this test is about the numeric return
+            }),
+        )
+
+        let end = logger.stamp("sync work")
+        now = 1012.3456
+        let first = end()
+        expect(first).toBeCloseTo(12.3456, 4)
+
+        now = 2000
+        let second = end()
+        expect(second).toBe(first)
+
+        now = 3000
+        logger.stamp("db query", "q1")
+        now = 3005.5
+        expect(logger.stampEnd("q1")).toBeCloseTo(5.5, 4)
+        expect(logger.stampEnd("q1")).toBeUndefined()
+        expect(logger.stampEnd("nope")).toBeUndefined()
+
+        spy.mockRestore()
     })
 
     test("ErrorMeta generic on logger instance provides typed meta for .error and .assert", () => {

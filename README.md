@@ -20,7 +20,7 @@ loggers, fine-grained level filtering (including minor levels like `INFO+3`), an
 - Beautiful structured formatting for objects, arrays, Maps, Sets, Errors, etc.
 - Safe by design — dispatcher errors never crash your application
 - `.stamp(label, id?)` + `.stampEnd(id)` (or returned ender) for `performance.now`-based timing with automatic pretty
-  `took X.XXms` logging
+  `took X.XXms` logging; the ender and `.stampEnd` return elapsed ms as a number
 - Tiny, fast, tree-shakeable ESM + CJS + TypeScript
 
 ## Installation
@@ -231,8 +231,8 @@ import { DispatcherBase, format, getType, toJSONValue, Dispatcher, HaluaLogger, 
 | `.trace / .debug / .info / .warn / .notice / .fatal(...args)` | Standard levels (varargs)                                                                                                                                                                                                                                                     |
 | `.error(error, meta?)`                                        | Log at ERROR level; first arg (unknown) is normalized to Error; optional `meta?: ErrorMeta` (generic on the logger instance) — when supplied, the normalized Error instance is auto-attached under `error` key and the augmented object becomes the second arg to dispatchers |
 | `.assert(condition, error, meta?)`                            | Log at ERROR only on falsy condition; same error + optional `meta?: ErrorMeta` semantics as `.error` (auto-attaches normalized Error under `error` when meta supplied)                                                                                                        |
-| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender fn; optional id for `.stampEnd`                                                                                                                                                                                  |
-| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`                                                                                                                                                                                          |
+| `.stamp(label, id?)`                                          | Start high-res perf timer (`performance.now`); returns ender `() => number` (raw elapsed ms); optional id for `.stampEnd` |
+| `.stampEnd(id)`                                               | End named stamp started with same id on this logger; logs pretty `label took X.XXms`; returns elapsed ms or `undefined` if unknown |
 
 Every method returns a new `HaluaLogger` when using `.create` / `.child`, so they are fully chainable.
 

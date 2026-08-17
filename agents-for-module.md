@@ -97,7 +97,7 @@ own RegExp. Works for both text and JSON paths and for `errorMeta`.
 ```ts
 let end = logger.stamp("database query")
 await db.query(...)
-end()   // logs: ... database query took 12.34ms
+let elapsedMs = end()   // logs: ... database query took 12.34ms
 ```
 
 ### Error handling contract

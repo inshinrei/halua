@@ -114,15 +114,16 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
         this.sendToBalancer(Level.Error, payload, finalMeta)
     }
 
-    stamp(label: string, id?: any): () => void {
+    stamp(label: string, id?: any): () => number {
         let start = performance.now()
         if (id != null) {
             this.stamps.set(id, { label, start })
         }
         let ended = false
+        let duration = 0
         const ender = () => {
             if (ended) {
-                return
+                return duration
             }
             ended = true
             if (id != null) {
@@ -131,24 +132,26 @@ export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<Error
                     this.stamps.delete(id)
                 }
             }
-            this.endStamp(label, start)
+            duration = this.endStamp(label, start)
+            return duration
         }
         return ender
     }
 
-    stampEnd(id: any): void {
+    stampEnd(id: any): number | undefined {
         let entry = this.stamps.get(id)
         if (!entry) {
             return
         }
         this.stamps.delete(id)
-        this.endStamp(entry.label, entry.start)
+        return this.endStamp(entry.label, entry.start)
     }
 
-    private endStamp(label: string, start: number): void {
+    private endStamp(label: string, start: number): number {
         let duration = performance.now() - start
         let ms = duration.toFixed(2)
         this.info(label, `took ${ms}ms`)
+        return duration
     }
 
     private updateBalancer() {

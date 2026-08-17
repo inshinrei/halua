@@ -49,8 +49,8 @@ export interface HaluaLogger<ErrorMeta = Record<string, any>> {
     fatal: (...args: any[]) => void
     assert: (assertion: boolean, error: unknown, meta?: ErrorMeta) => void
 
-    stamp: (label: string, id?: any) => () => void
-    stampEnd: (id: any) => void
+    stamp: (label: string, id?: any) => () => number
+    stampEnd: (id: any) => number | undefined
 }
 
 export interface HaluaOptions {
