@@ -33,6 +33,12 @@ export interface Feature<Api = {}> {
     apply: (host: HaluaLogger<any, any>) => Api
 }
 
+export interface SpanFlowApi {
+    flow(name: string, ctx?: Record<string, unknown>): this
+    span(label: string): () => number
+    span<T>(label: string, fn: (log: this) => T): T
+}
+
 export interface HaluaLogger<ErrorMeta = Record<string, any>, Caps = {}> {
     create: {
         <EM = ErrorMeta>(dispatcher: PassedDispatcher): HaluaLogger<EM, Caps> & Caps
