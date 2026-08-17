@@ -13,7 +13,7 @@ export function instantiate<EM = Record<string, any>, Caps = {}>(
     options: HaluaOptions = {},
     features: Feature<any>[] = [],
 ): HaluaLogger<EM, Caps> & Caps {
-    return new Halua<EM>(passed, options, features) as HaluaLogger<EM, Caps> & Caps
+    return new Halua<EM>(passed, options, features) as unknown as HaluaLogger<EM, Caps> & Caps
 }
 
 export class Halua<ErrorMeta = Record<string, any>> implements HaluaLogger<ErrorMeta> {

@@ -1,12 +1,15 @@
 import { describe, expect, test, vi } from "vitest"
 
 import {
+    capture,
+    createHalua,
     halua,
     Level,
     NewConsoleDispatcher,
     NewConsoleColoredDispatcher,
     NewJSONDispatcher,
     NewTextDispatcher,
+    spanFlow,
 } from "./index"
 
 describe("Halua logger e2e usage", () => {
@@ -521,5 +524,42 @@ describe("Halua logger e2e usage", () => {
 
         // @ts-expect-error on assert too
         logger.assert(false, new Error("bad2"), { notAnIssueKey: 1 })
+    })
+
+    test("default halua has flow/span; create() keeps them; bare createHalua() does not", () => {
+        let lines: string[] = []
+        let logger = halua.create(NewTextDispatcher((line) => lines.push(line)))
+        logger.flow("checkout", { requestId: "r1" }).info("start")
+        expect(lines[0]).toContain("flow checkout")
+        expect(lines[0]).toContain("requestId r1")
+
+        let end = logger.span("charge")
+        end()
+        expect(lines.some((l) => l.includes("span charge"))).toBe(true)
+
+        expect(typeof (halua as any).collect).toBe("undefined")
+        expect(typeof (createHalua().build() as any).flow).toBe("undefined")
+    })
+
+    test("createHalua + spanFlow + capture is the LDD test harness", () => {
+        let logger = createHalua()
+            .dispatchers(NewTextDispatcher(() => {}))
+            .use(spanFlow())
+            .use(capture())
+            .build()
+        logger.flow("checkout").collect()
+        logger.span("x", (s) => {
+            s.collect()
+            return 1
+        })
+        logger.clear()
+        logger.flow("checkout").span("charge", (s) => {
+            s.info("mid")
+        })
+        let argsList = logger.collect().map((r) => r.args[0])
+        expect(argsList).toContain("start")
+        expect(argsList).toContain("mid")
+        expect(argsList).toContain("done")
+        expect(logger.collect().some((r) => r.args.includes("flow") && r.args.includes("checkout"))).toBe(true)
     })
 })
