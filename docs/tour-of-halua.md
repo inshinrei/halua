@@ -1,6 +1,6 @@
-# Tour of Halua (v4)
+# Tour of Halua (v5)
 
-Last updated for Halua post-4.1.0 (createHalua + spanFlow + capture)
+Last updated for Halua 5.0.0 (createHalua + spanFlow + capture)
 
 This document walks through real-world usage patterns beyond the quick start in the README.
 

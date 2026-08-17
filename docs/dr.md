@@ -1,4 +1,14 @@
-Next release: minor
+Next release: major
+
+### 5.0.0 cut: LDD default logger, createHalua, stamp elapsed ms, shipped migrations
+
+- Public release is **5.0.0** (was tracked as additive/minor while landing). Major because the default `halua` contract
+  and `HaluaLogger` surface changed, not because JSON or `DispatcherExecuteMeta` broke.
+- Includes unreleased work since 4.1.0: stamp ender / `stampEnd` return raw elapsed ms; `createHalua` + `Feature`
+  re-apply; `spanFlow` on the default logger; opt-in `capture`.
+- Durable notes: `docs/release-notes/5.0.0.md` and `docs/migrations/4.1.0-to-5.0.0.md`. The migration folder is copied
+  to `lib/migrations/` on build.
+- After the version tag, reset this file to `Next release: minor` (scratchpad, not the changelog).
 
 ### Injectable LDD: createHalua builder, spanFlow, capture
 

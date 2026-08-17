@@ -34,6 +34,11 @@ npm install halua
 pnpm add halua
 ```
 
+## Upgrading
+
+4.1.0 → 5.0.0: most apps need no code changes. See [`docs/migrations/4.1.0-to-5.0.0.md`](docs/migrations/4.1.0-to-5.0.0.md)
+(also shipped at `lib/migrations/4.1.0-to-5.0.0.md` in the npm package).
+
 ## Quick Start
 
 ```ts

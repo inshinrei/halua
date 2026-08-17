@@ -3,17 +3,28 @@ import dts from "vite-plugin-dts"
 import fs from "node:fs"
 import path from "node:path"
 
-const copyModuleAgentsPlugin = {
-    name: "copy-module-agents",
+const copyShippedDocsPlugin = {
+    name: "copy-shipped-docs",
     closeBundle() {
-        const src = path.resolve("agents-for-module.md")
-        const dest = path.resolve("lib", "AGENTS.md")
+        let agentsSrc = path.resolve("agents-for-module.md")
+        let agentsDest = path.resolve("lib", "AGENTS.md")
+        let migrationsSrc = path.resolve("docs", "migrations")
+        let migrationsDest = path.resolve("lib", "migrations")
         try {
-            fs.copyFileSync(src, dest)
+            fs.copyFileSync(agentsSrc, agentsDest)
+            if (fs.existsSync(migrationsSrc)) {
+                fs.mkdirSync(migrationsDest, { recursive: true })
+                let names = fs.readdirSync(migrationsSrc)
+                for (let name of names) {
+                    if (name.endsWith(".md")) {
+                        fs.copyFileSync(path.join(migrationsSrc, name), path.join(migrationsDest, name))
+                    }
+                }
+            }
         } catch (err) {
             // non-fatal during non-build runs or if src missing
             if (process.env.CI) {
-                console.warn("[copy-module-agents] Could not copy agents-for-module.md:", err)
+                console.warn("[copy-shipped-docs] Could not copy shipped docs:", err)
             }
         }
     },
@@ -27,7 +38,7 @@ export default defineConfig({
             entryRoot: "src",
             tsconfigPath: "./tsconfig.json",
         }),
-        copyModuleAgentsPlugin,
+        copyShippedDocsPlugin,
     ],
     build: {
         lib: {

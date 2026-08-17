@@ -119,6 +119,8 @@ If you design a new public dispatcher, export a `New*Dispatcher` factory and upd
   package under `lib/`). This is the file that AI coding agents see when they inspect an installed `halua` module.
   **Keep `agents-for-module.md` up to date** whenever public API, recommended usage patterns, or logging best
   practices for consumers change. Update it in the same PR as README / tour changes.
+- `docs/migrations/*.md` is copied to `lib/migrations/` on every `vite build` and therefore ships in the npm package
+  next to `lib/AGENTS.md`. Add a migration file for each major bump. `docs/release-notes/` is repo-only.
 - The full repo `AGENTS.md` (this file) is **not** published — it contains contributor / release / repo-specific
   sections that are irrelevant to library consumers.
 - Keep documentation up to date with the changes. In `docs/dr.md` add Next release: major if the changes contain

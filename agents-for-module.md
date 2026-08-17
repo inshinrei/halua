@@ -198,6 +198,11 @@ See the implementations of `NewTextDispatcher` / `NewJSONDispatcher` (inside the
 `Dispatcher`, `DispatcherBase`, `format`, `getType`, and `toJSONValue` are the stable public surface for extension
 authors. Breaking changes to them are only done in major releases.
 
+## Upgrading
+
+Major bumps ship a migration guide inside this package at `lib/migrations/` (for 5.0.0:
+`lib/migrations/4.1.0-to-5.0.0.md`). Read that file before changing call sites. Typical 4.x apps need no code changes.
+
 ## When in doubt
 
 - Start with the default `halua` or `createHalua().dispatchers(New*Dispatcher(yourSendFn)).use(spanFlow()).build()`.
