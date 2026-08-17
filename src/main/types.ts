@@ -39,6 +39,18 @@ export interface SpanFlowApi {
     span<T>(label: string, fn: (log: this) => T): T
 }
 
+export interface CapturedRecord {
+    timestamp: number
+    level: LogLevel
+    args: any[]
+    errorMeta?: Record<string, any>
+}
+
+export interface CaptureApi {
+    collect(): CapturedRecord[]
+    clear(): void
+}
+
 export interface HaluaLogger<ErrorMeta = Record<string, any>, Caps = {}> {
     create: {
         <EM = ErrorMeta>(dispatcher: PassedDispatcher): HaluaLogger<EM, Caps> & Caps
